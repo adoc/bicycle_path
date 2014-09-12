@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn_codapt/!svn/ver/1876/core_cardgames/trunk/games
+END
+jsonencoder.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn_codapt/!svn/ver/1871/core_cardgames/trunk/games/jsonencoder.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn_codapt/!svn/ver/1876/core_cardgames/trunk/games/__init__.py
+END
+blackjack.py
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn_codapt/!svn/ver/1876/core_cardgames/trunk/games/blackjack.py
+END
