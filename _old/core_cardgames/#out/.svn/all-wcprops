@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out
+END
+games_tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out/games_tests.py
+END
+players_tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out/players_tests.py
+END
+blackjack_games_tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out/blackjack_games_tests.py
+END
+blackjack.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out/blackjack.py
+END
+blackjack_players_tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/%23out/blackjack_players_tests.py
+END

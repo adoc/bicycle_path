@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/data/blackjack
+END
+basic_soft.csv
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/data/blackjack/basic_soft.csv
+END
+basic_hard.csv
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/data/blackjack/basic_hard.csv
+END
+basic_pairs.csv
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn_codapt/!svn/ver/1848/core_cardgames/trunk/data/blackjack/basic_pairs.csv
+END
