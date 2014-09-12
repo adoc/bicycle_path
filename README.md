@@ -8,4 +8,9 @@ Post Mortem Notes
 -----------------
 I believe these modules do hold potential but perhaps the modeling was a little over-engineered.
 
-Scaling back and simplifying while keeping the API functionalities!
+A lot of incorrect code using class attributes. This is most likely where this module failes the most.
+
+
+Moving Forward
+--------------
+Possibly scaling back and simplifying while keeping the API functionalities!
