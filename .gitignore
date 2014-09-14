@@ -1,0 +1,6 @@
+*.pyc
+*.ipynb
+env
+.ipynb_checkpoints
+bicycle.egg-info
+_old_refence
