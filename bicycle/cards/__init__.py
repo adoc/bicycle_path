@@ -17,8 +17,6 @@ random = random.SystemRandom()
 #ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
 
 
-
-
 class DeckTypeStandard(object):
     """Contains the fundamental state of a standard playing deck.
     (i.e., Suits and Ranks.)
@@ -37,11 +35,11 @@ class DeckTypeStandard(object):
             for rank_str in self.__ranks:
                 yield self.suits_index(suit_str), self.ranks_index(rank_str)
 
-    def ranks_index(self, rank):
-        return self.__ranks.index(rank)
+    def ranks_index(self, rank_str):
+        return self.__ranks.index(rank_str)
 
-    def suits_index(self, suit):
-        return self.__suits.index(suit)
+    def suits_index(self, suit_str):
+        return self.__suits.index(suit_str)
 
     def get_rank(self, rank_index):
         return self.__ranks[rank_index]
@@ -132,11 +130,10 @@ class Card(object):
 class Hand(list):
     """ A list of ``Card``s """
 
-    def __init__(self, deck_type=DeckTypeStandard, card_cls=Card,
-                 build=True, shuffle=False):
-        self.card_cls = card_cls
-        self.deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
-        self._initlen = 0
+    def __init__(self):
+        # self.card_cls = card_cls
+        # self.deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
+        self.initlen = 0
 
     def serialize(self, snoop=False):
         """ provides serialization to the class. for json encoding. """
@@ -169,11 +166,11 @@ class Deck(Hand):
         """
         for suit, rank in self.deck_type.build():
             self.append(self.card_cls(suit, rank, deck_type=self.deck_type))
-        self._initlen += len(self)
+        self.initlen += len(self)
 
     def wipe(self):
         list.__init__(self)
-        self._initlen = 0
+        self.initlen = 0
 
     def reset(self):
         self.wipe()
@@ -214,12 +211,26 @@ class DeckEmpty(Exception):
 
 
 def deal(deck, hand, iterations=1):
+    """Deal a card from the deck to the hand.
+    """
     try:
         for _ in range(iterations):
             hand.append(deck.pop())
     except IndexError: # deck.pop should be the only thing that raises
                        # IndexError, but be wary.
         raise DeckEmpty("Cannot deal from an empty deck.")
+
+
+def build(deck, card_cls, deck_type=DeckTypeStandard):
+    """Build the deck.
+    """
+    for suit, rank in deck_type.build():
+        deck.append(card_cls(suit, rank, deck_type=deck_type))
+
+    deck.initlen += len(self)
+
+
+shuffle = random.shuffle
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved
