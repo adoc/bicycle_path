@@ -100,7 +100,7 @@ class Card(object):
 
     def __iter__(self):
         # This has been reversed to be more logical with the rest of teh class.
-        # Is this even used???
+        # Is this even used??? or needed?
         yield self.rank
         yield self.suit
 
@@ -127,12 +127,12 @@ class Card(object):
                     (self.rank, self.suit, self.serialize(snoop=True)))
 
 
-class Hand(list):
-    """ A list of ``Card``s """
+class Cards(list):
+    """ A list of ``Card``s
+    """
 
     def __init__(self):
-        # self.card_cls = card_cls
-        # self.deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
+        list.__init__(self)
         self.initlen = 0
 
     def serialize(self, snoop=False):
@@ -143,64 +143,7 @@ class Hand(list):
         return self.serialize()
 
     def __repr__(self):
-        return "Hand(%s)" % ','.join(self.serialize(snoop=True))
-
-
-class Deck(Hand): 
-    """ A Deck of Cards.
-        Usage:
-            Deck() - Build a Deck of 52 cards of type Card()
-    """
-
-    def __init__(self, build=True, shuffle=False, **kwa):
-        Hand.__init__(self, **kwa)
-
-        if build is True:
-            self.build()
-
-        if shuffle is True:
-            self.shuffle()
-
-    def build(self):
-        """Build the deck from suits and ranks.
-        """
-        for suit, rank in self.deck_type.build():
-            self.append(self.card_cls(suit, rank, deck_type=self.deck_type))
-        self.initlen += len(self)
-
-    def wipe(self):
-        list.__init__(self)
-        self.initlen = 0
-
-    def reset(self):
-        self.wipe()
-        self.build()
-
-    def shuffle(self, func=None):
-        random.shuffle(self, func)
-
-    def check(self, threshold=1):
-        return len(self) < threshold * self.__initlen
-
-    def __repr__(self):
-        return "Deck(%s)" % ','.join(self.serialize(snoop=True))
-
-
-class Shoe(Deck):
-    """ A Shoe of Decks. 
-        Usage:
-            Shoe(numdecks=1, **deck_kwa)""" 
-
-    def __init__(self, numdecks=1, **kwa):
-        self.__numdecks = numdecks
-        Deck.__init__(self, **kwa)
-
-    def build(self):
-        for _ in range(self.__numdecks):
-            Deck.build(self)
-
-    def __repr__(self):
-        return "Shoe(%s)" % ','.join(self.serialize(snoop=True))
+        return "Cards(%s)" % ','.join(self.serialize(snoop=True))
 
 
 class DeckEmpty(Exception):
@@ -210,9 +153,47 @@ class DeckEmpty(Exception):
     pass
 
 
-def deal(deck, hand, iterations=1):
-    """Deal a card from the deck to the hand.
+class DeckLow(Exception):
     """
+    """
+
+    pass
+
+
+shuffle = random.shuffle
+
+
+def build(deck, numdecks=1, card_cls=Card, deck_type=DeckTypeStandard, do_shuffle=False):
+    """Build a  ``deck`` or Shoe.
+    """
+    deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
+    for _ in range(numdecks):
+        for suit, rank in deck_type.build():
+            deck.append(card_cls(suit, rank, deck_type=deck_type))
+
+    deck.initlen += len(deck)
+    if do_shuffle is True:
+        return shuffle(deck)
+    else:
+        return deck
+
+
+def wipe(cards):
+    cards.wipe()
+
+
+def check(cards, threshold=1):
+    """Check the cards based on a ``threshold`` factor of its original
+    length.
+    """
+
+    return len(cards) < threshold * cards.initlen
+
+
+def deal(deck, hand, iterations=1, do_check=False):
+    """Deal a card from the ``deck`` to the ``hand``.
+    """
+
     try:
         for _ in range(iterations):
             hand.append(deck.pop())
@@ -221,16 +202,6 @@ def deal(deck, hand, iterations=1):
         raise DeckEmpty("Cannot deal from an empty deck.")
 
 
-def build(deck, card_cls, deck_type=DeckTypeStandard):
-    """Build the deck.
-    """
-    for suit, rank in deck_type.build():
-        deck.append(card_cls(suit, rank, deck_type=deck_type))
-
-    deck.initlen += len(self)
-
-
-shuffle = random.shuffle
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

@@ -138,13 +138,22 @@ class TestCardClass(unittest.TestCase):
 
 
 
-class TestHand(unittest.TestCase):
+class TestCards(unittest.TestCase):
 
     def test_init(self):
-        h = bicycle.cards.Hand()
-        self.assertIsInstance(h.deck_type, bicycle.cards.DeckTypeStandard)
-        self.assertIs(h.card_cls, bicycle.cards.Card)
-        self.assertEqual(h._initlen, 0)
+        h = bicycle.cards.Cards()
+        self.assertIsInstance(h, list)
+        self.assertEqual(h.initlen, 0)
 
     def test_serialize(self):
         pass
+
+    def test_repr(self):
+        pass
+
+
+class TestActions(unittest.TestCase):
+
+    def test_build(self):
+        d = build(bicycle.cards.Cards())
+        
