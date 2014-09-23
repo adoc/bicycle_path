@@ -31,9 +31,39 @@ except NameError:
     pass
 
 
-# Might move and rename.
-class Seats(list):
+class InsufficientBankroll(Exception):
     """
+    """
+    pass
+
+
+
+# These will be accessing the data model in other iterations of this func.
+# Reason being is that player data state can be handled 
+# outside the scope or the purpose of this module, but it must
+# be accounted for properly to ensure the integrity and fidelity
+# of the game.
+
+def wager(player, amount):
+
+    if player.bankroll >= amount:
+        player.bankroll -= amount
+        return amount
+
+def collect(player, amount):
+
+    player.bankroll += amount
+    return amount
+
+
+
+# Might move and rename.
+# 
+class Seats(list):
+    """ Handles a list in a way more like static arrays. This works
+    well when modeling position based entities like players, wagers, hands.
+
+    This is surely wrong and should be fixed!
     """
 
     def __init__(self, n):
@@ -69,8 +99,9 @@ class Seats(list):
         list.pop(self, i)
         list.insert(self, i, item)
 
-    def append(self):
-        raise IndexError("Cannot append to a `Seats` list.")
+    # Do all or nothing. (extend, pop, etc.)
+    #def append(self):
+    #    raise IndexError("Cannot append to a `Seats` list.")
 
 
 class Player(object):
@@ -78,6 +109,7 @@ class Player(object):
     """
 
     def __init__(self, seat_pref=None):
+        self.bankroll = 0
         self.seat_pref = None
 
     def _gen_seralize(self, snoop=False):
@@ -132,11 +164,11 @@ class Table(object):
         self.seat_prefs[player] = index # Player's seat preference if any.
         self.to_play.append(player)
 
-    # This will expand and have a recursive element.
     def resolve(self):
         """
         """
-        pass
+
+        raise NotImplementedError()
 
     def cleanup(self):
         """
@@ -165,12 +197,12 @@ class Table(object):
         return self.serialize(snoop=False)
 
 
-
 class CardTable(Table):
     """
     """
 
-    def __init__(self, hands=None, wagers=None, shoe=None, discard=None, **kwa):
+    def __init__(self, hands=None, wagers=None, shoe=None, discard=None,
+                 wager_func=wager, collect_func=collect, **kwa):
         # States that clear each game.
         self.hands = hands or Seats(self.num_seats)
         self.wagers = wagers or Seats(self.num_seats)
@@ -179,25 +211,43 @@ class CardTable(Table):
         self.shoe = shoe or Cards()
         self.discard = discard or Cards()
 
-    # This will expand and have a recursive element.
+        self.wager_func = wager_func
+        self.collect_func = collect_func
+
     def resolve(self):
         """
         """
-        # Resolve winners/loser???
-        # Resolve bets.
+
+        # Large percentage of card games should resolve with the top N
+        # hands or at least hands in a sorted order.
+        hands = sorted(self.hands,
+                       key=lambda hand: int(hand))
+
+        # List of winning hands only
+        winning_hands = [hand for hand in hands if int(hand) == int(hands[0])]
+
+        # Total pot.
+        pot = sum([wager for wager in wagers if wager is not None])
+
+        winnings = pot / len(winning_hands)
+
+        
+
+
+
 
     def cleanup(self):
+        """
+        Be aware this clears all hands every game.
+        """
         for player, hand, wager in zip(self.seats, self.hand, self.wagers):
-            if hand:
+            if hand is not None: # discard hands
                 deal_all(hand, self.discard)
 
-            if player:
-                pass
+            if player is not None and wager is not None:
+                self.collect_func(player, wager)
 
-        # Remove players wanting to leave.
-        for player in self.to_leave:
-            self.seats.remove(player)
-
+        Table.cleanup(self)
 
 
 def moretime(player):

@@ -79,19 +79,29 @@ class TestTable(unittest.TestCase):
 
         t1.sit(p1)
         t1.sit(p2, index=5)
+        self.assertEqual(t1.seat_prefs[p2], 5)
+
         t1.sit(p3, index=0) # Someone already in that position.
+        self.assertEqual(t1.seat_prefs[p3], 0)
+
         t1.sit(p4)
         t1.sit(p5)
         t1.sit(p6)
+
+        self.assertEqual(t1.to_play, [p1, p2, p3, p4, p5, p6])
+
+        # This may move to the "cleanup test"
         t1.cleanup()
         t1.sit(p7)
+        self.assertIn(p7, t1.to_play)
+
         self.assertEqual(t1.seats[0], p1)
         self.assertEqual(t1.seats[5], p2)
         self.assertEqual(t1.seats[1], p3)
         self.assertEqual(t1.seats[2], p4)
         self.assertEqual(t1.seats[3], p5)
         self.assertEqual(t1.seats[4], p6)
-        self.assertIn(p7, t1.to_play)
+        
 
     def test_leave(self):
         t1 = bicycle.games.Table()
@@ -107,18 +117,24 @@ class TestTable(unittest.TestCase):
         t1.to_play = [p7]
 
         t1.leave(p7)
-        t1.cleanup()
         self.assertNotIn(p7, t1.to_play)
 
+        t1.cleanup()
         t1.leave(p6)
         t1.leave(p5)
         t1.leave(p4)
+        self.assertEqual(t1.to_leave, [p6, p5, p4])
+
         t1.cleanup()
         self.assertNotIn(p6, t1.seats)
         self.assertNotIn(p5, t1.seats)
         self.assertNotIn(p4, t1.seats)
 
     def test_resolve(self):
+        t1 = bicycle.games.Table()
+        self.assertRaises(NotImplementedError, t1.resolve)
+
+    def test_cleanup(self):
         t1 = bicycle.games.Table()
         p1 = bicycle.games.Player()
         p2 = bicycle.games.Player()
@@ -128,6 +144,9 @@ class TestTable(unittest.TestCase):
         t1.seats = bicycle.games.Seats([p1, p2, p3, None])
         t1.to_play = [p4]
 
-
         t1.cleanup()
         self.assertIn(p4, t1.seats)
+
+
+class TestCardTable(unittest.TestCase):
+    pass
