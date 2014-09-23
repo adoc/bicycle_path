@@ -1,25 +1,30 @@
 """
-``cards`` module provides base classes and APIs for a standard playing card deck.
+``cards`` module provides base classes and APIs for a standard playing
+card deck.
 
 Should be python 2.7 and python 3.4 compatible.
 """
 
 import inspect
-import itertools
 import functools
-import random
 
-#  overload random with os.urandom
-random = random.SystemRandom()
-
-
-#suits = ['S','D','C','H']
-#ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+from bicycle import random      # Always import ``random`` from the
+                                #   ``bicycle`` module as it provides
+                                #   extra entropy.
 
 
 class DeckTypeStandard(object):
     """Contains the fundamental state of a standard playing deck.
     (i.e., Suits and Ranks.)
+
+    Cards in a standard deck are abbreviated and always referenced by
+    Rank then Suit. "AS" is the Ace of Spades. "KQ" is the King of
+    Queens, and so on.
+
+    The Ace is low (index 0) in this configuration. Games where the Ace
+    is high should attempt to overload the ``Card`` or ``Cards`` class
+    as demonstrated in ``blackjack.Hand`` to account for an Ace being
+    high.
 
     ``build`` method iterates suits then ranks and yields suit_str
             then rank_str.
@@ -69,7 +74,7 @@ class Card(object):
     @classmethod
     def from_str(cls, string, deck_type=DeckTypeStandard, **kwa):
         """Use a "card string" to instantiate the card.
-        e.g., "AC" for Ace of Clubs, "A" for suitless Ace.
+        e.g., "AC" for Ace of Clubs.
         """
 
         deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
@@ -190,6 +195,9 @@ def check(cards, threshold=1):
     return len(cards) < threshold * cards.initlen
 
 
+# These deal funcs are simple and obvious now, but might include card
+#   state changes which makes more sense.
+
 def deal(deck, hand, iterations=1, do_check=False):
     """Deal a card from the ``deck`` to the ``hand``.
     """
@@ -201,6 +209,12 @@ def deal(deck, hand, iterations=1, do_check=False):
                        # IndexError, but be wary.
         raise DeckEmpty("Cannot deal from an empty deck.")
 
+def deal_all(source, target):
+    try:
+        while True:
+            hand.append(deck.pop())
+    except IndexError:
+        pass
 
 
 

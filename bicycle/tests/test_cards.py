@@ -155,5 +155,5 @@ class TestCards(unittest.TestCase):
 class TestActions(unittest.TestCase):
 
     def test_build(self):
-        d = build(bicycle.cards.Cards())
+        d = bicycle.cards.build(bicycle.cards.Cards())
         
