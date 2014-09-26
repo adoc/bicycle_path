@@ -283,8 +283,9 @@ class TestCardTable(unittest.TestCase):
         self.assertEqual(t1.wagers[1], 12)
         self.assertEqual(t1.wagers[2], 14)
 
-        pprint(t1.__dict__)
-        assert False
+        # HERE!
+        # pprint(t1.__dict__)
+        # assert False
 
     def test_iter(self):
         pass
@@ -328,9 +329,6 @@ class TestCardTable(unittest.TestCase):
         p3 = bicycle.games.Player()
 
         t1.build()
-
-        
-
 
 
     def test_cleanup(self):
