@@ -22,7 +22,7 @@ import inspect
 import functools
 import itertools
 
-import bicycle.cards
+import bicycle.card
 
 from bicycle import map_serialize
 
@@ -238,13 +238,13 @@ class CardTable(Table):
 
         # States that clear each game.
         self.hands = hands or Seats(self.num_seats,
-                                    base_obj_factory=bicycle.cards.Cards)
+                                    base_obj_factory=bicycle.card.Cards)
         self.wagers = wagers or Seats(self.num_seats,
                                       base_obj_factory=wager_cls)
 
         # States that reset based on card threshold.
-        self.shoe = shoe or bicycle.cards.Cards()
-        self.discard = discard or bicycle.cards.Cards()
+        self.shoe = shoe or bicycle.card.Cards()
+        self.discard = discard or bicycle.card.Cards()
 
         self.wager_func = wager_func
         self.collect_func = collect_func
@@ -290,24 +290,24 @@ class CardTable(Table):
     # Though I see no reason to put them in a dealer class.
     # Possibly the "game" class.
     def build(self, **kwa):
-        bicycle.cards.build(self.shoe, **kwa)
+        bicycle.card.build(self.shoe, **kwa)
 
     def pickup(self):
         """Pickup all the cards from the discard and deal them in to the shoe
         """
 
-        bicycle.cards.deal_all(self.discard, self.shoe)
+        bicycle.card.deal_all(self.discard, self.shoe)
 
     # also might go elsewhere.
     def shuffle(self):
-        bicycle.cards.shuffle(self.shoe)
+        bicycle.card.shuffle(self.shoe)
 
     # Might go elsewhere. or be replaced.
     def deal_all(self):
         """
         """
         for _, hand, _ in self._deal_all_iter:
-            bicycle.cards.deal(self.shoe, hand)
+            bicycle.card.deal(self.shoe, hand)
 
     # ------------ Table event methods.
     def last_chance(self):
@@ -344,7 +344,7 @@ class CardTable(Table):
         """
         for player, hand, wager in self:
             if hand: # discard hands
-                bicycle.cards.deal_all(hand, self.discard)
+                bicycle.card.deal_all(hand, self.discard)
 
             if player and wager:
                 self.collect_func(player, wager.amount)

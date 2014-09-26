@@ -2,11 +2,11 @@
 """
 
 import functools
-import bicycle.cards
+import bicycle.card
 
 
 @functools.total_ordering
-class Card(bicycle.cards.Card):
+class Card(bicycle.card.Card):
     """A Blackjack card, including equivalence
     """
 
@@ -33,7 +33,7 @@ class Card(bicycle.cards.Card):
 ace = Card.from_str('AS')
 
 
-class Hand(bicycle.cards.Cards):
+class Hand(bicycle.card.Cards):
     """
     """
 
@@ -55,7 +55,7 @@ class Hand(bicycle.cards.Cards):
         return len(self) == 2 and int(self) == 21
 
 
-build = functools.partial(bicycle.cards.build, card_cls=Card)
+build = functools.partial(bicycle.card.build, card_cls=Card)
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

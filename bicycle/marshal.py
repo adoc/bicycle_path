@@ -1,4 +1,6 @@
-"""Set of classes and functions used to marshal game state to and from
+"""Marshal module.
+
+Set of classes and functions used to marshal game state to and from
 persistance as well as to and from implementated views.
 """
 

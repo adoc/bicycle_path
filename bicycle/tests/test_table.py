@@ -2,31 +2,32 @@ from pprint import pprint
 
 import unittest
 
+import bicycle.card
 import bicycle.player
-import bicycle.games
+import bicycle.table
 
 
 class TestSeats(unittest.TestCase):
     def test_init(self):
-        s1 = bicycle.games.Seats(6)
+        s1 = bicycle.table.Seats(6)
         self.assertEqual(len(s1), 6)
         self.assertTrue(all([item is None for item in s1]))
 
-        s1 = bicycle.games.Seats(60)
+        s1 = bicycle.table.Seats(60)
         self.assertEqual(len(s1), 60)
         self.assertTrue(all([item is None for item in s1]))
 
     def test_init_base_obj(self):
-        s1 = bicycle.games.Seats(6, base_obj_factory=lambda: [])
+        s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         self.assertEqual(len(s1), 6)
         self.assertTrue(all([item == [] for item in s1]))
 
-        s1 = bicycle.games.Seats(60, base_obj_factory=lambda: [])
+        s1 = bicycle.table.Seats(60, base_obj_factory=lambda: [])
         self.assertEqual(len(s1), 60)
         self.assertTrue(all([item == [] for item in s1]))
 
     def test_remove(self):
-        s1 = bicycle.games.Seats(6)
+        s1 = bicycle.table.Seats(6)
         s1.remove(None)
         s1.remove(None)
         s1.remove(None)
@@ -47,7 +48,7 @@ class TestSeats(unittest.TestCase):
         self.assertRaises(ValueError, lambda: s1.remove(False))
 
     def test_remove_base_obj(self):
-        s1 = bicycle.games.Seats(6, base_obj_factory=lambda: [])
+        s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         s1.remove([])
         s1.remove([])
         s1.remove([])
@@ -68,14 +69,14 @@ class TestSeats(unittest.TestCase):
         self.assertRaises(ValueError, lambda: s1.remove(False))
 
     def test_insert(self):
-        s1 = bicycle.games.Seats(6)
+        s1 = bicycle.table.Seats(6)
         s1.insert(0, True)
         s1.insert(2, False)
 
         self.assertEqual(len(s1), 6)
         self.assertEqual([item is None for item in s1].count(True), 4)
 
-        s2 = bicycle.games.Seats(6)
+        s2 = bicycle.table.Seats(6)
         s1.insert(None, True)
         s1[1] = True
         s1.insert(None, False)
@@ -85,14 +86,14 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[2], False)
 
     def test_insert_base_obj(self):
-        s1 = bicycle.games.Seats(6, base_obj_factory=lambda: [])
+        s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         s1.insert(0, True)
         s1.insert(2, False)
 
         self.assertEqual(len(s1), 6)
         self.assertEqual([item == [] for item in s1].count(True), 4)
 
-        s2 = bicycle.games.Seats(6, base_obj_factory=lambda: [])
+        s2 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         s1.insert(None, True)
         s1[1] = True
         s1.insert(None, False)
@@ -104,13 +105,13 @@ class TestSeats(unittest.TestCase):
 
 class TestTable(unittest.TestCase):
     def test_init(self):
-        t1 = bicycle.games.Table()
+        t1 = bicycle.table.Table()
         self.assertEqual(len(t1.seats), 6)
         self.assertEqual(t1.to_play, [])
-        self.assertIsInstance(t1.seats, bicycle.games.Seats)
+        self.assertIsInstance(t1.seats, bicycle.table.Seats)
 
     def test_sit(self):
-        t1 = bicycle.games.Table()
+        t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
         p3 = bicycle.player.Player()
@@ -146,7 +147,7 @@ class TestTable(unittest.TestCase):
         
 
     def test_leave(self):
-        t1 = bicycle.games.Table()
+        t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
         p3 = bicycle.player.Player()
@@ -155,7 +156,7 @@ class TestTable(unittest.TestCase):
         p6 = bicycle.player.Player()
         p7 = bicycle.player.Player()
 
-        t1.seats = bicycle.games.Seats([p1, p2, p3, p4, p5, p6])
+        t1.seats = bicycle.table.Seats([p1, p2, p3, p4, p5, p6])
         t1.to_play = [p7]
 
         t1.leave(p7)
@@ -173,17 +174,17 @@ class TestTable(unittest.TestCase):
         self.assertNotIn(p4, t1.seats)
 
     def test_resolve(self):
-        t1 = bicycle.games.Table()
+        t1 = bicycle.table.Table()
         self.assertRaises(NotImplementedError, t1.resolve)
 
     def test_cleanup(self):
-        t1 = bicycle.games.Table()
+        t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
         p3 = bicycle.player.Player()
         p4 = bicycle.player.Player()
 
-        t1.seats = bicycle.games.Seats([p1, p2, p3, None])
+        t1.seats = bicycle.table.Seats([p1, p2, p3, None])
         t1.to_play = [p4]
 
         t1.cleanup()
@@ -192,36 +193,36 @@ class TestTable(unittest.TestCase):
 
 class TestWager(unittest.TestCase):
     def test_init(self):
-        w1 = bicycle.games.Wager()
+        w1 = bicycle.table.Wager()
         self.assertEqual(w1.amount, 0)
 
-        w2 = bicycle.games.Wager(amount=1)
+        w2 = bicycle.table.Wager(amount=1)
         self.assertEqual(w2.amount, 1)
 
     def test_bool(self):
-        w1 = bicycle.games.Wager()
+        w1 = bicycle.table.Wager()
         self.assertFalse(w1)
 
-        w2 = bicycle.games.Wager(amount=0.1)
+        w2 = bicycle.table.Wager(amount=0.1)
         self.assertTrue(w2)
 
     def test_lt(self):
-        w1 = bicycle.games.Wager(amount=10)
-        w2 = bicycle.games.Wager(amount=5)
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=5)
         self.assertLess(w2, w1)
         self.assertLess(1, w1)
         self.assertLess(1, w2)
 
     def test_gt(self):
-        w1 = bicycle.games.Wager(amount=10)
-        w2 = bicycle.games.Wager(amount=5)
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=5)
         self.assertGreater(w1, w2)
         self.assertGreater(w1, 1)
         self.assertGreater(w2, 1)
 
     def test_eq(self):
-        w1 = bicycle.games.Wager(amount=10)
-        w2 = bicycle.games.Wager(amount=10)
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=10)
         self.assertEqual(w1, w2)
         self.assertEqual(w1, 10)
         self.assertEqual(w2, 10)
@@ -229,19 +230,19 @@ class TestWager(unittest.TestCase):
 
 class TestCardTable(unittest.TestCase):
     def test_init(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
-        self.assertEqual(t1.hands, bicycle.games.Seats(t1.num_seats, base_obj_factory=bicycle.cards.Cards))
-        #self.assertEqual(t1.wagers, bicycle.games.Seats(t1.num_seats, base_obj=0)
+        self.assertEqual(t1.hands, bicycle.table.Seats(t1.num_seats, base_obj_factory=bicycle.card.Cards))
+        #self.assertEqual(t1.wagers, bicycle.table.Seats(t1.num_seats, base_obj=0)
         self.assertTrue(not any(t1.wagers))
-        self.assertEqual(t1.shoe, bicycle.cards.Cards())
-        self.assertEqual(t1.discard, bicycle.cards.Cards())
-        self.assertEqual(t1.wager_func, bicycle.games.wager)
-        self.assertEqual(t1.collect_func, bicycle.games.collect)
+        self.assertEqual(t1.shoe, bicycle.card.Cards())
+        self.assertEqual(t1.discard, bicycle.card.Cards())
+        self.assertEqual(t1.wager_func, bicycle.table.wager)
+        self.assertEqual(t1.collect_func, bicycle.table.collect)
         self.assertEqual(t1.to_wager, {})
 
     def test_leave(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         p1 = bicycle.player.Player(bankroll=1000)
         t1.sit(p1)
@@ -252,7 +253,7 @@ class TestCardTable(unittest.TestCase):
 
     # Functional test?? Move this!
     def test_state_scenario_one(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         p1 = bicycle.player.Player(bankroll=1000)
         p2 = bicycle.player.Player(bankroll=1000)
@@ -286,39 +287,39 @@ class TestCardTable(unittest.TestCase):
         pass
 
     def test_build(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         t1.build()
         self.assertEqual(len(t1.shoe), 52)
-        self.assertEqual(t1.shoe[0], bicycle.cards.Card(suit=0, rank=0))
+        self.assertEqual(t1.shoe[0], bicycle.card.Card(suit=0, rank=0))
 
     def test_pickup(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         t1.build()
-        bicycle.cards.deal_all(t1.shoe, t1.discard)
+        bicycle.card.deal_all(t1.shoe, t1.discard)
         self.assertEqual(len(t1.shoe), 0)
         self.assertEqual(len(t1.discard), 52)
-        self.assertEqual(t1.discard[0], bicycle.cards.Card(suit=3, rank=12))
+        self.assertEqual(t1.discard[0], bicycle.card.Card(suit=3, rank=12))
 
         t1.pickup()
         self.assertEqual(len(t1.shoe), 52)
         self.assertEqual(len(t1.discard), 0)
-        self.assertEqual(t1.shoe[0], bicycle.cards.Card(suit=0, rank=0))
+        self.assertEqual(t1.shoe[0], bicycle.card.Card(suit=0, rank=0))
 
     def test_shuffle(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         t1.build()
         t1.shuffle()
         self.assertEqual(len(t1.shoe), 52)
         try:
-            self.assertNotEqual(t1.shoe[0], bicycle.cards.Card(suit=0, rank=0))
+            self.assertNotEqual(t1.shoe[0], bicycle.card.Card(suit=0, rank=0))
         except AssertionError:
-            self.assertNotEqual(t1.shoe[1], bicycle.cards.Card(suit=0, rank=1))
+            self.assertNotEqual(t1.shoe[1], bicycle.card.Card(suit=0, rank=1))
 
     def test_deal_all(self):
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
         p3 = bicycle.player.Player()
@@ -333,7 +334,7 @@ class TestCardTable(unittest.TestCase):
         p3 = bicycle.player.Player()
         p4 = bicycle.player.Player()
 
-        t1 = bicycle.games.CardTable()
+        t1 = bicycle.table.CardTable()
 
         t1.sit(p1)
         t1.sit(p2)
