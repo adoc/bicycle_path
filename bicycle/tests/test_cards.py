@@ -137,11 +137,11 @@ class TestCardClass(unittest.TestCase):
         pass
 
 
-
 class TestCards(unittest.TestCase):
 
     def test_init(self):
         h = bicycle.cards.Cards()
+        self.assertFalse(h)
         self.assertIsInstance(h, list)
         self.assertEqual(h.initlen, 0)
 

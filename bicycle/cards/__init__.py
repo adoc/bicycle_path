@@ -212,7 +212,7 @@ def deal(deck, hand, iterations=1, do_check=False):
 def deal_all(source, target):
     try:
         while True:
-            hand.append(deck.pop())
+            target.append(source.pop())
     except IndexError:
         pass
 

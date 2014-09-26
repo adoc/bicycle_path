@@ -19,7 +19,11 @@
 #   let's see if we can avoid any hard dependencies.
 
 
+import inspect
+import functools
 import itertools
+
+import bicycle.cards
 
 from bicycle import map_serialize
 
@@ -36,6 +40,42 @@ class InsufficientBankroll(Exception):
     """
     pass
 
+
+# Should wagers be equivalent based on amount?
+# 
+@functools.total_ordering
+class Wager(object):
+    """Wager "spot" on a table.
+    """
+    def __init__(self, amount=0):
+        self.amount = amount
+
+    def __lt__(self, other):
+        if isinstance(other, Wager):
+            return self.amount < other.amount
+        else:
+            return self.amount < other
+
+    def __eq__(self, other):
+        if isinstance(other, Wager):
+            return self.amount == other.amount
+        else:
+            return self.amount == other
+
+    def __nonzero__(self):
+        return self.amount > 0
+
+    __bool__ = __nonzero__
+
+    def __repr__(self):
+        return "Wager(amount=%s) @ %s" % (self.amount, id(self))
+
+
+class SplitWager(Wager):
+    """A wager that may be split in to several parts.
+    """
+
+    pass
 
 
 # These will be accessing the data model in other iterations of this func.
@@ -56,9 +96,12 @@ def collect(player, amount):
     return amount
 
 
-
 # Might move and rename.
-# 
+#   Maybe `StaticList`
+#
+# Should this inherit from list?
+#   What methods must be implemented for it to be list-like?
+#       __iter__, __getitem__, ??
 class Seats(list):
     """ Handles a list in a way more like static arrays. This works
     well when modeling position based entities like players, wagers, hands.
@@ -66,20 +109,26 @@ class Seats(list):
     This is surely wrong and should be fixed!
     """
 
-    def __init__(self, n):
+    def __init__(self, n, base_obj_factory=lambda: None):
+        self.base_obj_factory = base_obj_factory
         if isinstance(n, int):
-            list.__init__(self, [None for _ in range(n)])
+            list.__init__(self, [self.base_obj_factory() for _ in range(n)])
         elif isinstance(n, list) or isinstance(n, tuple):
             list.__init__(self, n)
 
+    @property
+    def base_obj(self):
+        return self.base_obj_factory()
+
     def remove(self, item):
         """Looks for the `item` and if found will remove it and
-        re-insert a `None`
+        re-insert a `base_obj`
         """
         i = list.index(self, item)
         list.pop(self, i)
-        list.insert(self, i, None)
+        list.insert(self, i, self.base_obj)
 
+    # This should be named `replace`
     def insert(self, i, item):
         """If `None` index is given, place item at first `None` valued
         index.
@@ -88,35 +137,29 @@ class Seats(list):
         index.
         """
         if i is None:
-            i = list.index(self, None)
+            i = list.index(self, self.base_obj)
         elif i < 0:
             raise IndexError("Must be a positive integer index.")
-        elif self[i] is not None:
+        elif self[i] != self.base_obj:
             self.insert(None, item)
             return
-            #raise IndexError("Must insert in to a position with a `None` value.")
 
         list.pop(self, i)
         list.insert(self, i, item)
-
-    # Do all or nothing. (extend, pop, etc.)
-    #def append(self):
-    #    raise IndexError("Cannot append to a `Seats` list.")
 
 
 class Player(object):
     """
     """
 
-    def __init__(self, seat_pref=None):
-        self.bankroll = 0
-        self.seat_pref = None
+    def __init__(self, seat_pref=None, bankroll=0):
+        self.bankroll = bankroll
+        self.seat_pref = seat_pref
 
     def _gen_seralize(self, snoop=False):
 
         if self.seat_prof is not None:
             yield 'seat_pref', self.seat_pref
-
 
     def serialize(self, snoop=False):
         return dict(self._gen_seralize)
@@ -145,6 +188,8 @@ class Table(object):
     def leave(self, player):
         """
         """
+        if player in self.seat_prefs:
+            del self.seat_prefs[player]
 
         if player in self.to_play:
             self.to_play.remove(player)
@@ -182,7 +227,10 @@ class Table(object):
         def cleanup_to_play():
             if self.to_play and None in self.seats:
                 player = self.to_play.pop(0)
-                self.seats.insert(self.seat_prefs.get(player), player)
+                if player in self.seat_prefs:
+                    self.seats.insert(self.seat_prefs.pop(player), player)
+                else:
+                    self.seats.insert(None, player)
                 cleanup_to_play()
         cleanup_to_play()
 
@@ -202,21 +250,97 @@ class CardTable(Table):
     """
 
     def __init__(self, hands=None, wagers=None, shoe=None, discard=None,
-                 wager_func=wager, collect_func=collect, **kwa):
+                 wager_func=wager, collect_func=collect, wager_cls=Wager,
+                 **kwa):
+        """
+        """
+
+        Table.__init__(self, **kwa)
+
         # States that clear each game.
-        self.hands = hands or Seats(self.num_seats)
-        self.wagers = wagers or Seats(self.num_seats)
+        self.hands = hands or Seats(self.num_seats,
+                                    base_obj_factory=bicycle.cards.Cards)
+        self.wagers = wagers or Seats(self.num_seats,
+                                      base_obj_factory=wager_cls)
 
         # States that reset based on card threshold.
-        self.shoe = shoe or Cards()
-        self.discard = discard or Cards()
+        self.shoe = shoe or bicycle.cards.Cards()
+        self.discard = discard or bicycle.cards.Cards()
 
         self.wager_func = wager_func
         self.collect_func = collect_func
 
+        self.to_wager = {}
+
+    # ===== Iterators
+    def __iter__(self):
+        """Basic iterator for the Table instance. Yields the `player`,
+        `hand`, `wager` tuple.
+        """
+        for player, hand, wager in zip(self.seats, self.hands, self.wagers):
+            yield player, hand, wager
+
+    def _deal_all_iter(self):
+        """Deal All iterator. Yields the `player`, `hand`, `wager`
+        tuple for seated players. This is the most basic form of a
+        deal only expecting that a player is in the seat.
+
+        This method is overloaded in subclasses to add further deal
+        caveats; e.g., games that require a wager before dealing to
+        as seat.
+        """
+
+        for player, hand, wager in self:
+            if player:
+                yield player, hand, wager
+
+
+    # -------- Player operations
+    def leave(self, player, force=False):
+        if player in self.to_wager:
+            del self.to_wager[player]
+
+        Table.leave(self, player)
+
+    def wager(self, player, amount):
+        self.to_wager[player] = self.to_wager.get(player, 0) + amount
+        return amount
+
+    # --------- Card shoe ops.
+    # Most of these methods are candidates to be placed elsewhere.
+    # Though I see no reason to put them in a dealer class.
+    # Possibly the "game" class.
+    def build(self, **kwa):
+        bicycle.cards.build(self.shoe, **kwa)
+
+    def pickup(self):
+        """Pickup all the cards from the discard and deal them in to the shoe
+        """
+
+        bicycle.cards.deal_all(self.discard, self.shoe)
+
+    # also might go elsewhere.
+    def shuffle(self):
+        bicycle.cards.shuffle(self.shoe)
+
+    # Might go elsewhere. or be replaced.
+    def deal_all(self):
+        """
+        """
+        for _, hand, _ in self._deal_all_iter:
+            bicycle.cards.deal(self.shoe, hand)
+
+    # ------------ Table event methods.
+    def last_chance(self):
+        """
+        """
+
+        pass
+
     def resolve(self):
         """
         """
+        # Not completed.
 
         # Large percentage of card games should resolve with the top N
         # hands or at least hands in a sorted order.
@@ -231,23 +355,29 @@ class CardTable(Table):
 
         winnings = pot / len(winning_hands)
 
-        
 
-
-
-
+    # Some of these operations need to be separated.
+    #   Player seating and wager resolution. Though this hasn't caused
+    #   any problems with the limited functional tests.
     def cleanup(self):
         """
         Be aware this clears all hands every game.
         """
-        for player, hand, wager in zip(self.seats, self.hand, self.wagers):
-            if hand is not None: # discard hands
-                deal_all(hand, self.discard)
+        for player, hand, wager in self:
+            if hand: # discard hands
+                bicycle.cards.deal_all(hand, self.discard)
 
-            if player is not None and wager is not None:
-                self.collect_func(player, wager)
+            if player and wager:
+                self.collect_func(player, wager.amount)
+                wager.amount = 0
 
+        # Handle table seating.
         Table.cleanup(self)
+
+        # Apply any queued bets.
+        for player, _, wager in self:
+            if player in self.to_wager:
+                wager.amount = self.to_wager.pop(player)
 
 
 def moretime(player):
