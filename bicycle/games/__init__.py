@@ -3,7 +3,6 @@
 
 # This should cover 99% of playing card games.
 
-
 # Cleanup Step
 #   Check deck state (reshuffle deck if needed)
 # Bet Step
@@ -14,7 +13,7 @@
 #   Resolve Hands and Bets.
 
 
-# These should both fire events and receive events.
+# These should both fire events and receive events??
 # asyncio and other async compatibility should be considered but
 #   let's see if we can avoid any hard dependencies.
 
@@ -146,26 +145,6 @@ class Seats(list):
 
         list.pop(self, i)
         list.insert(self, i, item)
-
-
-class Player(object):
-    """
-    """
-
-    def __init__(self, seat_pref=None, bankroll=0):
-        self.bankroll = bankroll
-        self.seat_pref = seat_pref
-
-    def _gen_seralize(self, snoop=False):
-
-        if self.seat_prof is not None:
-            yield 'seat_pref', self.seat_pref
-
-    def serialize(self, snoop=False):
-        return dict(self._gen_seralize)
-
-    def __json__(self):
-        return self.serialize(snoop=False)
 
 
 # We need to avoid the circular references.

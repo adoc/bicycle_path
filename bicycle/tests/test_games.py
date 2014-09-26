@@ -2,8 +2,8 @@ from pprint import pprint
 
 import unittest
 
+import bicycle.player
 import bicycle.games
-
 
 
 class TestSeats(unittest.TestCase):
@@ -102,11 +102,6 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[2], False)
 
 
-class TestPlayer(unittest.TestCase):
-    def test_init(self):
-        pass
-
-
 class TestTable(unittest.TestCase):
     def test_init(self):
         t1 = bicycle.games.Table()
@@ -116,13 +111,13 @@ class TestTable(unittest.TestCase):
 
     def test_sit(self):
         t1 = bicycle.games.Table()
-        p1 = bicycle.games.Player()
-        p2 = bicycle.games.Player()
-        p3 = bicycle.games.Player()
-        p4 = bicycle.games.Player()
-        p5 = bicycle.games.Player()
-        p6 = bicycle.games.Player()
-        p7 = bicycle.games.Player()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
+        p5 = bicycle.player.Player()
+        p6 = bicycle.player.Player()
+        p7 = bicycle.player.Player()
 
         t1.sit(p1)
         t1.sit(p2, index=5)
@@ -152,13 +147,13 @@ class TestTable(unittest.TestCase):
 
     def test_leave(self):
         t1 = bicycle.games.Table()
-        p1 = bicycle.games.Player()
-        p2 = bicycle.games.Player()
-        p3 = bicycle.games.Player()
-        p4 = bicycle.games.Player()
-        p5 = bicycle.games.Player()
-        p6 = bicycle.games.Player()
-        p7 = bicycle.games.Player()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
+        p5 = bicycle.player.Player()
+        p6 = bicycle.player.Player()
+        p7 = bicycle.player.Player()
 
         t1.seats = bicycle.games.Seats([p1, p2, p3, p4, p5, p6])
         t1.to_play = [p7]
@@ -183,10 +178,10 @@ class TestTable(unittest.TestCase):
 
     def test_cleanup(self):
         t1 = bicycle.games.Table()
-        p1 = bicycle.games.Player()
-        p2 = bicycle.games.Player()
-        p3 = bicycle.games.Player()
-        p4 = bicycle.games.Player()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
 
         t1.seats = bicycle.games.Seats([p1, p2, p3, None])
         t1.to_play = [p4]
@@ -248,7 +243,7 @@ class TestCardTable(unittest.TestCase):
     def test_leave(self):
         t1 = bicycle.games.CardTable()
 
-        p1 = bicycle.games.Player(bankroll=1000)
+        p1 = bicycle.player.Player(bankroll=1000)
         t1.sit(p1)
         t1.wager(p1, 11)
         t1.leave(p1)
@@ -259,10 +254,10 @@ class TestCardTable(unittest.TestCase):
     def test_state_scenario_one(self):
         t1 = bicycle.games.CardTable()
 
-        p1 = bicycle.games.Player(bankroll=1000)
-        p2 = bicycle.games.Player(bankroll=1000)
-        p3 = bicycle.games.Player(bankroll=1000)
-        p4 = bicycle.games.Player(bankroll=1000)
+        p1 = bicycle.player.Player(bankroll=1000)
+        p2 = bicycle.player.Player(bankroll=1000)
+        p3 = bicycle.player.Player(bankroll=1000)
+        p4 = bicycle.player.Player(bankroll=1000)
 
         t1.sit(p1)
         t1.sit(p2)
@@ -324,19 +319,19 @@ class TestCardTable(unittest.TestCase):
 
     def test_deal_all(self):
         t1 = bicycle.games.CardTable()
-        p1 = bicycle.games.Player()
-        p2 = bicycle.games.Player()
-        p3 = bicycle.games.Player()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
 
         t1.build()
 
 
     def test_cleanup(self):
         # Not complete.
-        p1 = bicycle.games.Player()
-        p2 = bicycle.games.Player()
-        p3 = bicycle.games.Player()
-        p4 = bicycle.games.Player()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
 
         t1 = bicycle.games.CardTable()
 
