@@ -10,11 +10,9 @@ class Card(bicycle.cards.Card):
         """
         """
 
-        if self.rank < 9: # A thru 9 return value
-          return self.rank + 1
+        # A to 10 return value; J, Q, K all return 10
+        return min([self.rank + 1, 10])
 
-        elif self.rank <= 12: # 10, J, Q, K return 10
-          return 10
 
     def __eq__(self, other):
         """
