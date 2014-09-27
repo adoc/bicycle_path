@@ -7,6 +7,12 @@ import bicycle.player
 import bicycle.table
 
 
+try:
+    range = xrange
+except NameError:
+    pass
+
+
 class TestSeats(unittest.TestCase):
     def test_init(self):
         s1 = bicycle.table.Seats(6)
@@ -103,6 +109,44 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[2], False)
 
 
+class TestRotatingDealer(unittest.TestCase):
+    def test_deal_iter(self):
+        s1 = bicycle.table.RotatingDealer(6)
+        s1[0] = 0
+        s1[1] = 1
+        s1[2] = 2
+        s1[3] = 3
+        s1[4] = 4
+        s1[5] = 5
+
+        s1.increment()
+        self.assertEqual(list(s1), [1,2,3,4,5,0])
+        s1.increment()
+        self.assertEqual(list(s1), [2,3,4,5,0,1])
+        s1.increment()
+        self.assertEqual(list(s1), [3,4,5,0,1,2])
+        s1.increment()
+        self.assertEqual(list(s1), [4,5,0,1,2,3])
+        s1.increment()
+        self.assertEqual(list(s1), [5,0,1,2,3,4])
+        s1.increment()
+        self.assertEqual(list(s1), [0,1,2,3,4,5])
+        self.assertEqual(s1._offset, 0)
+
+    def test_increment(self):
+        pass
+
+    def test_rotate(self):
+        pass
+
+
+
+class TestRandomDealer(unittest.TestCase):
+    def test_rotate(self):
+        pass
+
+
+
 class TestTable(unittest.TestCase):
     def test_init(self):
         t1 = bicycle.table.Table()
@@ -175,7 +219,8 @@ class TestTable(unittest.TestCase):
 
     def test_resolve(self):
         t1 = bicycle.table.Table()
-        self.assertRaises(NotImplementedError, t1.resolve)
+
+        # self.assertRaises(NotImplementedError, t1.resolve)
 
     def test_cleanup(self):
         t1 = bicycle.table.Table()
@@ -232,56 +277,12 @@ class TestCardTable(unittest.TestCase):
     def test_init(self):
         t1 = bicycle.table.CardTable()
 
-        self.assertEqual(t1.hands, bicycle.table.Seats(t1.num_seats, base_obj_factory=bicycle.card.Cards))
+        self.assertEqual(t1.hands, bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards))
         #self.assertEqual(t1.wagers, bicycle.table.Seats(t1.num_seats, base_obj=0)
-        self.assertTrue(not any(t1.wagers))
         self.assertEqual(t1.shoe, bicycle.card.Cards())
         self.assertEqual(t1.discard, bicycle.card.Cards())
-        self.assertEqual(t1.wager_func, bicycle.table.wager)
-        self.assertEqual(t1.collect_func, bicycle.table.collect)
-        self.assertEqual(t1.to_wager, {})
 
-    def test_leave(self):
-        t1 = bicycle.table.CardTable()
 
-        p1 = bicycle.player.Player(bankroll=1000)
-        t1.sit(p1)
-        t1.wager(p1, 11)
-        t1.leave(p1)
-
-        self.assertNotIn(p1, t1.to_wager)
-
-    # Functional test?? Move this!
-    def test_state_scenario_one(self):
-        t1 = bicycle.table.CardTable()
-
-        p1 = bicycle.player.Player(bankroll=1000)
-        p2 = bicycle.player.Player(bankroll=1000)
-        p3 = bicycle.player.Player(bankroll=1000)
-        p4 = bicycle.player.Player(bankroll=1000)
-
-        t1.sit(p1)
-        t1.sit(p2)
-        t1.sit(p3)
-        t1.sit(p4)
-        t1.wager(p1, 11)
-        t1.wager(p2, 12)
-        t1.wager(p3, 13)
-        t1.wager(p4, 14)
-        t1.leave(p3)
-        t1.cleanup()
-
-        self.assertEqual(t1.to_wager, {})
-        self.assertEqual(t1.seat_prefs, {})
-        self.assertEqual(t1.seats, [p1, p2, p4, None, None, None])
-
-        self.assertEqual(t1.wagers[0], 11)
-        self.assertEqual(t1.wagers[1], 12)
-        self.assertEqual(t1.wagers[2], 14)
-
-        # HERE!
-        # pprint(t1.__dict__)
-        # assert False
 
     def test_iter(self):
         pass
@@ -297,10 +298,10 @@ class TestCardTable(unittest.TestCase):
         t1 = bicycle.table.CardTable()
 
         t1.build()
-        bicycle.card.deal_all(t1.shoe, t1.discard)
+        t1.shoe.deal_all(t1.discard)
         self.assertEqual(len(t1.shoe), 0)
         self.assertEqual(len(t1.discard), 52)
-        self.assertEqual(t1.discard[0], bicycle.card.Card(suit=3, rank=12))
+        self.assertEqual(t1.discard[0], bicycle.card.Card(suit=0, rank=0))
 
         t1.pickup()
         self.assertEqual(len(t1.shoe), 52)
@@ -343,3 +344,53 @@ class TestCardTable(unittest.TestCase):
         t1.cleanup()
 
 
+class TestCardWagerTable(unittest.TestCase):
+    def test_init(self):
+        t1 = bicycle.table.WagerCardTable()
+
+        self.assertTrue(not any(t1.wagers))
+        self.assertEqual(t1.wager_func, bicycle.table.wager)
+        self.assertEqual(t1.collect_wager_func, bicycle.table.collect)
+        self.assertEqual(t1.to_wager, {})
+
+    def test_leave(self):
+        t1 = bicycle.table.WagerCardTable()
+
+        p1 = bicycle.player.Player(bankroll=1000)
+        t1.sit(p1)
+        t1.wager(p1, 11)
+        t1.leave(p1)
+
+        self.assertNotIn(p1, t1.to_wager)
+
+    # Functional test?? Move this!
+    def test_state_scenario_one(self):
+        t1 = bicycle.table.WagerCardTable()
+
+        p1 = bicycle.player.Player(bankroll=1000)
+        p2 = bicycle.player.Player(bankroll=1000)
+        p3 = bicycle.player.Player(bankroll=1000)
+        p4 = bicycle.player.Player(bankroll=1000)
+
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.sit(p3)
+        t1.sit(p4)
+        t1.wager(p1, 11)
+        t1.wager(p2, 12)
+        t1.wager(p3, 13)
+        t1.wager(p4, 14)
+        t1.leave(p3)
+        t1.cleanup()
+
+        self.assertEqual(t1.to_wager, {})
+        self.assertEqual(t1.seat_prefs, {})
+        self.assertEqual(t1.seats, [p1, p2, p4, None, None, None])
+
+        self.assertEqual(t1.wagers[0], 11)
+        self.assertEqual(t1.wagers[1], 12)
+        self.assertEqual(t1.wagers[2], 14)
+
+        # HERE!
+        # pprint(t1.__dict__)
+        # assert False

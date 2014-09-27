@@ -77,6 +77,10 @@ class TestCardClass(unittest.TestCase):
         self.assertFalse(c.private)
         self.assertTrue(c.up)
 
+    def test_int(self):
+        c = bicycle.card.Card.from_str('AD')
+        self.assertEqual(int(c), 1)
+
     def test_eq(self):
         c1 = bicycle.card.Card.from_str('AS')
         c2 = bicycle.card.Card.from_str('AS')
@@ -130,9 +134,6 @@ class TestCardClass(unittest.TestCase):
         c = bicycle.card.Card.from_str('KC', up=True)
         self.assertEqual(c.__json__(), 'KC')
 
-    def test_iter(self):
-        pass
-
     def test_repr(self):
         pass
 
@@ -145,6 +146,28 @@ class TestCards(unittest.TestCase):
         self.assertIsInstance(h, list)
         self.assertEqual(h.initlen, 0)
 
+    def test_int(self):
+        h = bicycle.card.Cards()
+        h.build()
+        self.assertEqual(int(h), 364)
+
+    def test_build(self):
+        h = bicycle.card.Cards()
+        h.build()
+        self.assertEqual(len(h), 52)
+        self.assertEqual(h.initlen, 52)
+        h.build()
+        self.assertEqual(len(h), 104)
+        self.assertEqual(h.initlen, 104)
+        self.assertRaises(AssertionError,
+                          lambda: h.build(card_cls=bicycle.blackjack.card.Card))
+
+    def test_shuffle(self):
+        pass
+
+    def test_deal(self):
+        pass
+
     def test_serialize(self):
         pass
 
@@ -155,5 +178,6 @@ class TestCards(unittest.TestCase):
 class TestActions(unittest.TestCase):
 
     def test_build(self):
-        d = bicycle.card.build(bicycle.card.Cards())
+        #d = bicycle.card.build(bicycle.card.Cards())
         
+        d = bicycle.card.Card.build()

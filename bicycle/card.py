@@ -12,7 +12,27 @@ from bicycle import random      # Always import ``random`` from the
                                 #   ``bicycle`` module as it provides
                                 #   extra entropy.
 
+shuffle = random.shuffle
 
+
+# Exceptions
+# ==========
+class DeckEmpty(Exception):
+    """
+    """
+
+    pass
+
+
+class DeckLow(Exception):
+    """
+    """
+
+    pass
+
+
+# Base Class
+# ==========
 class DeckTypeStandard(object):
     """Contains the fundamental state of a standard playing deck.
     (i.e., Suits and Ranks.)
@@ -53,6 +73,9 @@ class DeckTypeStandard(object):
         return self.__suits[suit_index]
 
 
+
+# Card Class
+# ==========
 @functools.total_ordering
 class Card(object):
     """ A Lonely Card.
@@ -70,6 +93,12 @@ class Card(object):
         self.rank = rank
         self.up = up        # Card is face up and can be seen by all observers.
         self.private = private # Possibly deprecating this usage.
+
+    @classmethod
+    def build(cls, deal_idx=0, **kwa):
+        """Build a deck based on this class of `Card`.
+        """
+        return Cards(deal_idx).build(card_cls=cls, **kwa)
 
     @classmethod
     def from_str(cls, string, deck_type=DeckTypeStandard, **kwa):
@@ -97,17 +126,24 @@ class Card(object):
                     deck_type.ranks_index(rankstr), deck_type=deck_type,
                     **kwa)
 
+    def __int__(self):
+        """Return "Face" value. (11, 12, 13 for J, Q, K.)
+        """
+
+        return self.rank + 1
+
     def __lt__(self, other):
+        """Less Than. Based on rank only.
+        """
+
         return self.rank < other.rank
 
     def __eq__(self, other):
+        """Equivalence. Base on rank only.
+        """
+
         return self.rank == other.rank
 
-    def __iter__(self):
-        # This has been reversed to be more logical with the rest of teh class.
-        # Is this even used??? or needed?
-        yield self.rank
-        yield self.suit
 
     def serialize(self, snoop=False):
         """
@@ -132,14 +168,79 @@ class Card(object):
                     (self.rank, self.suit, self.serialize(snoop=True)))
 
 
+# Cards Collection
+# ================
 class Cards(list):
     """ A list of ``Card``s
     """
 
-    def __init__(self):
+    def __init__(self, deal_idx=0):
+        """
+        params
+        ------
+        deal_idx    (int)   0 or -1 indicating dealing from the top or
+                            bottom respectively.
+        """
         list.__init__(self)
         self.initlen = 0
+        assert -1 <= deal_idx <= 0, "`index` must be 0 or -1."
+        self._deal_idx = deal_idx
 
+    def __int__(self):
+        """Sum all the cards in the list.
+        """
+        return sum(int(val) for val in self)
+
+    def build(self, numdecks=1, card_cls=Card, deck_type=DeckTypeStandard,
+              do_shuffle=False):
+        """Build a  ``deck`` or Shoe.
+        """
+        deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
+        for _ in range(numdecks):
+            for suit, rank in deck_type.build():
+                self.append(card_cls(suit, rank, deck_type=deck_type))
+
+        assert all(map(lambda obj: isinstance(obj, card_cls), self)), ("This "
+            "cards list may not contain mixed `card_cls` types.")
+
+        self.initlen = len(self)
+        if do_shuffle is True:
+            return shuffle(self)
+        else:
+            return self
+
+    def shuffle(self):
+        """
+        """
+        return shuffle(self)
+
+    def deal(self, target, flip=False, up=None):
+        """Deal a card from the ``deck`` to the ``target``.
+        """
+        
+        try:
+            card = self.pop(self._deal_idx)
+        except IndexError:
+            raise DeckEmpty("Cannot deal from an empty deck.")
+        else:
+            if flip is True:
+                card.up = not card.up
+            if up is not None:
+                card.up = up
+            target.append(card)
+
+    def deal_n(self, target, n, **kwa):
+        for _ in range(n):
+            self.deal(target, **kwa)
+
+    def deal_all(self, target, **kwa):
+        while True:
+            try:
+                self.deal(target, **kwa)
+            except DeckEmpty:
+                break
+
+    # Might remove these.
     def serialize(self, snoop=False):
         """ provides serialization to the class. for json encoding. """
         return [card.serialize(snoop=snoop) for card in self]
@@ -149,72 +250,6 @@ class Cards(list):
 
     def __repr__(self):
         return "Cards(%s)" % ','.join(self.serialize(snoop=True))
-
-
-class DeckEmpty(Exception):
-    """
-    """
-
-    pass
-
-
-class DeckLow(Exception):
-    """
-    """
-
-    pass
-
-
-shuffle = random.shuffle
-
-
-def build(deck, numdecks=1, card_cls=Card, deck_type=DeckTypeStandard, do_shuffle=False):
-    """Build a  ``deck`` or Shoe.
-    """
-    deck_type = inspect.isclass(deck_type) and deck_type() or deck_type
-    for _ in range(numdecks):
-        for suit, rank in deck_type.build():
-            deck.append(card_cls(suit, rank, deck_type=deck_type))
-
-    deck.initlen += len(deck)
-    if do_shuffle is True:
-        return shuffle(deck)
-    else:
-        return deck
-
-
-def wipe(cards):
-    cards.wipe()
-
-
-def check(cards, threshold=1):
-    """Check the cards based on a ``threshold`` factor of its original
-    length.
-    """
-
-    return len(cards) < threshold * cards.initlen
-
-
-# These deal funcs are simple and obvious now, but might include card
-#   state changes which makes more sense.
-
-def deal(deck, hand, iterations=1, do_check=False):
-    """Deal a card from the ``deck`` to the ``hand``.
-    """
-
-    try:
-        for _ in range(iterations):
-            hand.append(deck.pop())
-    except IndexError: # deck.pop should be the only thing that raises
-                       # IndexError, but be wary.
-        raise DeckEmpty("Cannot deal from an empty deck.")
-
-def deal_all(source, target):
-    try:
-        while True:
-            target.append(source.pop())
-    except IndexError:
-        pass
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

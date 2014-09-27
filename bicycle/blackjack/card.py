@@ -40,7 +40,7 @@ class Hand(bicycle.card.Cards):
     def __int__(self):
         """
         """
-        s = sum(int(val) for val in self)
+        s = bicycle.card.Cards.__int__(self)
 
         if s <= 11 and ace in self:
             s += 10
@@ -54,8 +54,7 @@ class Hand(bicycle.card.Cards):
 
         return len(self) == 2 and int(self) == 21
 
-
-build = functools.partial(bicycle.card.build, card_cls=Card)
+    # Do we do "bust", "splitable", etc here??
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

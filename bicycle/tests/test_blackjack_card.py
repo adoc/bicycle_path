@@ -141,7 +141,7 @@ class TestBuild(unittest.TestCase):
     def test_build(self):
         s1 = bicycle.card.Cards()
 
-        bicycle.blackjack.card.build(s1)
+        s1 = bicycle.blackjack.card.Card.build()
 
         for c in s1:
             self.assertIsInstance(c, bicycle.blackjack.card.Card)
