@@ -195,10 +195,13 @@ class RandomDealer(RotatingDealer):
         self._offset = self.index(random.choice(self))
 
 
-
 class Table(object):
     """Handles players, seat positions, waiting to play list, bets??
     """
+
+    # For (de)marshaling.
+    __persistent_keys__ = ['to_play', 'to_leave', 'seats', 'seat_prefs']
+    __view_keys__ = ['to_play', 'seats']
 
     def __init__(self, num_seats=6, to_play=None, seat_prefs=None,
                  seats_cls=Seats):
@@ -211,23 +214,36 @@ class Table(object):
         seat_prefs  (dict)  Player instance as key to integer seat
                             position preference.
         seats_cls   (Seats) Pass `RotatingDealer` or other `Seats`
-                            subclasses. Implement 
+                            subclasses. Implement
+
+        iterators
+        ---------
+        __iter__
+
+        actions/events
+        --------------
+        rotate_deal
+        leave
+        sit
+        resolve
+        _handle_seating
+        cleanup
+
+        serialization
+        -------------
+        serialize
+        __json__
         """
-        # Instance Vars.
-        # self.shoe
 
         # Queues.
         self.to_play = to_play or []
         self.to_leave = []
+
         # Position states.
         self.seats = seats_cls(num_seats)
 
         # Object metadata.
         self.seat_prefs = seat_prefs or {}
-
-    # For (de)marshaling.
-    __persistent_keys__ = ['to_play', 'to_leave', 'seats', 'seat_prefs']
-    __view_keys__ = ['to_play', 'seats']
 
     def __iter__(self):
         """
@@ -236,27 +252,6 @@ class Table(object):
             yield seat
 
     # ----- Actions/Events
-    def rotate_deal(self):
-        """
-        """
-        self.seats.increment()
-
-    def leave(self, player):
-        """
-        """
-
-        # Remove from seat position preferences.
-        if player in self.seat_prefs:
-            del self.seat_prefs[player]
-
-        # Remove from to_play queue.
-        if player in self.to_play:
-            self.to_play.remove(player)
-
-        # Remove from seats.
-        if player in self.seats:
-            self.to_leave.append(player)
-
     def sit(self, player, index=None):
         """
         """
@@ -274,6 +269,27 @@ class Table(object):
             self.seat_prefs[player] = index  # Player's seat preference
                                              # if any.
         self.to_play.append(player)
+
+    def leave(self, player):
+        """Queue the player to leave this table.
+        """
+
+        # Remove from seat position preferences.
+        if player in self.seat_prefs:
+            del self.seat_prefs[player]
+
+        # Remove from `to_play` queue.
+        if player in self.to_play:
+            self.to_play.remove(player)
+
+        # Put in `to_leave` queue.
+        if player in self.seats:
+            self.to_leave.append(player)
+
+    def rotate_deal(self):
+        """
+        """
+        self.seats.increment()
 
     def resolve(self):
         """Resolve the hands.

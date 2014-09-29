@@ -140,19 +140,38 @@ class TestRotatingDealer(unittest.TestCase):
         pass
 
 
-
 class TestRandomDealer(unittest.TestCase):
     def test_rotate(self):
         pass
 
 
-
 class TestTable(unittest.TestCase):
+    def test_attrs(self):
+        t1 = bicycle.table.Table()
+        self.assertEqual(t1.__persistent_keys__, ['to_play', 'to_leave',
+                                                  'seats', 'seat_prefs'])
+        self.assertEqual(t1.__view_keys__, ['to_play', 'seats'])
+
     def test_init(self):
         t1 = bicycle.table.Table()
         self.assertEqual(len(t1.seats), 6)
         self.assertEqual(t1.to_play, [])
         self.assertIsInstance(t1.seats, bicycle.table.Seats)
+
+    def test_iter(self):
+        t1 = bicycle.table.Table()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
+
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.sit(p3)
+        t1.sit(p4)
+        t1.cleanup()
+
+        self.assertEqual(list(t1), [p1, p2, p3, p4, None, None])
 
     def test_sit(self):
         t1 = bicycle.table.Table()
@@ -188,7 +207,6 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t1.seats[2], p4)
         self.assertEqual(t1.seats[3], p5)
         self.assertEqual(t1.seats[4], p6)
-        
 
     def test_leave(self):
         t1 = bicycle.table.Table()
@@ -217,12 +235,29 @@ class TestTable(unittest.TestCase):
         self.assertNotIn(p5, t1.seats)
         self.assertNotIn(p4, t1.seats)
 
+    def test_rotate_deal(self):
+        t1 = bicycle.table.Table(seats_cls=bicycle.table.RotatingDealer)
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
+
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.sit(p3)
+        t1.sit(p4)
+        t1.cleanup()
+
+        t1.rotate_deal()
+
+        self.assertEqual(list(t1), [p2, p3, p4, None, None, p1])
+
     def test_resolve(self):
         t1 = bicycle.table.Table()
 
-        # self.assertRaises(NotImplementedError, t1.resolve)
+        self.assertRaises(NotImplementedError, t1.resolve)
 
-    def test_cleanup(self):
+    def test_handle_seating(self):
         t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
@@ -232,8 +267,19 @@ class TestTable(unittest.TestCase):
         t1.seats = bicycle.table.Seats([p1, p2, p3, None])
         t1.to_play = [p4]
 
-        t1.cleanup()
+        t1._handle_seating()
         self.assertIn(p4, t1.seats)
+
+    def test_cleanup(self):
+        self.test_handle_seating()
+
+
+    def test_serialize(self):
+        pass
+
+
+    def test_json(self):
+        pass
 
 
 class TestWager(unittest.TestCase):
@@ -390,7 +436,3 @@ class TestCardWagerTable(unittest.TestCase):
         self.assertEqual(t1.wagers[0], 11)
         self.assertEqual(t1.wagers[1], 12)
         self.assertEqual(t1.wagers[2], 14)
-
-        # HERE!
-        # pprint(t1.__dict__)
-        # assert False
