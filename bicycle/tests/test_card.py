@@ -151,6 +151,29 @@ class TestCards(unittest.TestCase):
         h.build()
         self.assertEqual(int(h), 364)
 
+    def test_diff_check(self):
+        # There are more checks that can be put here.
+        h = bicycle.card.Cards()
+
+        self.assertTrue(h.diff_check(1.0))
+        self.assertTrue(h.diff_check(0.0))
+
+        h.build()
+
+        self.assertTrue(h.diff_check(1.0))
+        self.assertFalse(h.diff_check(0.0))
+
+        h.pop()
+
+        self.assertTrue(h.diff_check(1.0))
+        self.assertFalse(h.diff_check(0.0))
+
+        h.discard([])
+
+        self.assertTrue(h.diff_check(1.0))
+        self.assertTrue(h.diff_check(0.0))
+
+
     def test_build(self):
         h = bicycle.card.Cards()
         h.build()

@@ -245,13 +245,16 @@ class Table(object):
         # Object metadata.
         self.seat_prefs = seat_prefs or {}
 
+    # Iterators
+    # =========
     def __iter__(self):
         """
         """
         for seat in self.seats:
             yield seat
 
-    # ----- Actions/Events
+    # Actions/Events
+    # ==============
     def sit(self, player, index=None):
         """
         """
@@ -297,31 +300,27 @@ class Table(object):
 
         raise NotImplementedError()
 
-    def _handle_seating(self):
-        """Unseats players in the `to_leave` queue.
-        Sits players in the `to_play` queue.
+
+    def prepare(self):
+        """Seat the waiting players in the `to_play` queue.
         """
-
-        # Remove players wanting to leave.
-        for player in self.to_leave:
-            self.seats.remove(player)
-
-        # Seat the waiting players.
-        def cleanup_to_play():
+        def seat_to_play():
             if self.to_play and None in self.seats:
                 player = self.to_play.pop(0)
                 if player in self.seat_prefs:
                     self.seats.insert(self.seat_prefs.pop(player), player)
                 else:
                     self.seats.insert(None, player)
-                cleanup_to_play()
-        cleanup_to_play()
+                seat_to_play()
+        seat_to_play()
 
     def cleanup(self):
-        """
+        """Unseats players in the `to_leave` queue.
         """
 
-        self._handle_seating()
+        for player in self.to_leave:
+            self.seats.remove(player)
+
 
     # Removing in lieu of __presistant_keys && __views_keys
     def serialize(self, **kwa):
@@ -345,7 +344,7 @@ class CardTable(Table):
         """
         """
 
-        Table.__init__(self, num_seats=num_seats, **kwa)
+        Table.__init__(self, num_seats=num_seats, seats_cls=seats_cls, **kwa)
 
         # States that clear each game.
         self.hands = seats_cls(num_seats,
@@ -357,7 +356,8 @@ class CardTable(Table):
 
         self.card_cls = card_cls
 
-    # ===== Iterators
+    # Iterators
+    # =========
     def __iter__(self):
         """Basic iterator for the Table instance. Yields the `player`,
         `hand`, `wager` tuple.
@@ -379,13 +379,6 @@ class CardTable(Table):
             if player:
                 yield player, hand
 
-    def rotate_deal(self):
-        """
-        """
-
-        self.hands.increment()
-        Table.rotate_deal(self)
-
     # Card/Shoe Actions
     # -----------------
     # Most of these methods are candidates to be placed elsewhere.
@@ -395,24 +388,30 @@ class CardTable(Table):
         """
         """
         self.shoe.build(card_cls=self.card_cls, **kwa)
-        #bicycle.card.build(self.shoe, **kwa)
 
-    # also might go elsewhere.
     def shuffle(self):
-        bicycle.card.shuffle(self.shoe)
+        self.shoe.shuffle()
 
     def pickup(self):
         """Pickup all the cards from the discard and deal them in to the shoe
         """
 
-        self.discard.deal_all(self.shoe)
+        self.discard.discard(self.shoe)
 
-    # Might go elsewhere. or be replaced.
     def deal_all(self):
         """
         """
-        for args in self._deal_all_iter:
-            bicycle.card.deal(self.shoe, args[1])
+        # _deal_all_iter can return (player, hand) or (player, hand, wager)
+        #   depending on the class implementation.
+        for args in self._deal_all_iter():
+            self.shoe.deal(args[1])
+
+    def rotate_deal(self):
+        """
+        """
+
+        self.hands.increment()
+        Table.rotate_deal(self)
 
     # Table Events
     # ------------
@@ -425,30 +424,37 @@ class CardTable(Table):
         return sorted(self.hands,
                        key=lambda hand: int(hand))
 
-    # Cleanup
-    # -------
-    def _discard_hands(self):
+    def prepare(self):
+        """Check the shoe.
+        """
+
+        Table.prepare(self)
+
+        if len(self.shoe) + len(self.discard) == 0:
+            self.build()
+            self.shuffle()
+
+        if self.shoe.diff_check(0.0) is True:
+            self.pickup()
+            self.shuffle()
+
+    def cleanup(self):
         """Discard all players hands.
         """
 
         for player, hand in CardTable.__iter__(self):
             if hand:
-                bicycle.card.deal_all(hand, self.discard)
+                hand.discard(self.discard)
 
-    def cleanup(self):
-        """
-        * Be aware this clears all hands every game.
-        """
-
-        self._discard_hands()
-        self._handle_seating()
+        Table.cleanup(self)
 
 
-class WagerCardTable(CardTable):
+class WagerTableMixin(object):
+    """
+    """
 
     def __init__(self,  num_seats=6, wager_cls=Wager, wager_func=wager,
                  collect_wager_func=collect, seats_cls=Seats, **kwa):
-        CardTable.__init__(self, num_seats=num_seats, seats_cls=seats_cls, **kwa)
 
         self.wagers = seats_cls(num_seats,
                                       base_obj_factory=wager_cls)
@@ -457,20 +463,11 @@ class WagerCardTable(CardTable):
         self.collect_wager_func = collect_wager_func
         self.to_wager = {}
 
+    # Iterators
+    # =========
     def __iter__(self):
         for seat, hand, wager in zip(self.seats, self.hands, self.wagers):
             yield seat, hand, wager
-
-    def _collect_wagers(self):
-        for player, _, wager in self:
-            if player and wager:
-                self.collect_func(player, wager.amount)
-                wager.amount = 0
-
-    def _place_wagers(self):
-        for player, _, wager in self:
-            if player in self.to_wager:
-                wager.amount = self.to_wager.pop(player)
 
     # Player Actions
     # --------------
@@ -481,7 +478,7 @@ class WagerCardTable(CardTable):
         if player in self.to_wager:
             del self.to_wager[player]
 
-        Table.leave(self, player)
+        super(WagerTableMixin, self).leave(player)
 
     def wager(self, player, amount):
         """Queue up a wager.
@@ -489,16 +486,6 @@ class WagerCardTable(CardTable):
 
         self.to_wager[player] = self.to_wager.get(player, 0) + amount
         return amount
-
-    def cleanup(self):
-        """
-        Be aware this clears all hands every game.
-        """
-
-        self._collect_wagers()
-        self._discard_hands()
-        self._handle_seating()
-        self._place_wagers()
 
     def resolve(self):
         """
@@ -517,3 +504,30 @@ class WagerCardTable(CardTable):
         pot = sum([wager for wager in wagers if wager is not None])
 
         winnings = pot / len(winning_hands)
+
+    def prepare(self):
+        """
+        """
+
+        super(WagerTableMixin, self).prepare()
+
+        for player, _, wager in self:
+            if player in self.to_wager:
+                wager.amount = self.to_wager.pop(player)
+
+    def cleanup(self):
+        """
+        """
+
+        for player, _, wager in self:
+            if player and wager:
+                self.collect_func(player, wager.amount)
+                wager.amount = 0
+
+        super(WagerTableMixin, self).cleanup()
+
+
+class WagerCardTable(WagerTableMixin, CardTable):
+    def __init__(self):
+        CardTable.__init__(self)
+        WagerTableMixin.__init__(self)

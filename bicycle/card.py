@@ -191,6 +191,9 @@ class Cards(list):
         """
         return sum(int(val) for val in self)
 
+    def diff_check(self, threshold):
+        return len(self) <= self.initlen * threshold
+
     def build(self, numdecks=1, card_cls=Card, deck_type=DeckTypeStandard,
               do_shuffle=False):
         """Build a  ``deck`` or Shoe.
@@ -233,7 +236,7 @@ class Cards(list):
         for _ in range(n):
             self.deal(target, **kwa)
 
-    def deal_all(self, target, **kwa):
+    def discard(self, target, **kwa):
         while True:
             try:
                 self.deal(target, **kwa)
