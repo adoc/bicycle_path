@@ -368,10 +368,11 @@ class TestCardTable(unittest.TestCase):
         t1.sit(p4)
         t1.prepare()
 
-        deal = [p1, p2, p3, p4]
         hands = t1.hands[:4]
 
-        self.assertEqual(list(t1._deal_all_iter()), zip(deal, hands))
+
+        self.assertEqual(list(t1._deal_all_iter()),
+                         zip(hands, [None, None, None, None]))
 
     def test_build(self):
         t1 = bicycle.table.CardTable()
@@ -471,9 +472,15 @@ class TestCardTable(unittest.TestCase):
             self.assertEqual(len(h), 0)
 
 
+class WagerCardTable(bicycle.table.WagerTableMixin, bicycle.table.CardTable):
+    def __init__(self):
+        bicycle.table.CardTable.__init__(self)
+        bicycle.table.WagerTableMixin.__init__(self)
+
+
 class TestCardWagerTable(unittest.TestCase):
     def test_init(self):
-        t1 = bicycle.table.WagerCardTable()
+        t1 = WagerCardTable()
 
         self.assertTrue(not any(t1.wagers))
         self.assertEqual(t1.wager_func, bicycle.table.wager)
@@ -484,7 +491,7 @@ class TestCardWagerTable(unittest.TestCase):
         pass
 
     def test_leave(self):
-        t1 = bicycle.table.WagerCardTable()
+        t1 = WagerCardTable()
 
         p1 = bicycle.player.Player(bankroll=1000)
         t1.sit(p1)
@@ -514,7 +521,7 @@ class TestFunctional(unittest.TestCase):
 
     # Functional test?? Move this!
     def test_state_scenario_one(self):
-        t1 = bicycle.table.WagerCardTable()
+        t1 = WagerCardTable()
 
         p1 = bicycle.player.Player(bankroll=1000)
         p2 = bicycle.player.Player(bankroll=1000)

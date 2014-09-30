@@ -340,7 +340,7 @@ class CardTable(Table):
     """
 
     def __init__(self, num_seats=6, card_cls=bicycle.card.Card,
-                 seats_cls=Seats, **kwa):
+                 hand_cls=bicycle.card.Cards, seats_cls=Seats, **kwa):
         """
         """
 
@@ -348,13 +348,15 @@ class CardTable(Table):
 
         # States that clear each game.
         self.hands = seats_cls(num_seats,
-                               base_obj_factory=bicycle.card.Cards)
+                               base_obj_factory=hand_cls)
 
         # States that reset based on card threshold.
         self.shoe = bicycle.card.Cards()
         self.discard = bicycle.card.Cards()
 
         self.card_cls = card_cls
+
+        self.reshuffle_threshold = 1.0
 
     # Iterators
     # =========
@@ -377,7 +379,7 @@ class CardTable(Table):
 
         for player, hand in self:
             if player:
-                yield player, hand
+                yield hand, None
 
     # Card/Shoe Actions
     # -----------------
@@ -403,8 +405,8 @@ class CardTable(Table):
         """
         # _deal_all_iter can return (player, hand) or (player, hand, wager)
         #   depending on the class implementation.
-        for args in self._deal_all_iter():
-            self.shoe.deal(args[1])
+        for hand, opts in self._deal_all_iter():
+            self.shoe.deal(hand, **(opts or {}))
 
     def rotate_deal(self):
         """
@@ -434,7 +436,7 @@ class CardTable(Table):
             self.build()
             self.shuffle()
 
-        if self.shoe.diff_check(0.0) is True:
+        if self.shoe.diff_check(self.reshuffle_threshold) is True:
             self.pickup()
             self.shuffle()
 
@@ -453,7 +455,7 @@ class WagerTableMixin(object):
     """
     """
 
-    def __init__(self,  num_seats=6, wager_cls=Wager, wager_func=wager,
+    def __init__(self, num_seats=6, wager_cls=Wager, wager_func=wager,
                  collect_wager_func=collect, seats_cls=Seats, **kwa):
 
         self.wagers = seats_cls(num_seats,
@@ -521,13 +523,9 @@ class WagerTableMixin(object):
 
         for player, _, wager in self:
             if player and wager:
-                self.collect_func(player, wager.amount)
+                self.collect_wager_func(player, wager.amount)
                 wager.amount = 0
 
         super(WagerTableMixin, self).cleanup()
 
 
-class WagerCardTable(WagerTableMixin, CardTable):
-    def __init__(self):
-        CardTable.__init__(self)
-        WagerTableMixin.__init__(self)
