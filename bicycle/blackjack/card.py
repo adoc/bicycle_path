@@ -54,6 +54,13 @@ class Hand(bicycle.card.Cards):
 
         return len(self) == 2 and int(self) == 21
 
+    @property
+    def busted(self):
+        """
+        """
+
+        return int(self) > 21
+
     # Do we do "bust", "splitable", etc here??
 
 

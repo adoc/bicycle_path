@@ -210,6 +210,48 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(list(t1), [p1, p2, p3, p4, None, None])
 
+    def test_can_sit(self):
+        t1 = bicycle.table.Table()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+
+        self.assertTrue(t1.can_sit(p1))
+        self.assertTrue(t1.can_sit(p2))
+
+        t1.sit(p1)
+        t1.sit(p2)
+        self.assertFalse(t1.can_sit(p1))
+        self.assertFalse(t1.can_sit(p2))
+
+        t1.prepare()
+        t1.cleanup()
+        t1.leave(p1)
+        self.assertFalse(t1.can_sit(p1))
+        self.assertFalse(t1.can_sit(p2))
+
+        t1.cleanup()
+        self.assertTrue(t1.can_sit(p1))
+        self.assertFalse(t1.can_sit(p2))
+
+    def test_can_leave(self):
+        t1 = bicycle.table.Table()
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+
+        self.assertFalse(t1.can_leave(p1))
+        self.assertFalse(t1.can_leave(p2))
+
+        t1.sit(p1)
+        t1.sit(p2)
+        self.assertTrue(t1.can_leave(p1))
+        self.assertTrue(t1.can_leave(p2))
+
+        t1.leave(p1)
+        t1.prepare()
+        t1.cleanup()
+        self.assertFalse(t1.can_leave(p1))
+        self.assertTrue(t1.can_leave(p2))
+
     def test_sit(self):
         t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
@@ -440,16 +482,20 @@ class TestCardTable(unittest.TestCase):
     def test_prepare(self):
         t1 = bicycle.table.CardTable()
 
-        t1.prepare()
-        init_deck = t1.shoe[:]
+        t1.prepare() # Verify shoe build.
+        deck = t1.shoe[:]
 
         self.assertEqual(len(t1.shoe), 52)
 
         t1.shoe.discard(t1.discard)
-        t1.prepare()
+        t1.prepare() # Verify pickup and reshuffle
 
         self.assertEqual(len(t1.shoe), 52)
-        self.assertNotEqual(t1.shoe, init_deck)
+        self.assertNotEqual(t1.shoe, deck)
+        deck = t1.shoe[:]
+
+        t1.prepare() # Verify reshuffle
+        self.assertNotEqual(t1.shoe, deck)
 
     def test_cleanup(self):
         t1 = bicycle.table.CardTable()

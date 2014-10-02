@@ -253,6 +253,22 @@ class Table(object):
         for seat in self.seats:
             yield seat
 
+
+    # Misc
+    def can_sit(self, player):
+        """Return True if the player may sit at this table or be queued
+        to sit.
+        """
+        return (player not in self.seats and
+                player not in self.to_play)
+
+    def can_leave(self, player):
+        """Return True if the player may leave this table or be queued
+        to leave it.
+        """
+        return player not in self.to_leave and (player in self.seats or
+                                                player in self.to_play)
+
     # Actions/Events
     # ==============
     def sit(self, player, index=None):
@@ -276,6 +292,9 @@ class Table(object):
     def leave(self, player):
         """Queue the player to leave this table.
         """
+
+        assert player not in self.to_leave
+        assert player in self.seats or player in self.to_play
 
         # Remove from seat position preferences.
         if player in self.seat_prefs:
@@ -339,7 +358,8 @@ class CardTable(Table):
     """
     """
 
-    def __init__(self, num_seats=6, card_cls=bicycle.card.Card,
+    def __init__(self, num_seats=6, reshuffle_threshold=1.0,
+                 card_cls=bicycle.card.Card,
                  hand_cls=bicycle.card.Cards, seats_cls=Seats, **kwa):
         """
         """
@@ -356,7 +376,7 @@ class CardTable(Table):
 
         self.card_cls = card_cls
 
-        self.reshuffle_threshold = 1.0
+        self.reshuffle_threshold = reshuffle_threshold
 
     # Iterators
     # =========
@@ -434,11 +454,14 @@ class CardTable(Table):
 
         if len(self.shoe) + len(self.discard) == 0:
             self.build()
-            self.shuffle()
 
         if self.shoe.diff_check(self.reshuffle_threshold) is True:
             self.pickup()
-            self.shuffle()
+
+        self.shuffle()  # Let's just shuffle every time. This should
+                        #   add a little extra entropy since the number
+                        #   of prepare calls is essentially random and
+                        #   based on player interaction.
 
     def cleanup(self):
         """Discard all players hands.
@@ -451,6 +474,7 @@ class CardTable(Table):
         Table.cleanup(self)
 
 
+# Possibly a wrapped instance than a mixin should allow for side bets.
 class WagerTableMixin(object):
     """
     """
@@ -468,8 +492,8 @@ class WagerTableMixin(object):
     # Iterators
     # =========
     def __iter__(self):
-        for seat, hand, wager in zip(self.seats, self.hands, self.wagers):
-            yield seat, hand, wager
+        for seat, wager in zip(self.seats, self.wagers):
+            yield seat, wager
 
     # Player Actions
     # --------------
@@ -485,7 +509,6 @@ class WagerTableMixin(object):
     def wager(self, player, amount):
         """Queue up a wager.
         """
-
         self.to_wager[player] = self.to_wager.get(player, 0) + amount
         return amount
 
@@ -513,7 +536,7 @@ class WagerTableMixin(object):
 
         super(WagerTableMixin, self).prepare()
 
-        for player, _, wager in self:
+        for player, wager in WagerTableMixin.__iter__(self):
             if player in self.to_wager:
                 wager.amount = self.to_wager.pop(player)
 
@@ -521,11 +544,9 @@ class WagerTableMixin(object):
         """
         """
 
-        for player, _, wager in self:
+        for player, wager in WagerTableMixin.__iter__(self):
             if player and wager:
                 self.collect_wager_func(player, wager.amount)
                 wager.amount = 0
 
         super(WagerTableMixin, self).cleanup()
-
-

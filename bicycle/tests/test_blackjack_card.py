@@ -137,6 +137,18 @@ class TestHand(unittest.TestCase):
         h3.append(bicycle.blackjack.card.Card.from_str("9H"))
         self.assertFalse(h3.blackjack)
 
+    def test_busted(self):
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("AS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertFalse(h1.busted)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("2S"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.busted)
+
 class TestBuild(unittest.TestCase):
     def test_build(self):
         s1 = bicycle.card.Cards()
