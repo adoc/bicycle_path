@@ -203,8 +203,7 @@ class Table(object):
     __persistent_keys__ = ['to_play', 'to_leave', 'seats', 'seat_prefs']
     __view_keys__ = ['to_play', 'seats']
 
-    def __init__(self, num_seats=6, to_play=None, seat_prefs=None,
-                 seats_cls=Seats):
+    def __init__(self, num_seats=6, seats_cls=Seats):
         """
         params
         ------
@@ -236,14 +235,14 @@ class Table(object):
         """
 
         # Queues.
-        self.to_play = to_play or []
+        self.to_play = []
         self.to_leave = []
 
         # Position states.
         self.seats = seats_cls(num_seats)
 
         # Object metadata.
-        self.seat_prefs = seat_prefs or {}
+        self.seat_prefs = {}
 
     # Iterators
     # =========
@@ -252,7 +251,6 @@ class Table(object):
         """
         for seat in self.seats:
             yield seat
-
 
     # Misc
     def can_sit(self, player):
@@ -319,7 +317,6 @@ class Table(object):
 
         raise NotImplementedError()
 
-
     def prepare(self):
         """Seat the waiting players in the `to_play` queue.
         """
@@ -340,7 +337,6 @@ class Table(object):
         for player in self.to_leave:
             self.seats.remove(player)
 
-
     # Removing in lieu of __presistant_keys && __views_keys
     def serialize(self, **kwa):
         """
@@ -359,24 +355,33 @@ class CardTable(Table):
     """
 
     def __init__(self, num_seats=6, reshuffle_threshold=1.0,
-                 card_cls=bicycle.card.Card,
-                 hand_cls=bicycle.card.Cards, seats_cls=Seats, **kwa):
+                 card_cls=bicycle.card.Card, hand_cls=bicycle.card.Cards,
+                 seats_cls=Seats, **kwa):
         """
         """
 
         Table.__init__(self, num_seats=num_seats, seats_cls=seats_cls, **kwa)
 
-        # States that clear each game.
+        # "hands" should be meta as well as wagers to facilitate
+        #   multiple hand. Like in the case of a blackjack split.
         self.hands = seats_cls(num_seats,
                                base_obj_factory=hand_cls)
 
-        # States that reset based on card threshold.
-        self.shoe = bicycle.card.Cards()
-        self.discard = bicycle.card.Cards()
+        self.shoe = bicycle.card.Cards()        # Dealing shoe
+        self.discard = bicycle.card.Cards()     # Discard pile
+        self.reshuffle_threshold = reshuffle_threshold
 
         self.card_cls = card_cls
 
-        self.reshuffle_threshold = reshuffle_threshold
+    @classmethod
+    def subtable(cls, table):
+        # Idea for subtable, but is full of problems.
+        subtable = cls(len(table.seats), seats_cls=table.seats.__class__)
+
+        subtable.to_play = table.to_play
+        subtable.to_leave = table.to_leave
+        subtable.seats = table.seats
+        subtable.seat_prefs = table.seat_prefs
 
     # Iterators
     # =========
@@ -400,6 +405,12 @@ class CardTable(Table):
         for player, hand in self:
             if player:
                 yield hand, None
+
+    def players(self):
+        """
+        """
+
+        pass
 
     # Card/Shoe Actions
     # -----------------
@@ -444,7 +455,7 @@ class CardTable(Table):
         # Large percentage of card games should resolve with the top N
         # hands or at least hands in a sorted order.
         return sorted(self.hands,
-                       key=lambda hand: int(hand))
+                      key=lambda hand: int(hand))
 
     def prepare(self):
         """Check the shoe.

@@ -1,3 +1,4 @@
+import itertools
 
 import bicycle.table
 
@@ -101,8 +102,8 @@ class PrepareStep(SittableGameStepMixin, GameStep):
     """
     """
 
-    timeout = 1
-    execute = True
+    __timeout__ = 1
+    to_execute = True
 
     def __init__(self, *args, **kwa):
         GameStep.__init__(self, *args, **kwa)
@@ -120,8 +121,8 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
     """One or many players are wagering.
     """
 
-    timeout = 15
-    execute = True  # Maybe base this instead on any(self.table.seats)
+    __timeout__ = 15
+    to_execute = True  # Maybe base this instead on any(self.table.seats)
 
     def __init__(self, *args, **kwa):
         GameStep.__init__(self, *args, **kwa)
@@ -140,36 +141,34 @@ class DealStep(GameStep):
     """
     """
 
-    timeout = 0
-    execute = True
+    __timeout__ = 0
+    to_execute = True
 
     def __call__(self):
         self.table.deal_all()
         return True
 
 
-# class DealStep(GameStep):
-# ????
 class PlayerStep(GameStep):
     """One or many players are acting on the game state.
     """
 
-    timeout = 15
+    __timeout__ = 15
+    to_execute = True
 
     def __call__(self):
         """
         """
 
-        # How to check for the truth state here??
-        # Possibly a to_play list on the table.
-        return True
+        raise NotImplementedError()
 
 
 class ResolveStep(GameStep):
     """Resolve the hands and wagers on the table.
     """
 
-    timeout = 10
+    __timeout__ = 10
+    to_execute = True
 
     def __call__(self):
         """
@@ -182,20 +181,12 @@ class CleanupStep(GameStep):
     """
     """
 
-    timeout = 0
+    __timeout__ = 0
+    to_execute = True
 
     def __call__(self):
         self.table.cleanup()
         return True # Cleanup always returns True??
-
-
-# Just the default "game", mainly for testing and demonstration
-#   purposes.
-# game_steps = [CleanupStep, BetStep, DealStep, ResolveStep]
-
-
-
-# This is also probably going elsewhere
 
 
 class GameState(object):
@@ -206,22 +197,11 @@ class GameState(object):
 
     __game__ = [] # Subclass to create the actual game.
 
-    def __init__(self, table):
+    def __init__(self):
         """
         """
 
-        self.table = table
         self.step = itertools.cycle(self.__game__)
-
-
-    def do(self):
-        """
-        """
-
-
-    def advance(self):
-        """
-        """
 
     # Serialization
     # =============
@@ -234,10 +214,3 @@ class GameState(object):
 
     def __json__(self):
         return self.serialize(snoop=False)
-
-
-class Engine(object):
-    """Machine all the states!
-    """
-
-    pass

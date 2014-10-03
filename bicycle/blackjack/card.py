@@ -48,11 +48,18 @@ class Hand(bicycle.card.Cards):
         return s
 
     @property
+    def twentyone(self):
+        """
+        """
+        
+        return int(self) == 21
+
+    @property
     def blackjack(self):
         """
         """
 
-        return len(self) == 2 and int(self) == 21
+        return len(self) == 2 and self.twentyone
 
     @property
     def busted(self):

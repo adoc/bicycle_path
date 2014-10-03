@@ -60,6 +60,14 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
                 yield hand, {'up': self.face_up}
         yield self.dealer_hand, {'up': True}
 
+    def _play_all_iter(self):
+        """
+        """
+
+        for player, hand, wager, _ in self:
+            if player and wager:
+                yield player, hand
+
     def cleanup(self):
         """
         """
