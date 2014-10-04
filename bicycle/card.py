@@ -33,6 +33,7 @@ class DeckLow(Exception):
 
 # Base Class
 # ==========
+
 class DeckTypeStandard(object):
     """Contains the fundamental state of a standard playing deck.
     (i.e., Suits and Ranks.)
@@ -73,15 +74,14 @@ class DeckTypeStandard(object):
         return self.__suits[suit_index]
 
 
-
 # Card Class
 # ==========
 @functools.total_ordering
 class Card(object):
     """ A Lonely Card.
           Usage:
-            Card('2C')
-            Card([suit=index],[rank=index])
+            Card(suit_index, rank_index)
+            Card.from_str('2C')
     """
 
     def __init__(self, suit, rank, up=False,
@@ -132,18 +132,17 @@ class Card(object):
 
         return self.rank + 1
 
-    def __lt__(self, other):
-        """Less Than. Based on rank only.
-        """
-
-        return self.rank < other.rank
-
     def __eq__(self, other):
         """Equivalence. Base on rank only.
         """
 
         return self.rank == other.rank
 
+    def __lt__(self, other):
+        """Less Than. Based on rank only.
+        """
+
+        return self.rank < other.rank
 
     def serialize(self, snoop=False):
         """
@@ -162,6 +161,9 @@ class Card(object):
 
     def __json__(self):
         return self.serialize()
+
+    def __persist__(self):
+        return self.serialize(snoop=True)
 
     def __repr__(self):
         return ("Card(rank=%s, suit=%s, serialize=%s)" %
@@ -183,7 +185,8 @@ class Cards(list):
         """
         list.__init__(self)
         self.initlen = 0
-        assert -1 <= deal_idx <= 0, "`index` must be 0 or -1."
+
+        assert deal_idx == 0 or deal_idx == -1, "`deal_idx` must be 0 or -1."
         self._deal_idx = deal_idx
 
     def __int__(self):
@@ -192,6 +195,10 @@ class Cards(list):
         return sum(int(val) for val in self)
 
     def diff_check(self, threshold):
+        """
+        diff_check(1.0) to determine if the deck has changed at all.
+        diff_check(0.0) to determine if the deck is empty.
+        """
         return len(self) <= self.initlen * threshold
 
     def build(self, numdecks=1, card_cls=Card, deck_type=DeckTypeStandard,
@@ -250,6 +257,9 @@ class Cards(list):
 
     def __json__(self):
         return self.serialize()
+
+    def __persist__(self):
+        return self.serialize(snoop=True)
 
     def __repr__(self):
         return "Cards(%s)" % ','.join(self.serialize(snoop=True))
