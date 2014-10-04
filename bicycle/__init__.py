@@ -1,7 +1,7 @@
 """Bicycle init module.
 """
 
-
+import collections
 import random as _random
 
 
@@ -17,7 +17,6 @@ def map_serialize(obj_iter, **kwa):
     """Map the `serialize` method of items from `obj_iter`.
     Passes keyword args.
     """
-
     return map(lambda obj: obj.serialize(**kwa), obj_iter)
 
 

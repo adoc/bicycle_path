@@ -15,6 +15,12 @@ from bicycle import random      # Always import ``random`` from the
 shuffle = random.shuffle
 
 
+try:
+    range = xrange
+except NameError:
+    pass
+
+
 # Exceptions
 # ==========
 class DeckEmpty(Exception):
@@ -166,8 +172,9 @@ class Card(object):
         return self.serialize(snoop=True)
 
     def __repr__(self):
-        return ("Card(rank=%s, suit=%s, serialize=%s)" %
-                    (self.rank, self.suit, self.serialize(snoop=True)))
+        return ("Card(rank=%s, suit=%s, serialize=%s) @ %s" %
+                    (self.rank, self.suit, self.serialize(snoop=True),
+                     hex(id(self))))
 
 
 # Cards Collection
@@ -250,19 +257,9 @@ class Cards(list):
             except DeckEmpty:
                 break
 
-    # Might remove these.
-    def serialize(self, snoop=False):
-        """ provides serialization to the class. for json encoding. """
-        return [card.serialize(snoop=snoop) for card in self]
-
-    def __json__(self):
-        return self.serialize()
-
-    def __persist__(self):
-        return self.serialize(snoop=True)
-
     def __repr__(self):
-        return "Cards(%s)" % ','.join(self.serialize(snoop=True))
+        return "Cards(%s) @ %s" % (','.join(self.serialize(snoop=True)),
+                                   hex(id(self)))
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

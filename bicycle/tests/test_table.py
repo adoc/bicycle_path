@@ -1,8 +1,6 @@
 """
 """
 
-from pprint import pprint
-
 import unittest
 
 import bicycle.card
@@ -10,10 +8,24 @@ import bicycle.player
 import bicycle.table
 
 
-try:
-    range = xrange
-except NameError:
-    pass
+
+class TestModule(unittest.TestCase):
+    def test_exceptions(self):
+        self.assertTrue(issubclass(bicycle.table.InsufficientBankroll, 
+                                   Exception))
+
+    def test_wager(self):
+        p1 = bicycle.player.Player(bankroll=1000)
+
+        self.assertEqual(bicycle.table.wager(p1, 100), 100)
+        self.assertEqual(bicycle.table.wager(p1, 900), 900)
+        self.assertRaises(bicycle.table.InsufficientBankroll, lambda: bicycle.table.wager(p1, 1))
+
+    def test_collect(self):
+        p1 = bicycle.player.Player(bankroll=0)
+
+        bicycle.table.collect(p1, 1000)
+        self.assertEqual(p1.bankroll, 1000)
 
 
 class TestWager(unittest.TestCase):
@@ -24,12 +36,12 @@ class TestWager(unittest.TestCase):
         w2 = bicycle.table.Wager(amount=1)
         self.assertEqual(w2.amount, 1)
 
-    def test_bool(self):
-        w1 = bicycle.table.Wager()
-        self.assertFalse(w1)
-
-        w2 = bicycle.table.Wager(amount=0.1)
-        self.assertTrue(w2)
+    def test_eq(self):
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=10)
+        self.assertEqual(w1, w2)
+        self.assertEqual(w1, 10)
+        self.assertEqual(w2, 10)
 
     def test_lt(self):
         w1 = bicycle.table.Wager(amount=10)
@@ -45,12 +57,28 @@ class TestWager(unittest.TestCase):
         self.assertGreater(w1, 1)
         self.assertGreater(w2, 1)
 
-    def test_eq(self):
-        w1 = bicycle.table.Wager(amount=10)
-        w2 = bicycle.table.Wager(amount=10)
-        self.assertEqual(w1, w2)
-        self.assertEqual(w1, 10)
-        self.assertEqual(w2, 10)
+    def test_bool(self):
+        w1 = bicycle.table.Wager()
+        self.assertFalse(w1)
+
+        w1 = bicycle.table.Wager(amount=0.0)
+        self.assertFalse(w1)
+
+        w1 = bicycle.table.Wager(amount=0.1)
+        self.assertTrue(w1)
+
+    def test_nonzero(self):
+        w1 = bicycle.table.Wager()
+        self.assertFalse(w1)
+
+        w1 = bicycle.table.Wager(amount=0.0)
+        self.assertFalse(w1.__nonzero__())
+
+        w1 = bicycle.table.Wager(amount=0.1)
+        self.assertTrue(w1.__nonzero__())
+
+    def test_repr(self):
+        assert False, "Should be test code here."
 
 
 class TestSeats(unittest.TestCase):
@@ -63,7 +91,6 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(len(s1), 60)
         self.assertTrue(all([item is None for item in s1]))
 
-    def test_init_base_obj(self):
         s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         self.assertEqual(len(s1), 6)
         self.assertTrue(all([item == [] for item in s1]))
@@ -71,6 +98,17 @@ class TestSeats(unittest.TestCase):
         s1 = bicycle.table.Seats(60, base_obj_factory=lambda: [])
         self.assertEqual(len(s1), 60)
         self.assertTrue(all([item == [] for item in s1]))
+
+    def test_increment(self):
+        s1 = bicycle.table.Seats(6)
+        self.assertRaises(NotImplementedError, s1.increment)
+
+    def test_base_obj(self):
+        s1 = bicycle.table.Seats(6)
+        self.assertIsNone(s1.base_obj)
+
+        s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
+        self.assertEqual(s1.base_obj, [])
 
     def test_remove(self):
         s1 = bicycle.table.Seats(6)
@@ -93,7 +131,6 @@ class TestSeats(unittest.TestCase):
         self.assertRaises(ValueError, lambda: s1.remove(True))
         self.assertRaises(ValueError, lambda: s1.remove(False))
 
-    def test_remove_base_obj(self):
         s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         s1.remove([])
         s1.remove([])
@@ -114,6 +151,9 @@ class TestSeats(unittest.TestCase):
         self.assertRaises(ValueError, lambda: s1.remove(True))
         self.assertRaises(ValueError, lambda: s1.remove(False))
 
+    def test_pop(self):
+        assert False, "Should be test code here."
+
     def test_insert(self):
         s1 = bicycle.table.Seats(6)
         s1.insert(0, True)
@@ -131,7 +171,6 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[1], True)
         self.assertEqual(s1[2], False)
 
-    def test_insert_base_obj(self):
         s1 = bicycle.table.Seats(6, base_obj_factory=lambda: [])
         s1.insert(0, True)
         s1.insert(2, False)
@@ -147,6 +186,59 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[0], True)
         self.assertEqual(s1[1], True)
         self.assertEqual(s1[2], False)
+
+    def test_serialize(self):
+        s1 = bicycle.table.Seats(6)
+        self.assertEqual(s1.serialize(), [None, None, None, None, None, None])
+
+        s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
+        self.assertEqual(s1.serialize(), [[], [], [], [], [], []])
+        self.assertEqual(s1.serialize(snoop=True), [[], [], [], [], [], []])
+
+        d = bicycle.card.Cards()
+        d.build()
+
+        d.deal(s1[0])
+        d.deal(s1[1])
+        d.deal(s1[2])
+        d.deal(s1[3])
+        d.deal(s1[4])
+        d.deal(s1[5])
+
+        self.assertEqual(s1.serialize(), [['XX'], ['XX'], ['XX'], ['XX'],
+                         ['XX'], ['XX']])
+        self.assertEqual(s1.serialize(snoop=True), [['AS'], ['2S'], ['3S'],
+                         ['4S'], ['5S'], ['6S']])
+
+    def test_json(self):
+        s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
+        d = bicycle.card.Cards()
+        d.build()
+
+        d.deal(s1[0])
+        d.deal(s1[1])
+        d.deal(s1[2])
+        d.deal(s1[3])
+        d.deal(s1[4])
+        d.deal(s1[5])
+
+        self.assertEqual(s1.__json__(), [['XX'], ['XX'], ['XX'], ['XX'],
+                         ['XX'], ['XX']])
+
+    def test_persist(self):
+        s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
+        d = bicycle.card.Cards()
+        d.build()
+
+        d.deal(s1[0])
+        d.deal(s1[1])
+        d.deal(s1[2])
+        d.deal(s1[3])
+        d.deal(s1[4])
+        d.deal(s1[5])
+
+        self.assertEqual(s1.__persist__(), [['AS'], ['2S'], ['3S'], ['4S'],
+                         ['5S'], ['6S']])
 
 
 class TestRotatingDealer(unittest.TestCase):
@@ -174,10 +266,14 @@ class TestRotatingDealer(unittest.TestCase):
         self.assertEqual(s1._offset, 0)
 
     def test_increment(self):
-        pass
+        s1 = bicycle.table.RotatingDealer(6)
+        s1.increment()
+        self.assertEqual(s1._offset, 1)
 
     def test_rotate(self):
-        pass
+        s1 = bicycle.table.RotatingDealer(6)
+        s1.rotate()
+        self.assertEqual(s1._offset, 1)
 
 
 class TestRandomDealer(unittest.TestCase):
@@ -366,11 +462,10 @@ class TestTable(unittest.TestCase):
 
 
     def test_serialize(self):
-        pass
-
+        assert False, "Should be test code here."
 
     def test_json(self):
-        pass
+        assert False, "Should be test code here."
 
 
 class TestCardTable(unittest.TestCase):
@@ -414,7 +509,6 @@ class TestCardTable(unittest.TestCase):
         t1.prepare()
 
         hands = t1.hands[:4]
-
 
         self.assertEqual(list(t1._deal_all_iter()),
                          zip(hands, [None, None, None, None]))
@@ -477,10 +571,10 @@ class TestCardTable(unittest.TestCase):
             self.assertEqual(len(h), 2)
 
     def test_rotate_deal(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_resolve(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_prepare(self):
         t1 = bicycle.table.CardTable()
@@ -537,7 +631,7 @@ class TestCardWagerTable(unittest.TestCase):
         self.assertEqual(t1.to_wager, {})
 
     def test_iter(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_leave(self):
         t1 = WagerCardTable()
@@ -549,21 +643,20 @@ class TestCardWagerTable(unittest.TestCase):
 
         self.assertNotIn(p1, t1.to_wager)
 
-
     def test_wager(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_resolve(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_collect_wagers(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_place_wagers(self):
-        pass
+        assert False, "Should be test code here."
 
     def cleanup(self):
-        pass
+        assert False, "Should be test code here."
 
 
 class TestFunctional(unittest.TestCase):

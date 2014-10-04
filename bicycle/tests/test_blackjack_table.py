@@ -132,10 +132,11 @@ class TestFunctional(unittest.TestCase):
 
         t1.cleanup()
 
-        pprint(t1.hands[0].serialize())
-        pprint(t1.dealer_hand.serialize())
 
-        #assert False
+        # pprint(t1.hands[0].serialize())
+        # pprint(t1.dealer_hand.serialize())
+
+        # assert False
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

@@ -1,24 +1,6 @@
-"""Games base.
+"""Playing Table and Card Table module.
 """
 
-# This should cover 99% of playing card games.
-
-# Cleanup Step
-#   Check deck state (reshuffle deck if needed)
-# Bet Step
-#   Take bets from players.
-# Deal Step
-#   Deal to active players.
-# Resolve Step
-#   Resolve Hands and Bets.
-
-
-# These should both fire events and receive events??
-# asyncio and other async compatibility should be considered but
-#   let's see if we can avoid any hard dependencies.
-
-
-import inspect
 import functools
 import itertools
 
@@ -30,7 +12,6 @@ from bicycle import random, map_serialize
 try:
     range = xrange
 except NameError:
-    # Already Python 3 (hopefully) as `xrange` doesn't exist.
     pass
 
 
@@ -40,49 +21,11 @@ class InsufficientBankroll(Exception):
     pass
 
 
-# Should wagers be equivalent based on amount?
-# 
-@functools.total_ordering
-class Wager(object):
-    """Wager "spot" on a table.
-    """
-    def __init__(self, amount=0):
-        self.amount = amount
-
-    def __lt__(self, other):
-        if isinstance(other, Wager):
-            return self.amount < other.amount
-        else:
-            return self.amount < other
-
-    def __eq__(self, other):
-        if isinstance(other, Wager):
-            return self.amount == other.amount
-        else:
-            return self.amount == other
-
-    def __nonzero__(self):
-        return self.amount > 0
-
-    __bool__ = __nonzero__
-
-    def __repr__(self):
-        return "Wager(amount=%s) @ %s" % (self.amount, id(self))
-
-
-class SplitWager(Wager):
-    """A wager that may be split in to several parts.
-    """
-
-    pass
-
-
 # These will be accessing the data model in other iterations of this func.
 # Reason being is that player data state can be handled 
 # outside the scope or the purpose of this module, but it must
 # be accounted for properly to ensure the integrity and fidelity
 # of the game.
-
 def wager(player, amount):
     """
     """
@@ -90,6 +33,9 @@ def wager(player, amount):
     if player.bankroll >= amount:
         player.bankroll -= amount
         return amount
+    else:
+        raise InsufficientBankroll()
+
 
 def collect(player, amount):
     """
@@ -97,6 +43,35 @@ def collect(player, amount):
 
     player.bankroll += amount
     return amount
+
+
+@functools.total_ordering
+class Wager(object):
+    """Wager "spot" on a table.
+    Equivalent based on amount.
+    """
+    def __init__(self, amount=0):
+        self.amount = amount
+
+    def __eq__(self, other):
+        if isinstance(other, Wager):
+            return self.amount == other.amount
+        else:
+            return self.amount == other
+
+    def __lt__(self, other):
+        if isinstance(other, Wager):
+            return self.amount < other.amount
+        else:
+            return self.amount < other
+
+    def __nonzero__(self):
+        return self.amount > 0
+
+    __bool__ = __nonzero__
+
+    def __repr__(self):
+        return "Wager(amount=%s) @ %s" % (self.amount, hex(id(self)))
 
 
 # Might move and rename.
@@ -157,6 +132,22 @@ class Seats(list):
 
         list.pop(self, i)
         list.insert(self, i, item)
+
+    def _serialize(self, snoop=False):
+        for item in self:
+            if hasattr(item, 'serialize'):
+                yield item.serialize(snoop=snoop)
+            else:
+                yield item
+
+    def serialize(self, snoop=False):
+        return list(self._serialize(snoop=snoop))
+
+    def __json__(self):
+        return self.serialize(snoop=False)
+
+    def __persist__(self):
+        return self.serialize(snoop=True)
 
 
 class RotatingDealer(Seats):
@@ -353,6 +344,9 @@ class Table(object):
 class CardTable(Table):
     """
     """
+
+    __persistent_keys__ = ['hands', 'shoe', 'discard', 'reshuffle_threshold'] + Table.__persistent_keys__
+    __view_keys__ = ['hands', 'reshuffle_threshold'] + Table.__view_keys__
 
     def __init__(self, num_seats=6, reshuffle_threshold=1.0,
                  card_cls=bicycle.card.Card, hand_cls=bicycle.card.Cards,
