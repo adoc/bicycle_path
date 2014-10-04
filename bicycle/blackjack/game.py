@@ -3,17 +3,15 @@
 
 import itertools
 
-import bicycle.blackjack.card
-
 import bicycle.game
-
-from bicycle.game import (GameState, GameStep, SittableGameStepMixin, WagerGameStepMixin, PrepareStep, WagerStep, DealStep, PlayerStep, ResolveStep, CleanupStep)
+import bicycle.blackjack.card
+import bicycle.blackjack.table
 
 
 # Allow betting during the prep step.
 class PrepareStep(bicycle.game.WagerGameStepMixin, bicycle.game.PrepareStep):
-    def __init__(self, *args, **kwa):
-        bicycle.game.PrepareStep.__init__(self, *args, **kwa)
+    def __init__(self, engine):
+        bicycle.game.PrepareStep.__init__(self, engine)
         bicycle.game.WagerGameStepMixin.__init__(self)
 
 
@@ -31,20 +29,50 @@ class InsuranceStep(bicycle.game.GameStep):
         pass
 
     def __call__(self):
-        pass
+        return True
 
 
-class PlayerStep(bicycle.game.PlayerStep):
+class HandActionStepMixin(object):
     """
+    """
+
+    def __init__(self):
+        self.player = None
+        self.hand = None
+
+    def _correlate(self, player):
+        """Ensure only the current player is acting.
+        """
+        # This kind of check might be better done elsewhere.
+        if player is not self.player:
+            raise bicycle.game.CannotAct()
+
+    # Player Actions
+    # ==============
+    def hit(self):
+        """
+        """
+        self.table.deal(self.hand)
+        self.engine.set_timer()
+
+
+# Some pieces here can moved back in to bicycle.game.
+class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
+    """
+    Iterates through 
     """
 
     __timeout__ = 15
 
-    def __init__(self, table):
-        bicycle.game.PlayerStep.__init__(self, table)
+    def __init__(self, engine):
+        bicycle.game.PlayerStep.__init__(self, engine)
+        HandActionStepMixin.__init__(self)
+        
         # Iterate through players.
-        self._play_all = table._play_all_iter()
-        self._player, self._hand = self._play_all.next()
+        self._play_all = self.table._play_all_iter()
+
+        next = self._next()
+        assert next is True
 
     @property
     def to_execute(self):
@@ -53,37 +81,30 @@ class PlayerStep(bicycle.game.PlayerStep):
 
         return not self.table.dealer_hand.blackjack
 
-    @property
-    def _stop_hand(self):
-        return self._hand.blackjack or self._hand.busted
-
     def _next(self):
         try:
-            self._player, self._hand = self._play_all.next()
-            
+            self.player, self.hand = self._play_all.next()
             return True
         except StopIteration:
             return False
 
-    def hit(self, player):
-        """
-        """
+    def __call__(self):
 
-        if self._stop_hand is True:
-            self._next()
+        # Simply skip the player if delay
+        return not self._next()
 
-    def stand(self, player):
+    def stand(self):
         """
         """
-
-        self._next()
+        self.engine.execute_step()
 
     def double(self, player):
         """
         """
-        raise NotImplementedError()
-        self._next()
+        # Double the wager here too using self.wager!
 
+        self.hit(player)
+        self.engine.execute_step()
 
     def split(self, player):
         """
@@ -97,10 +118,32 @@ class PlayerStep(bicycle.game.PlayerStep):
 
         raise NotImplementedError()
 
-    def __call__(self):
 
-        # Simply skip the player if delay
-        return not self._next()
+class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
+    """
+    """
+
+    __timeout__ = 0
+    to_execute = True
+
+    def __init__(self, engine):
+        """
+        """
+        bicycle.game.GameStep.__init__(self, engine)
+        HandActionStepMixin.__init__(self)
+
+        self.hand = self.table.dealer_hand
+        self.player = self.table.dealer
+
+    def __call__(self):
+        """
+        """
+
+        while (int(self.hand) < 17 or
+               self.hand.soft is True and int(self.hand) <= 17):
+            self.hit()
+
+        return True
 
 
 class ResolveStep(bicycle.game.ResolveStep):
@@ -117,5 +160,12 @@ class StandardBlackjack(bicycle.game.GameState):
     """
 
     # The Engine will use these wisely.
-    __game__ = (PrepareStep, WagerStep, DealStep, InsuranceStep, PlayerStep,
-                ResolveStep, CleanupStep)
+    __game__ = (PrepareStep,
+                bicycle.game.WagerStep,
+                bicycle.game.DealStep,
+                InsuranceStep,
+                PlayerStep,
+                DealerStep,
+                ResolveStep,
+                bicycle.game.CleanupStep)
+    __table__ = bicycle.blackjack.table.BlackjackTable

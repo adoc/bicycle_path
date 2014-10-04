@@ -1,61 +1,90 @@
 """
 """
 
-import threading
 import time
+import threading
+import itertools
+
 import bicycle.game
 import bicycle.table
 
 
-class SimpleEngine(object):
+ENGINE_TICK = 0.1  # In seconds.
+
+
+class Engine(threading.Thread):
     """
+    * Not sure how well this will play with Tornado IOLoop or
+    asyncio (py 3.4)
     """
 
-    def __init__(self, game_state, table):
-        assert isinstance(game_state, bicycle.game.GameState)
-        assert isinstance(table, bicycle.table.Table)
-        self._game_state = game_state
-        self._table = table
-        self.step =None
-
-    def execute(self):
+    def __init__(self, state):
         """
         """
-
-        for game_step in self._game_state.step:
-
-            self.step = game_step(self._table) # Instance the GameStep
-            
-            while True:
-                # This is all wonky. Fix it!
-                if self.step.to_execute is True:
-                    time.sleep(self.step.__timeout__)
-                    result = self.step() # Execute the step.
-                    yield self.step, result
-
-                    if result is True:
-                        break
-
-                else:
-                    break
-
-
-class EngineThread(threading.Thread):
-    """
-    """
-
-    def __init__(self, engine):
+        assert isinstance(state, bicycle.game.GameState)
         threading.Thread.__init__(self)
-        self.engine = engine
-        self.alive = False
+
+        self.state = state
+        self.table = state.table
+
+        self.game_steps = itertools.cycle(state.__game__)
+
+        self.game = None    # Current GameStep.
+        self.timer = None   # Current GameStep timer.
+        self.result = None  # Current GameStep result.
+
+        self.alive = False  # Engine thread alive.
+        self.tick_count = 0
+
+    def execute_step(self):
+        """This can be triggered by the timer or by a GameStep action.
+        """
+        self.timer.cancel() # Must cancel the time as a first action.
+        self.result = self.game()
+        if self.result is not True:
+            self.set_timer()
+
+    def set_timer(self):
+        """This is the game step timer.
+        """
+        if self.timer is not None:
+            self.timer.cancel()
+        self.timer = threading.Timer(self.game.__timeout__, self.execute_step)
+        self.timer.start()
+
+    def handler(self):
+        """
+        """
+
+        for game_step in self.game_steps:   # Iterate through the
+                                            #   cycle of steps.
+            self.result = None
+            self.game = game_step(self)  # Instance the GameStep
+
+            if self.game.to_execute is True:
+                self.set_timer()
+                yield True
+
+                while not self.result:
+                    time.sleep(ENGINE_TICK)
+                    self.tick_count += 1
+
+            else:
+                yield False
 
     def run(self):
         self.alive = True
-        e = self.engine.execute()
+        self.tick_count = 0
+
+        handler = self.handler()
 
         while self.alive:
-            print(e.next())
+            handler.next()
 
-    def kill(self):
+            print("%s | %s" % (self.tick_count, self.game))
+            print("Dealer Hand: %s" % self.table.dealer_hand)
+            print("Table Hands: %s" % self.table.hands)
+
+    def stop(self):
         self.alive = False
 

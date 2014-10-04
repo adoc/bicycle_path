@@ -149,6 +149,48 @@ class TestHand(unittest.TestCase):
         h1.append(bicycle.blackjack.card.Card.from_str("KS"))
         self.assertTrue(h1.busted)
 
+    def test_soft(self):
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("AS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.soft)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertFalse(h1.soft)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("AS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("AS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.soft)
+
+    def test_stop(self):
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("AS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.stop)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("2S"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.stop)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("9C"))
+        h1.append(bicycle.blackjack.card.Card.from_str("2D"))
+        h1.append(bicycle.blackjack.card.Card.from_str("10H"))
+        self.assertTrue(h1.stop)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("9C"))
+        h1.append(bicycle.blackjack.card.Card.from_str("2D"))
+        h1.append(bicycle.blackjack.card.Card.from_str("9C"))
+        self.assertFalse(h1.stop)
+
+
 class TestBuild(unittest.TestCase):
     def test_build(self):
         s1 = bicycle.card.Cards()

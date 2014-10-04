@@ -48,25 +48,32 @@ class Hand(bicycle.card.Cards):
         return s
 
     @property
-    def twentyone(self):
-        """
-        """
-        
-        return int(self) == 21
-
-    @property
     def blackjack(self):
-        """
+        """The hand is a blackjack.
         """
 
-        return len(self) == 2 and self.twentyone
+        return len(self) == 2 and int(self) == 21
 
     @property
     def busted(self):
-        """
+        """The hand is busted.
         """
 
         return int(self) > 21
+
+    @property
+    def soft(self):
+        """The hand is soft; has an ace.
+        """
+
+        return ace in self
+
+    @property
+    def stop(self):
+        """All player actions stop on this Hand.
+        """
+
+        return int(self) >= 21
 
     # Do we do "bust", "splitable", etc here??
 

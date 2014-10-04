@@ -1,49 +1,7 @@
 import itertools
 
 import bicycle.table
-
-
-def moretime(player):
-    """The player has requested more time.
-    """
-
-    pass
-
-
-def ready(player, state=None):
-    """The player is ready. This is to provide a more intuitive
-    UI response. Generally a bet will invoke a ready state, but
-    there may be other indicators such as the player clicking on
-    the table or interacting with the game.
-
-    1. Player has indicated they want to play this game.
-
-    2. Game in progress, player has indicated they want to play
-    the next game.
-    """
-
-    if state is not None:
-        # Set player ready state.
-        pass
-
-    # return player state.
-
-
-def bet(self, player, amount):
-    """Handle a bet.
-    """
-
-    # Set ready state for player on bet!
-    self.ready(player, state=True)
-
-    pass
-
-
-class DealerEvents(object):
-    """
-    """
-
-    pass
+import bicycle.engine
 
 
 class GameStep(object):
@@ -55,9 +13,11 @@ class GameStep(object):
     vars that will be used outside of the GameStep instance.
     """
 
-    def __init__(self, table):
-        assert isinstance(table, bicycle.table.Table)
-        self.table = table
+    def __init__(self, engine):
+        assert isinstance(engine, bicycle.engine.Engine)
+        self.engine = engine
+        self.table = engine.table
+        self.state= engine.state
 
     def __call__(self):
         raise NotImplementedError()
@@ -105,8 +65,8 @@ class PrepareStep(SittableGameStepMixin, GameStep):
     __timeout__ = 1
     to_execute = True
 
-    def __init__(self, *args, **kwa):
-        GameStep.__init__(self, *args, **kwa)
+    def __init__(self, engine):
+        GameStep.__init__(self, engine)
         SittableGameStepMixin.__init__(self)
 
     def __call__(self): 
@@ -124,8 +84,8 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
     __timeout__ = 15
     to_execute = True  # Maybe base this instead on any(self.table.seats)
 
-    def __init__(self, *args, **kwa):
-        GameStep.__init__(self, *args, **kwa)
+    def __init__(self, engine):
+        GameStep.__init__(self, engine)
         WagerGameStepMixin.__init__(self)
         SittableGameStepMixin.__init__(self)
 
@@ -196,12 +156,13 @@ class GameState(object):
     """
 
     __game__ = [] # Subclass to create the actual game.
+    __table__ = bicycle.table.Table
 
-    def __init__(self):
+    def __init__(self, *args, **kwa):
         """
         """
-
-        self.step = itertools.cycle(self.__game__)
+        # self.step = itertools.cycle(self.__game__)
+        self.table = self.__table__(*args, **kwa)
 
     # Serialization
     # =============

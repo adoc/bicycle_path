@@ -437,7 +437,10 @@ class CardTable(Table):
         # _deal_all_iter can return (player, hand) or (player, hand, wager)
         #   depending on the class implementation.
         for hand, opts in self._deal_all_iter():
-            self.shoe.deal(hand, **(opts or {}))
+            self.deal(hand, **(opts or {}))
+
+    def deal(self, hand, **opts):
+        self.shoe.deal(hand, **opts)
 
     def rotate_deal(self):
         """

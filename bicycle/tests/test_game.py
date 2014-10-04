@@ -24,18 +24,24 @@ class WagerTable(bicycle.table.WagerTableMixin, bicycle.table.Table):
         bicycle.table.WagerTableMixin.__init__(self)
 
 
+class WagerGameState(bicycle.game.GameState):
+    __table__ = WagerTable
+
+
 class TestGameStep(unittest.TestCase):
     def test_init(self):
         self.assertRaises(AssertionError, lambda: bicycle.game.GameStep(None))
 
-        t1 = bicycle.table.Table()
-        gs1 = bicycle.game.GameStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+        gs1 = bicycle.game.GameStep(e1)
 
-        self.assertIs(gs1.table, t1)
+        self.assertIs(gs1.engine, e1)
+        self.assertIs(gs1.table, e1.table)
+        self.assertIs(gs1.state, e1.state)
 
     def test_call(self):
-        t1 = bicycle.table.Table()
-        gs1 = bicycle.game.GameStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+        gs1 = bicycle.game.GameStep(e1)
 
         self.assertRaises(NotImplementedError, gs1)
 
@@ -44,8 +50,8 @@ class TestSittableGameStepMixin(unittest.TestCase):
     def test_sit(self):
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
-        t1 = bicycle.table.Table()
-        gs1 = SittableGameStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+        gs1 = SittableGameStep(e1)
 
         self.assertTrue(gs1.sit(p1))
         self.assertTrue(gs1.sit(p2))
@@ -61,8 +67,8 @@ class TestSittableGameStepMixin(unittest.TestCase):
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
         p3 = bicycle.player.Player()
-        t1 = bicycle.table.Table()
-        gs1 = SittableGameStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+        gs1 = SittableGameStep(e1)
 
         gs1.sit(p1)
         gs1.sit(p2)
@@ -86,16 +92,17 @@ class TestWagerGameStepMixin(unittest.TestCase):
 
 class TestPrepareStep(unittest.TestCase):
     def test_init(self):
-        t1 = bicycle.table.Table()
-        gs1 = bicycle.game.PrepareStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+        gs1 = bicycle.game.PrepareStep(e1)
 
         self.assertTrue(hasattr(gs1, 'sit'))
         self.assertTrue(hasattr(gs1, 'leave'))
 
     def test_call(self):
-        t1 = bicycle.table.Table()
         p1 = bicycle.player.Player()
-        gs1 = bicycle.game.PrepareStep(t1)
+        e1 = bicycle.engine.Engine(bicycle.game.GameState())
+
+        gs1 = bicycle.game.PrepareStep(e1)
 
         self.assertFalse(gs1())
 
@@ -106,8 +113,8 @@ class TestPrepareStep(unittest.TestCase):
 
 class TestWagerStep(unittest.TestCase):
     def test_init(self):
-        t1 = WagerTable()
-        gs1 = bicycle.game.WagerStep(t1)
+        e1 = bicycle.engine.Engine(WagerGameState())
+        gs1 = bicycle.game.WagerStep(e1)
 
         self.assertTrue(hasattr(gs1, 'sit'))
         self.assertTrue(hasattr(gs1, 'leave'))
@@ -116,7 +123,9 @@ class TestWagerStep(unittest.TestCase):
     def test_call(self):
         t1 = WagerTable()
         p1 = bicycle.player.Player(bankroll=10000)
-        gs1 = bicycle.game.WagerStep(t1)
+
+        e1 = bicycle.engine.Engine(WagerGameState())
+        gs1 = bicycle.game.WagerStep(e1)
 
         self.assertFalse(gs1())
         gs1.sit(p1)
