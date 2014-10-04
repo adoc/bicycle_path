@@ -19,3 +19,6 @@ def map_serialize(obj_iter, **kwa):
     """
 
     return map(lambda obj: obj.serialize(**kwa), obj_iter)
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

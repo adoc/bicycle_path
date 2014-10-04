@@ -1,3 +1,6 @@
+"""
+"""
+
 import unittest
 
 import bicycle.blackjack.table
@@ -133,3 +136,6 @@ class TestFunctional(unittest.TestCase):
         pprint(t1.dealer_hand.serialize())
 
         #assert False
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

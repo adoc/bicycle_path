@@ -1,3 +1,6 @@
+"""
+"""
+
 import itertools
 
 import bicycle.table
@@ -175,3 +178,6 @@ class GameState(object):
 
     def __json__(self):
         return self.serialize(snoop=False)
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

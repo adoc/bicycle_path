@@ -564,3 +564,6 @@ class WagerTableMixin(object):
                 wager.amount = 0
 
         super(WagerTableMixin, self).cleanup()
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

@@ -169,3 +169,6 @@ class StandardBlackjack(bicycle.game.GameState):
                 ResolveStep,
                 bicycle.game.CleanupStep)
     __table__ = bicycle.blackjack.table.BlackjackTable
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

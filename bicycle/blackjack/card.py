@@ -17,17 +17,17 @@ class Card(bicycle.card.Card):
 
         return min([self.rank + 1, 10])
 
-    def __lt__(self, other):
-        """Less Than; Matches less than integer value.
-        """
-
-        return int(self) < int(other)
-
     def __eq__(self, other):
         """Equivalence; Matches integer value.
         """
 
         return int(self) == int(other)
+
+    def __lt__(self, other):
+        """Less Than; Matches less than integer value.
+        """
+
+        return int(self) < int(other)
 
 
 ace = Card.from_str('AS')
@@ -69,13 +69,18 @@ class Hand(bicycle.card.Cards):
         return ace in self
 
     @property
+    def splittable(self):
+        """The hand is splittable.
+        """
+
+        return len(self) == 2 and self[0].rank == self[1].rank
+
+    @property
     def stop(self):
         """All player actions stop on this Hand.
         """
 
         return int(self) >= 21
-
-    # Do we do "bust", "splitable", etc here??
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

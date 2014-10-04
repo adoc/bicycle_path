@@ -88,3 +88,5 @@ class Engine(threading.Thread):
     def stop(self):
         self.alive = False
 
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

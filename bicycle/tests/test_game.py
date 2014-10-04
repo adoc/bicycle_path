@@ -1,3 +1,6 @@
+"""
+"""
+
 import unittest
 
 import bicycle.player
@@ -148,3 +151,6 @@ class ResolveStep(unittest.TestCase):
 
 class CleanupStep(unittest.TestCase):
     pass
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

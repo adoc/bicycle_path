@@ -80,3 +80,6 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
                 insurance.amount = 0
 
         super(BlackjackTable, self).cleanup()
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

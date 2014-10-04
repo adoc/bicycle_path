@@ -1,7 +1,6 @@
 """Blackjack Cards module Unit Tests.
 """
 
-
 import unittest
 
 import bicycle.card
@@ -39,6 +38,20 @@ class TestBlackjackCard(unittest.TestCase):
         self.assertEqual(int(cc), 10)
         self.assertEqual(int(cd), 10)
 
+    def test_eq(self):
+        c1 = bicycle.blackjack.card.Card.from_str("AS")
+        c2 = bicycle.blackjack.card.Card.from_str("AC")
+        c3 = bicycle.blackjack.card.Card.from_str("2S")
+        c4 = bicycle.blackjack.card.Card.from_str("2C")
+        c5 = bicycle.blackjack.card.Card.from_str("10H")
+        c6 = bicycle.blackjack.card.Card.from_str("KH")
+        c7 = bicycle.blackjack.card.Card.from_str("QD")
+
+        self.assertEqual(c1, c2)
+        self.assertEqual(c3, c4)
+        self.assertEqual(c5, c6)
+        self.assertEqual(c6, c7)
+
     def test_lt(self):
         c1 = bicycle.blackjack.card.Card.from_str("AS")
         c2 = bicycle.blackjack.card.Card.from_str("2C")
@@ -53,6 +66,7 @@ class TestBlackjackCard(unittest.TestCase):
         self.assertLess(c2, c3)
         self.assertLess(c2, c4)
 
+    # functools.total_ordering provided.
     def test_gt(self):
         c1 = bicycle.blackjack.card.Card.from_str("AS")
         c2 = bicycle.blackjack.card.Card.from_str("2C")
@@ -66,20 +80,6 @@ class TestBlackjackCard(unittest.TestCase):
         self.assertGreater(c3, c2)
 
         self.assertGreater(c2, c1)
-
-    def test_eq(self):
-        c1 = bicycle.blackjack.card.Card.from_str("AS")
-        c2 = bicycle.blackjack.card.Card.from_str("AC")
-        c3 = bicycle.blackjack.card.Card.from_str("2S")
-        c4 = bicycle.blackjack.card.Card.from_str("2C")
-        c5 = bicycle.blackjack.card.Card.from_str("10H")
-        c6 = bicycle.blackjack.card.Card.from_str("KH")
-        c7 = bicycle.blackjack.card.Card.from_str("QD")
-
-        self.assertEqual(c1, c2)
-        self.assertEqual(c3, c4)
-        self.assertEqual(c5, c6)
-        self.assertEqual(c6, c7)
 
     def test_ne(self):
         c1 = bicycle.blackjack.card.Card.from_str("AS")
@@ -97,11 +97,11 @@ class TestAce(unittest.TestCase):
         ace = bicycle.blackjack.card.ace
 
         a1 = bicycle.blackjack.card.Card.from_str("AC")
-        a2 = bicycle.blackjack.card.Card.from_str("KC")
+        k1 = bicycle.blackjack.card.Card.from_str("KC")
 
         self.assertEqual(int(ace), 1)
         self.assertEqual(ace, a1)
-        self.assertNotEqual(ace, a2)
+        self.assertNotEqual(ace, k1)
 
 
 class TestHand(unittest.TestCase):
@@ -166,6 +166,32 @@ class TestHand(unittest.TestCase):
         h1.append(bicycle.blackjack.card.Card.from_str("KS"))
         self.assertTrue(h1.soft)
 
+    def test_splittable(self):
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        self.assertTrue(h1.splittable)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("KS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KC"))
+        self.assertTrue(h1.splittable)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("10S"))
+        h1.append(bicycle.blackjack.card.Card.from_str("10C"))
+        self.assertTrue(h1.splittable)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("10S"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KC"))
+        self.assertFalse(h1.splittable)
+
+        h1 = bicycle.blackjack.card.Hand()
+        h1.append(bicycle.blackjack.card.Card.from_str("QS"))
+        h1.append(bicycle.blackjack.card.Card.from_str("KC"))
+        self.assertFalse(h1.splittable)
+
     def test_stop(self):
         h1 = bicycle.blackjack.card.Hand()
         h1.append(bicycle.blackjack.card.Card.from_str("AS"))
@@ -199,3 +225,6 @@ class TestBuild(unittest.TestCase):
 
         for c in s1:
             self.assertIsInstance(c, bicycle.blackjack.card.Card)
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

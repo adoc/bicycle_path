@@ -1,3 +1,6 @@
+"""
+"""
+
 from pprint import pprint
 
 import unittest
@@ -593,3 +596,6 @@ class TestFunctional(unittest.TestCase):
         self.assertEqual(t1.wagers[0], 11)
         self.assertEqual(t1.wagers[1], 12)
         self.assertEqual(t1.wagers[2], 14)
+
+
+# (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved
