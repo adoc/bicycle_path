@@ -133,22 +133,6 @@ class Seats(list):
         list.pop(self, i)
         list.insert(self, i, item)
 
-    def _serialize(self, snoop=False):
-        for item in self:
-            if hasattr(item, 'serialize'):
-                yield item.serialize(snoop=snoop)
-            else:
-                yield item
-
-    def serialize(self, snoop=False):
-        return list(self._serialize(snoop=snoop))
-
-    def __json__(self):
-        return self.serialize(snoop=False)
-
-    def __persist__(self):
-        return self.serialize(snoop=True)
-
 
 class RotatingDealer(Seats):
     """Used in place of `Seats` in the cases of a rotating deal.
@@ -191,15 +175,15 @@ class Table(object):
     """
 
     # For (de)marshaling.
-    __persistent_keys__ = ['to_play', 'to_leave', 'seats', 'seat_prefs']
-    __view_keys__ = ['to_play', 'seats']
+    __persistent_keys__ = ['to_sit', 'to_leave', 'seats', 'seat_prefs']
+    __view_keys__ = ['to_sit', 'seats']
 
     def __init__(self, num_seats=6, seats_cls=Seats):
         """
         params
         ------
         num_seats   (int)   Number of seats available at this table.
-        to_play     (list)  List of Players waiting to play at this
+        to_sit     (list)  List of Players waiting to play at this
                             table.
         seat_prefs  (dict)  Player instance as key to integer seat
                             position preference.
@@ -226,7 +210,7 @@ class Table(object):
         """
 
         # Queues.
-        self.to_play = []
+        self.to_sit = []
         self.to_leave = []
 
         # Position states.
@@ -249,14 +233,14 @@ class Table(object):
         to sit.
         """
         return (player not in self.seats and
-                player not in self.to_play)
+                player not in self.to_sit)
 
     def can_leave(self, player):
         """Return True if the player may leave this table or be queued
         to leave it.
         """
         return player not in self.to_leave and (player in self.seats or
-                                                player in self.to_play)
+                                                player in self.to_sit)
 
     # Actions/Events
     # ==============
@@ -267,7 +251,7 @@ class Table(object):
         assert index is None or index >= 0, ("`index` must be a positive "
                                              "integer.")
         assert player not in self.seats 
-        assert player not in self.to_play
+        assert player not in self.to_sit
         # If a game table requires that a player may play multiple
         #   seats, this should be implemented in the higher layers of
         #   the architecture. i.e.; multiple Player instances assigned
@@ -276,22 +260,22 @@ class Table(object):
         if index is not None:
             self.seat_prefs[player] = index  # Player's seat preference
                                              # if any.
-        self.to_play.append(player)
+        self.to_sit.append(player)
 
     def leave(self, player):
         """Queue the player to leave this table.
         """
 
         assert player not in self.to_leave
-        assert player in self.seats or player in self.to_play
+        assert player in self.seats or player in self.to_sit
 
         # Remove from seat position preferences.
         if player in self.seat_prefs:
             del self.seat_prefs[player]
 
-        # Remove from `to_play` queue.
-        if player in self.to_play:
-            self.to_play.remove(player)
+        # Remove from `to_sit` queue.
+        if player in self.to_sit:
+            self.to_sit.remove(player)
 
         # Put in `to_leave` queue.
         if player in self.seats:
@@ -309,11 +293,11 @@ class Table(object):
         raise NotImplementedError()
 
     def prepare(self):
-        """Seat the waiting players in the `to_play` queue.
+        """Seat the waiting players in the `to_sit` queue.
         """
         def seat_to_play():
-            if self.to_play and None in self.seats:
-                player = self.to_play.pop(0)
+            if self.to_sit and None in self.seats:
+                player = self.to_sit.pop(0)
                 if player in self.seat_prefs:
                     self.seats.insert(self.seat_prefs.pop(player), player)
                 else:
@@ -327,18 +311,6 @@ class Table(object):
 
         for player in self.to_leave:
             self.seats.remove(player)
-
-    # Removing in lieu of __presistant_keys && __views_keys
-    def serialize(self, **kwa):
-        """
-        """
-
-        return {'seats': map_serialize(self.seats, **kwa),
-                'num_seats': self.num_seats}
-
-    # Removing in lieu of __presistant_keys && __views_keys
-    def __json__(self):
-        return self.serialize(snoop=False)
 
 
 class CardTable(Table):
@@ -372,7 +344,7 @@ class CardTable(Table):
         # Idea for subtable, but is full of problems.
         subtable = cls(len(table.seats), seats_cls=table.seats.__class__)
 
-        subtable.to_play = table.to_play
+        subtable.to_sit = table.to_sit
         subtable.to_leave = table.to_leave
         subtable.seats = table.seats
         subtable.seat_prefs = table.seat_prefs

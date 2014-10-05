@@ -18,25 +18,30 @@ def _serialize(obj, **kwa):
     except AttributeError:
         return obj
 
+
 def _extract_keys(obj, keys):
     for key in keys:
         yield key, getattr(obj, key)
 
-def marshal_object(obj, persist=False):
+
+def marshal_object(obj, persist=False, get_id=False):
     """
     """
 
     key_list_attr = persist and '__persistent_keys__' or '__view_keys__' 
+    get_id = get_id or persist
 
     if isinstance(obj, list) or isinstance(obj, tuple):
         def handle_list():
             for item in obj:
-                yield marshal_object(item, persist)
+                yield marshal_object(item, persist, get_id)
         return list(handle_list())
     elif hasattr(obj, key_list_attr):
         def handle_dict():
-            for key, subob in _extract_keys(obj, obj.__view_keys__):
-                yield key, marshal_object(subob, persist)
+            for key, subob in _extract_keys(obj, getattr(obj, key_list_attr)):
+                yield key, marshal_object(subob, persist, get_id)
+            if get_id is True:
+                yield 'id', hash(obj)
         return dict(handle_dict())
     else:
         return _serialize(obj, snoop=persist)

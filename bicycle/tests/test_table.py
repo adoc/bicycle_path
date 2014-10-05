@@ -187,13 +187,13 @@ class TestSeats(unittest.TestCase):
         self.assertEqual(s1[1], True)
         self.assertEqual(s1[2], False)
 
-    def test_serialize(self):
+    def test_marshal(self):
         s1 = bicycle.table.Seats(6)
-        self.assertEqual(s1.serialize(), [None, None, None, None, None, None])
+        self.assertEqual(bicycle.marshal.marshal_object(s1), [None, None, None, None, None, None])
 
         s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
-        self.assertEqual(s1.serialize(), [[], [], [], [], [], []])
-        self.assertEqual(s1.serialize(snoop=True), [[], [], [], [], [], []])
+        self.assertEqual(bicycle.marshal.marshal_object(s1), [[], [], [], [], [], []])
+        self.assertEqual(bicycle.marshal.marshal_object(s1, persist=True), [[], [], [], [], [], []])
 
         d = bicycle.card.Cards()
         d.build()
@@ -205,40 +205,10 @@ class TestSeats(unittest.TestCase):
         d.deal(s1[4])
         d.deal(s1[5])
 
-        self.assertEqual(s1.serialize(), [['XX'], ['XX'], ['XX'], ['XX'],
-                         ['XX'], ['XX']])
-        self.assertEqual(s1.serialize(snoop=True), [['AS'], ['2S'], ['3S'],
-                         ['4S'], ['5S'], ['6S']])
-
-    def test_json(self):
-        s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
-        d = bicycle.card.Cards()
-        d.build()
-
-        d.deal(s1[0])
-        d.deal(s1[1])
-        d.deal(s1[2])
-        d.deal(s1[3])
-        d.deal(s1[4])
-        d.deal(s1[5])
-
-        self.assertEqual(s1.__json__(), [['XX'], ['XX'], ['XX'], ['XX'],
-                         ['XX'], ['XX']])
-
-    def test_persist(self):
-        s1 = bicycle.table.Seats(6, base_obj_factory=bicycle.card.Cards)
-        d = bicycle.card.Cards()
-        d.build()
-
-        d.deal(s1[0])
-        d.deal(s1[1])
-        d.deal(s1[2])
-        d.deal(s1[3])
-        d.deal(s1[4])
-        d.deal(s1[5])
-
-        self.assertEqual(s1.__persist__(), [['AS'], ['2S'], ['3S'], ['4S'],
-                         ['5S'], ['6S']])
+        self.assertEqual(bicycle.marshal.marshal_object(s1),
+                [['XX'], ['XX'], ['XX'], ['XX'], ['XX'], ['XX']])
+        self.assertEqual(bicycle.marshal.marshal_object(s1, persist=True),
+                [['AS'], ['2S'], ['3S'], ['4S'], ['5S'], ['6S']])
 
 
 class TestRotatingDealer(unittest.TestCase):
@@ -284,14 +254,14 @@ class TestRandomDealer(unittest.TestCase):
 class TestTable(unittest.TestCase):
     def test_attrs(self):
         t1 = bicycle.table.Table()
-        self.assertEqual(t1.__persistent_keys__, ['to_play', 'to_leave',
+        self.assertEqual(t1.__persistent_keys__, ['to_sit', 'to_leave',
                                                   'seats', 'seat_prefs'])
-        self.assertEqual(t1.__view_keys__, ['to_play', 'seats'])
+        self.assertEqual(t1.__view_keys__, ['to_sit', 'seats'])
 
     def test_init(self):
         t1 = bicycle.table.Table()
         self.assertEqual(len(t1.seats), 6)
-        self.assertEqual(t1.to_play, [])
+        self.assertEqual(t1.to_sit, [])
         self.assertIsInstance(t1.seats, bicycle.table.Seats)
 
     def test_iter(self):
@@ -372,11 +342,11 @@ class TestTable(unittest.TestCase):
         t1.sit(p5)
         t1.sit(p6)
 
-        self.assertEqual(t1.to_play, [p1, p2, p3, p4, p5, p6])
+        self.assertEqual(t1.to_sit, [p1, p2, p3, p4, p5, p6])
 
         t1.prepare()
         t1.sit(p7)
-        self.assertIn(p7, t1.to_play)
+        self.assertIn(p7, t1.to_sit)
 
         self.assertEqual(t1.seats[0], p1)
         self.assertEqual(t1.seats[5], p2)
@@ -396,10 +366,10 @@ class TestTable(unittest.TestCase):
         p7 = bicycle.player.Player()
 
         t1.seats = bicycle.table.Seats([p1, p2, p3, p4, p5, p6])
-        t1.to_play = [p7]
+        t1.to_sit = [p7]
 
         t1.leave(p7)
-        self.assertNotIn(p7, t1.to_play)
+        self.assertNotIn(p7, t1.to_sit)
 
         t1.cleanup()
         t1.leave(p6)
@@ -442,7 +412,7 @@ class TestTable(unittest.TestCase):
         p4 = bicycle.player.Player()
 
         t1.seats = bicycle.table.Seats([p1, p2, p3, None])
-        t1.to_play = [p4]
+        t1.to_sit = [p4]
 
         t1.prepare()
         self.assertIn(p4, t1.seats)
@@ -460,12 +430,36 @@ class TestTable(unittest.TestCase):
         t1.cleanup()
         self.assertNotIn(p4, t1.seats)
 
+    def test_marshal(self):
+        t1 = bicycle.table.Table()
+        self.assertEqual(bicycle.marshal.marshal_object(t1),
+            {'to_sit': [], 'seats': [None, None, None, None, None, None]})
 
-    def test_serialize(self):
-        assert False, "Should be test code here."
+        p1 = bicycle.player.Player()
+        p2 = bicycle.player.Player()
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.prepare()
+        p3 = bicycle.player.Player()
+        p4 = bicycle.player.Player()
+        t1.sit(p3)
+        t1.sit(p4)
+        self.assertEqual(bicycle.marshal.marshal_object(t1),
+            {'to_sit': [{'bankroll_view': 'busted'},
+                        {'bankroll_view': 'busted'}],
+            'seats':[{'bankroll_view': 'busted'}, {'bankroll_view': 'busted'},
+                     None, None, None, None]})
 
-    def test_json(self):
-        assert False, "Should be test code here."
+        t1.leave(p2)
+        self.maxDiff=None
+        self.assertEqual(bicycle.marshal.marshal_object(t1, persist=True),
+            {'to_leave': [{'bankroll': 0, 'seat_pref': None, 'id': hash(p2)}],
+            'to_sit': [{'bankroll': 0, 'seat_pref': None, 'id': hash(p3)},
+                       {'bankroll': 0, 'seat_pref': None, 'id': hash(p4)}],
+            'id': hash(t1), 'seat_prefs': {}, 'seats':
+                      [{'bankroll': 0, 'seat_pref': None, 'id': hash(p1)},
+                      {'bankroll': 0, 'seat_pref': None, 'id': hash(p2)},
+                      None, None, None, None]})
 
 
 class TestCardTable(unittest.TestCase):

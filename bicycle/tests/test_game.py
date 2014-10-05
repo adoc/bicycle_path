@@ -59,8 +59,8 @@ class TestSittableGameStepMixin(unittest.TestCase):
         self.assertTrue(gs1.sit(p1))
         self.assertTrue(gs1.sit(p2))
 
-        self.assertIs(gs1.table.to_play[0], p1)
-        self.assertIs(gs1.table.to_play[1], p2)
+        self.assertIs(gs1.table.to_sit[0], p1)
+        self.assertIs(gs1.table.to_sit[1], p2)
 
         self.assertFalse(gs1.sit(p1))
         gs1.table.prepare()
@@ -84,7 +84,7 @@ class TestSittableGameStepMixin(unittest.TestCase):
 
         self.assertIn(p1, gs1.table.to_leave)
         self.assertIn(p2, gs1.table.to_leave)
-        self.assertNotIn(p3, gs1.table.to_play)
+        self.assertNotIn(p3, gs1.table.to_sit)
 
 
 class TestWagerGameStepMixin(unittest.TestCase):

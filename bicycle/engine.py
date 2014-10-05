@@ -59,9 +59,10 @@ class Engine(threading.Thread):
         for game_step in self.game_steps:   # Iterate through the
                                             #   cycle of steps.
             self.result = None
-            self.game = game_step(self)  # Instance the GameStep
+            game = game_step(self)  # Instance the GameStep
 
-            if self.game.to_execute is True:
+            if game.to_execute is True:
+                self.game = game
                 self.set_timer()
                 yield True
 

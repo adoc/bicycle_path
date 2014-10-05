@@ -3,10 +3,21 @@
 # There may not continue to be a `player` module, but this needed
 #   separation from the `games` module.
 
+bankrolls = {
+                1.0:        'busted',
+                1000.0:     'a little light',
+                10000.0:    'throwing weight',
+                100000.0:   'rolling',
+                1000000.0:  'whale'
+            }
+
 
 class Player(object):
     """
     """
+
+    __persistent_keys__ = ['bankroll', 'seat_pref']
+    __view_keys__ = ['bankroll_view']
 
     def __init__(self, seat_pref=None, bankroll=0):
         """Initialize a Player object.
@@ -21,26 +32,13 @@ class Player(object):
         self.bankroll = bankroll
         self.seat_pref = seat_pref
 
-    def _seralize_iter(self, snoop=False):
-        """
-        """
-
-        if snoop is True:
-            if self.seat_prof is not None:
-                yield 'seat_pref', self.seat_pref
-            yield 'bankroll', self.bankroll
-
-    def serialize(self, snoop=False):
-        """
-        """
-
-        return dict(self._seralize_iter(snoop=snoop))
-
-    def __json__(self):
-        """Public serialization of a Player object.
-        """
-
-        return self.serialize(snoop=False)
+    @property
+    def bankroll_view(self):
+        bankroll_key = 1.0
+        for k in bankrolls:
+            if self.bankroll / k > 1.0:
+                bankroll_key = max(k, bankroll_key)
+        return bankrolls[bankroll_key]
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved
