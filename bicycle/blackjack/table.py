@@ -13,7 +13,7 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
 
     __view_keys__ = (bicycle.table.WagerTableMixin.__view_keys__ +
                      bicycle.table.CardTable.__view_keys__ +
-                     ['dealer', 'dealer_hand', 'insurance_wagers'])
+                     ['dealer', 'dealer_hand', 'dealer_hand_total', 'insurance_wagers'])
 
 
     def __init__(self, num_seats=6,
