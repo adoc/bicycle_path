@@ -16,11 +16,17 @@ class GameStep(object):
     vars that will be used outside of the GameStep instance.
     """
 
+    __timeout__ = 0
+
+    __persistent_keys__ = ['timeout', 'table']
+    __view_keys__ = ['timeout', 'table']
+
     def __init__(self, engine):
         assert isinstance(engine, bicycle.engine.Engine)
         self.engine = engine
         self.table = engine.table
         self.state= engine.state
+        self.timeout = self.__timeout__
 
     def __call__(self):
         raise NotImplementedError()
@@ -164,20 +170,9 @@ class GameState(object):
     def __init__(self, *args, **kwa):
         """
         """
-        # self.step = itertools.cycle(self.__game__)
+
+        # Instance a table.
         self.table = self.__table__(*args, **kwa)
-
-    # Serialization
-    # =============
-    def serialize(self, snoop=False):
-        """Serialize the game step state for persistence or for
-        communication.
-        """
-
-        pass
-
-    def __json__(self):
-        return self.serialize(snoop=False)
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

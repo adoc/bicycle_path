@@ -62,7 +62,7 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
     Iterates through 
     """
 
-    __timeout__ = 15
+    __timeout__ = 60
 
     def __init__(self, engine):
         bicycle.game.PlayerStep.__init__(self, engine)
@@ -150,8 +150,11 @@ class ResolveStep(bicycle.game.ResolveStep):
     """
     """
 
-    def __call__(self):
+    def __init__(self, engine):
+        bicycle.game.ResolveStep.__init__(self, engine)
+        self.table.dealer_hand.up = True
 
+    def __call__(self):
         return True
 
 

@@ -11,7 +11,13 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
     """
     """
 
-    def __init__(self, num_seats=6, dealer=bicycle.player.Player(),
+    __view_keys__ = (bicycle.table.WagerTableMixin.__view_keys__ +
+                     bicycle.table.CardTable.__view_keys__ +
+                     ['dealer', 'dealer_hand', 'insurance_wagers'])
+
+
+    def __init__(self, num_seats=6,
+                 dealer=bicycle.player.Player(bankroll=100000000),
                  reshuffle_threshold=0.2, face_up=False, 
                  wager_cls=bicycle.table.Wager, **kwa):
         """
@@ -45,6 +51,10 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
         for seat, hand, wager, insurance in zip(self.seats, self.hands,
                                         self.wagers, self.insurance_wagers):
             yield seat, hand, wager, insurance
+
+    def deal(self, hand, **opts):
+        opts['up'] = self.face_up
+        bicycle.table.CardTable.deal(self, hand, **opts)
 
     def _deal_all_iter(self):
         """

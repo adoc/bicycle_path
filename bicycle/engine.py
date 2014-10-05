@@ -1,12 +1,14 @@
 """
 """
 
+import math
 import time
 import threading
 import itertools
 
 import bicycle.game
 import bicycle.table
+import bicycle.marshal
 
 
 ENGINE_TICK = 0.1  # In seconds.
@@ -34,7 +36,6 @@ class Engine(threading.Thread):
         self.result = None  # Current GameStep result.
 
         self.alive = False  # Engine thread alive.
-        self.tick_count = 0
 
     def execute_step(self):
         """This can be triggered by the timer or by a GameStep action.
@@ -50,6 +51,7 @@ class Engine(threading.Thread):
         if self.timer is not None:
             self.timer.cancel()
         self.timer = threading.Timer(self.game.__timeout__, self.execute_step)
+        self.timer_started = time.time()
         self.timer.start()
 
     def handler(self):
@@ -67,11 +69,18 @@ class Engine(threading.Thread):
                 yield True
 
                 while not self.result:
+                    self.game.timeout = math.floor(self.game.__timeout__ -
+                                            (time.time() - self.timer_started))
                     time.sleep(ENGINE_TICK)
-                    self.tick_count += 1
 
             else:
                 yield False
+
+    def query(self):
+        """Query the engine for game state.
+        """
+
+        return self.game, bicycle.marshal.marshal_object(self.game)
 
     def run(self):
         self.alive = True
@@ -81,10 +90,6 @@ class Engine(threading.Thread):
 
         while self.alive:
             handler.next()
-
-            print("%s | %s" % (self.tick_count, self.game))
-            print("Dealer Hand: %s" % self.table.dealer_hand)
-            print("Table Hands: %s" % self.table.hands)
 
     def stop(self):
         self.alive = False

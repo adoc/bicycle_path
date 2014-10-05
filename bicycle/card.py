@@ -8,6 +8,8 @@ Should be python 2.7 and python 3.4 compatible.
 import inspect
 import functools
 
+import bicycle.marshal
+
 from bicycle import random      # Always import ``random`` from the
                                 #   ``bicycle`` module as it provides
                                 #   extra entropy.
@@ -258,7 +260,7 @@ class Cards(list):
                 break
 
     def __repr__(self):
-        return "Cards(%s) @ %s" % (','.join(self.serialize(snoop=True)),
+        return "Cards(%s) @ %s" % (','.join(bicycle.marshal.marshal_object(self, persist=True)),
                                    hex(id(self)))
 
 

@@ -459,6 +459,8 @@ class WagerTableMixin(object):
     """
     """
 
+    __view_keys__ = ['wagers']
+
     def __init__(self, num_seats=6, wager_cls=Wager, wager_func=wager,
                  collect_wager_func=collect, seats_cls=Seats, **kwa):
 
