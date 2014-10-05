@@ -403,7 +403,7 @@ class CardTable(Table):
         # _deal_all_iter can return (player, hand) or (player, hand, wager)
         #   depending on the class implementation.
         for hand, opts in self._deal_all_iter():
-            self.deal(hand, **(opts or {}))
+            CardTable.deal(self, hand, **(opts or {}))
 
     def deal(self, hand, **opts):
         self.shoe.deal(hand, **opts)

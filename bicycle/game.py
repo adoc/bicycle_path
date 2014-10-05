@@ -25,7 +25,7 @@ class GameStep(object):
         assert isinstance(engine, bicycle.engine.Engine)
         self.engine = engine
         self.table = engine.table
-        self.state= engine.state
+        self.state = engine.state
         self.timeout = self.__timeout__
 
     def __call__(self):
@@ -71,7 +71,7 @@ class PrepareStep(SittableGameStepMixin, GameStep):
     """
     """
 
-    __timeout__ = 1
+    __timeout__ = 0
     to_execute = True
 
     def __init__(self, engine):
@@ -125,11 +125,27 @@ class PlayerStep(GameStep):
     __timeout__ = 15
     to_execute = True
 
+    def __init__(self, engine):
+        GameStep.__init__(self, engine)
+
+        # Iterate through players.
+        self._play_all = self.table._play_all_iter()
+
+        next = self.next() # Get first player.
+        assert next is True
+
+    def next(self):
+        try:
+            self._play_item = self._play_all.next()
+            return True
+        except StopIteration:
+            return False
+
     def __call__(self):
         """
         """
 
-        raise NotImplementedError()
+        return not self.next()
 
 
 class ResolveStep(GameStep):

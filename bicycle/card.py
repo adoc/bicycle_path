@@ -259,6 +259,12 @@ class Cards(list):
             except DeckEmpty:
                 break
 
+    def up(self):
+        """
+        """
+        for card in self:
+            card.up = True
+
     def __repr__(self):
         return "Cards(%s) @ %s" % (','.join(bicycle.marshal.marshal_object(self, persist=True)),
                                    hex(id(self)))

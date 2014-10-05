@@ -32,6 +32,13 @@ class WagerGameState(bicycle.game.GameState):
 
 
 class TestGameStep(unittest.TestCase):
+    def test_class(self):
+        self.assertEqual(bicycle.game.GameStep.__timeout__, 0)
+        self.assertEqual(bicycle.game.GameStep.__persistent_keys__,
+                         ['timeout', 'table'])
+        self.assertEqual(bicycle.game.GameStep.__view_keys__,
+                         ['timeout', 'table'])
+
     def test_init(self):
         self.assertRaises(AssertionError, lambda: bicycle.game.GameStep(None))
 
@@ -41,6 +48,7 @@ class TestGameStep(unittest.TestCase):
         self.assertIs(gs1.engine, e1)
         self.assertIs(gs1.table, e1.table)
         self.assertIs(gs1.state, e1.state)
+        self.assertEqual(gs1.timeout, gs1.__timeout__)
 
     def test_call(self):
         e1 = bicycle.engine.Engine(bicycle.game.GameState())
@@ -49,7 +57,7 @@ class TestGameStep(unittest.TestCase):
         self.assertRaises(NotImplementedError, gs1)
 
 
-class TestSittableGameStepMixin(unittest.TestCase):
+class TestSittableGameStep(unittest.TestCase):
     def test_sit(self):
         p1 = bicycle.player.Player()
         p2 = bicycle.player.Player()
@@ -87,7 +95,7 @@ class TestSittableGameStepMixin(unittest.TestCase):
         self.assertNotIn(p3, gs1.table.to_sit)
 
 
-class TestWagerGameStepMixin(unittest.TestCase):
+class TestWagerGameStep(unittest.TestCase):
     def test_wager(self):
         # Nothing yet substantial to test.
         pass
