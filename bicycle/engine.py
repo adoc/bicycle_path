@@ -50,7 +50,8 @@ class Engine(threading.Thread):
         """
         if self.timer is not None:
             self.timer.cancel()
-        self.timer = threading.Timer(self.game.__timeout__, self.execute_step)
+
+        self.timer = threading.Timer(self.game.__timeout__ or ENGINE_TICK, self.execute_step)
         self.timer_started = time.time()
         self.timer.start()
 
@@ -68,13 +69,15 @@ class Engine(threading.Thread):
                 self.set_timer()
                 yield True
 
-                while not self.result:
+                while not self.result and self.alive:
                     self.game.timeout = math.floor(self.game.__timeout__ -
                                             (time.time() - self.timer_started))
                     time.sleep(ENGINE_TICK)
 
             else:
                 yield False
+                time.sleep(ENGINE_TICK)
+
 
     def query(self):
         """Query the engine for game state.
@@ -90,9 +93,13 @@ class Engine(threading.Thread):
 
         while self.alive:
             handler.next()
+            time.sleep(ENGINE_TICK)
 
     def stop(self):
         self.alive = False
+        self.timer.cancel()
+        self.join()
+        return True
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

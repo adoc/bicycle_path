@@ -70,6 +70,9 @@ class Wager(object):
 
     __bool__ = __nonzero__
 
+    def __json__(self, request):
+        return {'amount': self.amount}
+
     def __repr__(self):
         return "Wager(amount=%s) @ %s" % (self.amount, hex(id(self)))
 
