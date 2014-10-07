@@ -15,17 +15,26 @@ def main(global_config, **settings):
     config.add_route('home', '/')
     config.add_route('game', '/game')
     
-    config.add_view('bicycle_path.views.game_view', route_name='game',
+    config.add_view('bicycle_path.views.meta_view', route_name='game',
                     renderer='templates/game.html.mako')
 
     # REST Routes
     config.add_route('engine_list', '/api/v1/engines')
     config.add_route('engine_observe', '/api/v1/engines/{engine}/observe')
+    config.add_route('engine_perspective', '/api/v1/engines/{engine}/perspective')
     config.add_route('engine_sit', '/api/v1/engines/{engine}/sit')
     config.add_route('engine_leave', '/api/v1/engines/{engine}/leave')
-    config.add_route('engine_player', '/api/v1/game')
+    config.add_route('engine_wager', '/api/v1/engines/{engine}/wager',
+                     request_method=["POST"])
+    config.add_route('engine_reset_wager', '/api/v1/engines/{engine}/wager/reset')
 
-    config.add_view('bicycle_path.views.game_view', route_name='engine_player',
+    config.add_route('engine_hit', '/api/v1/engines/{engine}/hit')
+    config.add_route('engine_stand', '/api/v1/engines/{engine}/stand')
+    config.add_route('engine_double', '/api/v1/engines/{engine}/double')
+
+    config.add_route('engine_meta', '/api/v1/meta')
+
+    config.add_view('bicycle_path.views.meta_view', route_name='engine_meta',
                     renderer='json')
 
     config.scan()
@@ -41,7 +50,8 @@ def main(global_config, **settings):
                                                                   face_up=True))
                     for _ in range(buffer_engines)}
 
-    config.add_settings({'engines': engines})
+    config.add_settings({'engines': engines,
+                         'players': {}})
 
     for _, engine in engines.items():
         engine.start()

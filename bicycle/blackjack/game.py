@@ -44,13 +44,6 @@ class HandActionStepMixin(object):
     def hand(self):
         return self._play_item[1]
 
-    # def _correlate(self, player):
-    #     """Ensure only the current player is acting.
-    #     """
-    #     # This kind of check might be better done elsewhere.
-    #     if player is not self.player:
-    #         raise bicycle.game.CannotAct()
-
     # Player Actions
     # ==============
     def hit(self):
@@ -69,7 +62,7 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
     Iterates through 
     """
 
-    __timeout__ = 60
+    __timeout__ = 30
 
     def __init__(self, engine):
         bicycle.game.PlayerStep.__init__(self, engine)
@@ -86,6 +79,8 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         n = bicycle.game.PlayerStep.next(self)
 
         if n is True:
+            self.hand.up()
+
             if self.hand.stop is True:
                 self.engine.execute_step()
 
@@ -96,21 +91,21 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         """
         self.engine.execute_step()
 
-    def double(self, player):
+    def double(self):
         """
         """
         # Double the wager here too using self.wager!
 
-        self.hit(player)
+        self.hit()
         self.engine.execute_step()
 
-    def split(self, player):
+    def split(self):
         """
         """
 
         raise NotImplementedError()
 
-    def surrender(self, player):
+    def surrender(self):
         """
         """
 
@@ -121,9 +116,6 @@ class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
     """
     """
 
-    __timeout__ = 0
-    to_execute = True
-
     def __init__(self, engine):
         """
         """
@@ -132,10 +124,18 @@ class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
 
         self._play_item = self.table.dealer, self.table.dealer_hand
 
+        self.table.dealer_hand.up()
+
+    @property
+    def to_execute(self):
+        """Execute if 
+        """
+
+        return not all([hand.busted for hand in self.table.hands])
+
     def __call__(self):
         """
         """
-        self.table.dealer_hand.up()
 
         while (int(self.hand) < 17 or
                self.hand.soft is True and int(self.hand) <= 17):
@@ -144,12 +144,13 @@ class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
         return True
 
 
-class ResolveStep(bicycle.game.ResolveStep):
+class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     """
     """
 
     def __init__(self, engine):
         bicycle.game.ResolveStep.__init__(self, engine)
+        bicycle.game.WagerGameStepMixin.__init__(self)
 
     def __call__(self):
         return True

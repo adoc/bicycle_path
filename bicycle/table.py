@@ -312,8 +312,12 @@ class Table(object):
         """Unseats players in the `to_leave` queue.
         """
 
-        for player in self.to_leave:
-            self.seats.remove(player)
+        while self.to_leave:
+            self.seats.remove(self.to_leave.pop())
+
+        # for player in self.to_leave:
+        #     self.seats.remove(player)
+        # self.to_leave = []
 
 
 class CardTable(Table):

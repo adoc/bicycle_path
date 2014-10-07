@@ -45,23 +45,26 @@ function postWrapper(url, data, foundCallback, notFoundCallback, errorCallback) 
 }
 
 
+// '/api/v1/engines/'+engine+'/'+action
+
+
 // Polling for now. Will implement websockets later.
 // Poll the api
-function poll_engine(engine, poll_success, action, interval) {
+function poll(url, poll_success, interval) {
     var self = this;
     var interval = interval || 1000;
 
     this.__timer = null;
 
     function error(data) {
-        console.error('Error in polling: '+data);
+        console.error('Error in polling: ' + data);
         self.cancel();
     }
 
     function poll() {
-        apiWrapper('/api/v1/engines/'+engine+'/'+action, 
+        apiWrapper(url, 
             function (data) {
-                poll_success(engine, data);
+                poll_success(data);
             }, error, error)
     }
 

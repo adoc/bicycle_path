@@ -32,6 +32,7 @@ class Engine(threading.Thread):
         self.game_steps = itertools.cycle(state.__game__)
 
         self.game = None    # Current GameStep.
+        self.game_cls= None # Current GameStep Class
         self.timer = None   # Current GameStep timer.
         self.result = None  # Current GameStep result.
 
@@ -40,8 +41,11 @@ class Engine(threading.Thread):
     def execute_step(self):
         """This can be triggered by the timer or by a GameStep action.
         """
-        self.timer.cancel() # Must cancel the time as a first action.
+        if self.timer is not None:
+            self.timer.cancel() # Must cancel the time as a first action.
+        
         self.result = self.game()
+        
         if self.result is not True:
             self.set_timer()
 
@@ -51,7 +55,8 @@ class Engine(threading.Thread):
         if self.timer is not None:
             self.timer.cancel()
 
-        self.timer = threading.Timer(self.game.__timeout__ or ENGINE_TICK, self.execute_step)
+        self.timer = threading.Timer(self.game.__timeout__ or ENGINE_TICK,
+                                     self.execute_step)
         self.timer_started = time.time()
         self.timer.start()
 
@@ -61,14 +66,14 @@ class Engine(threading.Thread):
 
         for game_step in self.game_steps:   # Iterate through the
                                             #   cycle of steps.
-            self.result = None
             game = game_step(self)  # Instance the GameStep
+            # self.game_cls = game_step
+            self.result = None
 
             if game.to_execute is True:
                 self.game = game
                 self.set_timer()
                 yield True
-
                 while not self.result and self.alive:
                     self.game.timeout = math.floor(self.game.__timeout__ -
                                             (time.time() - self.timer_started))
@@ -77,7 +82,6 @@ class Engine(threading.Thread):
             else:
                 yield False
                 time.sleep(ENGINE_TICK)
-
 
     def query(self):
         """Query the engine for game state.

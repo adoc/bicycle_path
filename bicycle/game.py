@@ -17,9 +17,10 @@ class GameStep(object):
     """
 
     __timeout__ = 0
-
     __persistent_keys__ = ['timeout', 'table']
     __view_keys__ = ['timeout', 'table']
+
+    to_execute = True
 
     def __init__(self, engine):
         assert isinstance(engine, bicycle.engine.Engine)
@@ -71,9 +72,6 @@ class PrepareStep(SittableGameStepMixin, GameStep):
     """
     """
 
-    __timeout__ = 0
-    to_execute = True
-
     def __init__(self, engine):
         GameStep.__init__(self, engine)
         SittableGameStepMixin.__init__(self)
@@ -90,8 +88,7 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
     """One or many players are wagering.
     """
 
-    __timeout__ = 15
-    to_execute = True  # Maybe base this instead on any(self.table.seats)
+    __timeout__ = 5
 
     def __init__(self, engine):
         GameStep.__init__(self, engine)
@@ -103,15 +100,15 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
         """
 
         self.table.prepare()
-        return any(self.table.wagers)
+        result = any(self.table.wagers)
+        if result is False:
+            self.table.cleanup()
+        return result
 
 
 class DealStep(GameStep):
     """
     """
-
-    __timeout__ = 0
-    to_execute = True
 
     def __call__(self):
         self.table.deal_all()
@@ -123,7 +120,6 @@ class PlayerStep(GameStep):
     """
 
     __timeout__ = 15
-    to_execute = True
 
     def __init__(self, engine):
         GameStep.__init__(self, engine)
@@ -153,7 +149,6 @@ class ResolveStep(GameStep):
     """
 
     __timeout__ = 10
-    to_execute = True
 
     def __call__(self):
         """
@@ -165,9 +160,6 @@ class ResolveStep(GameStep):
 class CleanupStep(GameStep):
     """
     """
-
-    __timeout__ = 0
-    to_execute = True
 
     def __call__(self):
         self.table.cleanup()
