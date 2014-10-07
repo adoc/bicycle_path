@@ -6,9 +6,10 @@ import itertools
 
 import bicycle.card
 
-from bicycle import random, map_serialize
+from bicycle import random
 
 
+# Just some py2.7 > py3 voodoo.
 try:
     range = xrange
 except NameError:
@@ -16,8 +17,10 @@ except NameError:
 
 
 class InsufficientBankroll(Exception):
+    """Exception thrown when a player has an insufficient bankroll and
+    a `wager` is made.
     """
-    """
+
     pass
 
 
@@ -91,6 +94,8 @@ class Seats(list):
     """
 
     def __init__(self, n, base_obj_factory=lambda: None):
+        """Returns a `Seats` object.
+        """
         self.base_obj_factory = base_obj_factory
         if isinstance(n, int):
             list.__init__(self, [self.base_obj_factory() for _ in range(n)])
@@ -141,6 +146,9 @@ class RotatingDealer(Seats):
     """Used in place of `Seats` in the cases of a rotating deal.
     """
     def __init__(self, n, offset=0, **kwa):
+        """Returns a `RotatingDealer` object.
+        """
+
         Seats.__init__(self, n, **kwa)
         self._offset = 0
 
@@ -157,9 +165,14 @@ class RotatingDealer(Seats):
             yield cycle_self.next()
 
     def increment(self):
+        """
+        """
         self._offset += 1
 
     def rotate(self):
+        """Rotate the deal. Alias of `increment`.
+        """
+
         self.increment()
 
 
@@ -314,10 +327,6 @@ class Table(object):
 
         while self.to_leave:
             self.seats.remove(self.to_leave.pop())
-
-        # for player in self.to_leave:
-        #     self.seats.remove(player)
-        # self.to_leave = []
 
 
 class CardTable(Table):
@@ -498,7 +507,7 @@ class WagerTableMixin(object):
     def wager(self, player, amount):
         """Queue up a wager.
         """
-        self.to_wager[player] = self.to_wager.get(player, 0) + amount
+        self.to_wager[player] = self.to_wager.get(player, 0) + self.wager_func(player, amount)
         return amount
 
     def resolve(self):

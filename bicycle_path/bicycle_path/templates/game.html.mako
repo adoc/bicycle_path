@@ -3,7 +3,7 @@
 <div class="container">
     <div class="jumbotron">
         <div class="page-header"><h1>Table Games</h1></div>
-        <h2>Just a temporary demo site for Coda's Card Game Engine.</h2>
+        <h2>Just a temporary Alpha testing site for Coda's Card Game Engine.</h2>
         <p><a href="#table1" class="btn btn-primary btn-lg" role="button">Go Play! &raquo;</a></p>
 
         <br />
@@ -139,7 +139,6 @@
         
     </div>
 </div>
-
 
 <div style="min-height: 400px" class="container">
 

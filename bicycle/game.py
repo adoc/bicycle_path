@@ -27,6 +27,7 @@ class GameStep(object):
         self.engine = engine
         self.table = engine.table
         self.state = engine.state
+        # May remove `timeout` and place it in the engine.
         self.timeout = self.__timeout__
 
     def __call__(self):
@@ -100,10 +101,13 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
         """
 
         self.table.prepare()
-        result = any(self.table.wagers)
-        if result is False:
-            self.table.cleanup()
-        return result
+        return any(self.table.wagers)
+
+        # What is this cleaning up??
+        # result = any(self.table.wagers)
+        # if result is False:
+        #     self.table.cleanup()
+        # return result
 
 
 class DealStep(GameStep):
@@ -122,13 +126,16 @@ class PlayerStep(GameStep):
     __timeout__ = 15
 
     def __init__(self, engine):
+        """
+        """
+
         GameStep.__init__(self, engine)
 
-        # Iterate through players.
-        self._play_all = self.table._play_all_iter()
+        self._play_all = self.table._play_all_iter() # Set up iterator.
 
         next = self.next() # Get first player.
-        assert next is True
+        assert next is True     # Assert on second line in case code is
+                                # optimized to .pyo
 
     def next(self):
         try:
@@ -153,6 +160,7 @@ class ResolveStep(GameStep):
     def __call__(self):
         """
         """
+
         self.table.resolve()
         return True # Not sure in what cases resolve would return False.
 
@@ -162,6 +170,9 @@ class CleanupStep(GameStep):
     """
 
     def __call__(self):
+        """
+        """
+
         self.table.cleanup()
         return True # Cleanup always returns True??
 
@@ -172,15 +183,14 @@ class GameState(object):
     hold the current state of a game.
     """
 
-    __game__ = [] # Subclass to create the actual game.
+    __game__ = []       # Subclass to create the actual game.
     __table__ = bicycle.table.Table
 
     def __init__(self, *args, **kwa):
         """
         """
 
-        # Instance a table.
-        self.table = self.__table__(*args, **kwa)
+        self.table = self.__table__(*args, **kwa)   # Instance a table.
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved
