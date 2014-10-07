@@ -69,8 +69,8 @@ function update_table_view(data) {
 
 
     if (data.in_game === true &&
-        (data.step == "PrepareStep" || data.step == "WagerStep" || data.step == "InsuranceStep")
-        || data.step == "ResolveStep") {
+        (data.step == "PrepareStep" || data.step == "WagerStep" || data.step == "InsuranceStep"
+        || data.step == "ResolveStep")) {
         $("#bj1 .wager").show();
     } else {
         $("#bj1 .wager").hide();
