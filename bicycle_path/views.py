@@ -3,14 +3,18 @@ import pyramid.httpexceptions
 from pyramid.view import view_config
 
 from bicycle.player import Player
+from bicycle.marshal import marshal_object
 
 
-def player_in_engines(request, player):
-    def _player_in_engines():
-        for key, engine in request.registry.settings['engines'].items():
-            if player in engine.table.to_sit or player in engine.table.seats:
-                yield key
-    return list(_player_in_engines())
+def _get_engine_player(request):
+    try:
+        engine_id = request.matchdict['engine']
+        engine = request.registry.settings['engines'][engine_id]
+        player = request.session['player']
+    except KeyError:
+        raise pyramid.httpexceptions.HTTPNotFound()
+    else:
+        return engine_id, engine, player
 
 
 # Website Views
@@ -20,57 +24,105 @@ def my_view(request):
     return {'project': 'bicycle_path'}
 
 
-def game_view(request):
+def meta_view(request):
     player = request.session['player'] = request.session.get('player', Player(bankroll=100000))
-    in_games = request.session.get('in_games',
-                                   player_in_engines(request, player))
-    return {'player': player,
-            'in_games': json.dumps(in_games)}
+
+    return {'player': player}
 
 
 # RESTful Views
 # =============
-# @view_config(route_name='engine_action', renderer='json')
-def engine_action(request):
-    engine = request.matchdict['engine']
-    action = request.matchdict['action']
-
-    return [engine, action]
-
-
-@view_config(route_name='engine_sit', renderer='json')
-def engine_sit(request):
-    try:
-        player = request.session['player']
-        engine = request.registry.settings['engines'][request.matchdict['engine']]
-    except KeyError:
-        raise pyramid.httpexceptions.HTTPNotFound()
-    else:
-        return engine.game.sit(player)
-
-
-@view_config(route_name='engine_leave', renderer='json')
-def engine_leave(request):
-    try:
-        player = request.session['player']
-        engine = request.registry.settings['engines'][request.matchdict['engine']]
-    except KeyError:
-        raise pyramid.httpexceptions.HTTPNotFound()
-    else:
-        return engine.game.leave(player)
-
-
 @view_config(route_name='engine_list', renderer='json')
 def engine_list(request):
     return [engine for engine in request.registry.settings['engines']]
 
 
+@view_config(route_name='engine_sit', renderer='json')
+def engine_sit(request):
+    _, engine, player = _get_engine_player(request)
+    return engine.game.sit(player)
+
+
+@view_config(route_name='engine_leave', renderer='json')
+def engine_leave(request):
+    _, engine, player = _get_engine_player(request)
+    return engine.game.leave(player)
+
+
+@view_config(route_name='engine_wager', renderer='json')
+def engine_wager(request):
+    _, engine, player = _get_engine_player(request)
+    try:
+        amount = int(request.params['amount'])
+    except (KeyError, ValueError, TypeError):
+        raise pyramid.httpexceptions.HTTPBadRequest()
+    else:
+        engine.game.wager(player, amount)
+        return True
+
+
+@view_config(route_name='engine_hit', renderer='json')
+def engine_hit(request):
+    _, engine, player = _get_engine_player(request)
+    if player is engine.game.player: # If current player.
+        engine.game.hit()
+        return True
+
+
+@view_config(route_name='engine_stand', renderer='json')
+def engine_stand(request):
+    _, engine, player = _get_engine_player(request)
+    if player is engine.game.player:
+        engine.game.stand()
+        return True
+
+
+@view_config(route_name='engine_double', renderer='json')
+def engine_double(request):
+    _, engine, player = _get_engine_player(request)
+    if player is engine.game.player:
+        engine.game.double()
+        return True
+
+
+def _engine_observation(engine_id, engine, player):
+    """
+    """
+
+    # Combine the marshaled game state.
+    for k, v in marshal_object(engine.game).items():
+        yield k, v
+
+    yield 'engine_id', engine_id
+    yield 'step', engine.game.__class__.__name__
+    yield 'in_game', (player in engine.table.to_sit or
+                        player in engine.table.seats and
+                        player not in engine.table.to_leave)
+
+
+    def sum_cards(hand):
+        for card in hand:
+            if card.up is True:
+                yield int(card)
+
+    yield 'dealer_total', sum(sum_cards(engine.table.dealer_hand))
+    yield 'shown_totals', [sum(sum_cards(hand)) if hand else 0 for hand in engine.table.hands]
+
+    if player in engine.table.seats:
+        idx = engine.table.seats.index(player)
+        hand = engine.table.hands[idx]
+
+        # Some of these can be incorporated in to the table state.
+        yield 'your_turn', (hasattr(engine.game, 'player') and
+                            engine.game.player is player)
+
+        yield 'in_seat', (player in engine.table.seats and
+                            engine.table.seats.index(player))
+
+        yield 'your_hand', marshal_object(hand, persist=True)
+        yield 'hand_total', int(hand)
+
+
 @view_config(route_name='engine_observe', renderer='json')
 def engine_observe(request):
-    try:
-        engine = request.registry.settings['engines'][request.matchdict['engine']]
-    except KeyError:
-        raise pyramid.httpexceptions.HTTPNotFound()
-    else:
-        query = engine.query()
-        return query[0].__class__.__name__, query[1]
+    return dict(_engine_observation(*_get_engine_player(request)))
