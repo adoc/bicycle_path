@@ -14,6 +14,43 @@ import bicycle.marshal
 ENGINE_TICK = 0.1  # In seconds.
 
 
+# This can possibly become part of the GameStep base.
+
+class EngineStep(object):
+    """
+    """
+    
+    def __init__(self, step):
+        """
+        `step`  -   Instanced GameStep object.
+        """
+
+        self.step = step
+        self.step.execute = self
+        # self.result = None
+        self.timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
+                                     self)
+        self.started = time.time()
+        self.timer.start()
+
+    def __call__(self):
+        """Essentially the "Next"
+        """
+
+        if self.timer is not None and not self.timer.finished:
+            self.timer.cancel()
+        self.result = self.step()
+        return self.result
+
+    @property
+    def timeout(self):
+        """
+        """
+
+        return math.floor(self.step.__timeout__ -
+                          (time.time() - self.started))
+
+
 class Engine(threading.Thread):
     """
     * Not sure how well this will play with Tornado IOLoop or
@@ -23,87 +60,53 @@ class Engine(threading.Thread):
     def __init__(self, state):
         """
         """
-        assert isinstance(state, bicycle.game.GameState)
         threading.Thread.__init__(self)
+        assert isinstance(state, bicycle.game.GameState)
 
         self.state = state
         self.table = state.table
 
-        self.game_steps = itertools.cycle(state.__game__)
-
-        self.game = None    # Current GameStep.
-        self.game_cls= None # Current GameStep Class
-        self.timer = None   # Current GameStep timer.
-        self.result = None  # Current GameStep result.
+        self.__steps = self.game_steps = itertools.cycle(state.__game__)
 
         self.alive = False  # Engine thread alive.
 
-    def execute_step(self):
-        """This can be triggered by the timer or by a GameStep action.
-        """
-        if self.timer is not None:
-            self.timer.cancel() # Must cancel the time as a first action.
-        
-        self.result = self.game()
-        
-        if self.result is not True:
-            self.set_timer()
-
-    def set_timer(self):
-        """This is the game step timer.
-        """
-        if self.timer is not None:
-            self.timer.cancel()
-
-        self.timer = threading.Timer(self.game.__timeout__ or ENGINE_TICK,
-                                     self.execute_step)
-        self.timer_started = time.time()
-        self.timer.start()
-
-    def handler(self):
+    def __iter__(self):
         """
         """
 
-        for game_step in self.game_steps:   # Iterate through the
-                                            #   cycle of steps.
-            game = game_step(self)  # Instance the GameStep
-            # self.game_cls = game_step
-            self.result = None
-
-            if game.to_execute is True:
-                self.game = game
-                self.set_timer()
-                yield True
-                while not self.result and self.alive:
-                    self.game.timeout = math.floor(self.game.__timeout__ -
-                                            (time.time() - self.timer_started))
+        while self.alive is True:
+            time.sleep(ENGINE_TICK)
+            step = self.__steps.next()(self)    # Iterate to next step and
+                                                # instance `GameStep.`
+            while step.to_execute and self.alive is True:
+                engine_step = EngineStep(step)
+                yield step
+                while not hasattr(engine_step, 'result') and self.alive is True:
                     time.sleep(ENGINE_TICK)
-
-            else:
-                yield False
-                time.sleep(ENGINE_TICK)
-
-    def query(self):
-        """Query the engine for game state.
-        """
-
-        return self.game, bicycle.marshal.marshal_object(self.game)
+                if engine_step.result is True:
+                    break
 
     def run(self):
+        """
+        """
+
         self.alive = True
         self.tick_count = 0
 
-        handler = self.handler()
+        handler = iter(self)
 
         while self.alive:
-            handler.next()
-            time.sleep(ENGINE_TICK)
+            self.game = handler.next()
+            print(self.game)
+            #time.sleep(ENGINE_TICK)
 
     def stop(self):
+        """
+        """
+        
         self.alive = False
         self.timer.cancel()
         self.join()
         return True
-
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

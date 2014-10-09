@@ -183,13 +183,13 @@ class TestPlayerStep(unittest.TestCase):
         self.assertIs(bicycle.game.PlayerStep.to_execute, True)
 
     def test_init(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_next(self):
-        pass
+        assert False, "Should be test code here."
 
     def test_call(self):
-        pass
+        assert False, "Should be test code here."
 
 
 class TestResolveStep(unittest.TestCase):
@@ -197,17 +197,35 @@ class TestResolveStep(unittest.TestCase):
         self.assertIs(bicycle.game.ResolveStep.__timeout__, 10)
         self.assertIs(bicycle.game.ResolveStep.to_execute, True)
 
+    def test_init(self):
+        assert False, "Should be test code here."
+
+    def test_call(self):
+        assert False, "Should be test code here."
+
 
 class TestCleanupStep(unittest.TestCase):
     def test_class(self):
-        self.assertIs(bicycle.game.ResolveStep.__timeout__, 10)
-        self.assertIs(bicycle.game.ResolveStep.to_execute, True)
+        self.assertIs(bicycle.game.CleanupStep.__timeout__, 0)
+        self.assertIs(bicycle.game.CleanupStep.to_execute, True)
+
+    def test_init(self):
+        assert False, "Should be test code here."
+
+    def test_call(sellf):
+        assert False, "Should be test code here."
 
 
 class TestGameState(unittest.TestCase):
     def test_class(self):
         self.assertEqual(bicycle.game.GameState.__game__, [])
         self.assertIs(bicycle.game.GameState.__table__, bicycle.table.Table)
+
+    def test_init(self):
+        assert False, "Should be test code here."
+
+    def test_call(self):
+        assert False, "Should be test code here."
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

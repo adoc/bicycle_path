@@ -73,7 +73,7 @@ class Wager(object):
 
     __bool__ = __nonzero__
 
-    def __json__(self, request):
+    def __json__(self, *args):
         return {'amount': self.amount}
 
     def __repr__(self):
@@ -119,8 +119,9 @@ class Seats(list):
     def pop(self, i):
         """
         """
-        list.pop(self, i)
+        item = list.pop(self, i)
         list.insert(self, i, self.base_obj)
+        return item
 
     # Should this be named `replace`??
     def insert(self, i, item):
@@ -333,7 +334,8 @@ class CardTable(Table):
     """
     """
 
-    __persistent_keys__ = ['hands', 'shoe', 'discard', 'reshuffle_threshold'] + Table.__persistent_keys__
+    __persistent_keys__ = (['hands', 'shoe', 'discard', 'reshuffle_threshold'] +
+                           Table.__persistent_keys__)
     __view_keys__ = ['hands', 'reshuffle_threshold'] + Table.__view_keys__
 
     def __init__(self, num_seats=6, reshuffle_threshold=1.0,
@@ -490,6 +492,9 @@ class WagerTableMixin(object):
     # Iterators
     # =========
     def __iter__(self):
+        """
+        """
+
         for seat, wager in zip(self.seats, self.wagers):
             yield seat, wager
 
@@ -507,26 +512,9 @@ class WagerTableMixin(object):
     def wager(self, player, amount):
         """Queue up a wager.
         """
-        self.to_wager[player] = self.to_wager.get(player, 0) + self.wager_func(player, amount)
+        self.to_wager[player] = (self.to_wager.get(player, 0) +
+                                 self.wager_func(player, amount))
         return amount
-
-    def resolve(self):
-        """
-        """
-        # Not completed.
-
-        # Large percentage of card games should resolve with the top N
-        # hands or at least hands in a sorted order.
-        hands = sorted(self.hands,
-                       key=lambda hand: int(hand))
-
-        # List of winning hands only
-        winning_hands = [hand for hand in hands if int(hand) == int(hands[0])]
-
-        # Total pot.
-        pot = sum([wager for wager in wagers if wager is not None])
-
-        winnings = pot / len(winning_hands)
 
     def prepare(self):
         """

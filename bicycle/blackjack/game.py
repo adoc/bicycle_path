@@ -51,9 +51,9 @@ class HandActionStepMixin(object):
         """
         self.table.deal(self.hand)
         if self.hand.stop is True:
-            self.engine.execute_step()
+            self.engine.execute_step() # Finish step.
         else:
-            self.engine.set_timer()
+            self.engine.set_timer() # Reset timer.
 
 
 # Some pieces here can moved back in to bicycle.game.

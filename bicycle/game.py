@@ -187,7 +187,7 @@ class GameState(object):
     __table__ = bicycle.table.Table
 
     def __init__(self, *args, **kwa):
-        """
+        """Return the `GameState` with instanced `Table`.
         """
 
         self.table = self.__table__(*args, **kwa)   # Instance a table.

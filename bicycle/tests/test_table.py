@@ -8,7 +8,6 @@ import bicycle.player
 import bicycle.table
 
 
-
 class TestModule(unittest.TestCase):
     def test_exceptions(self):
         self.assertTrue(issubclass(bicycle.table.InsufficientBankroll, 
@@ -31,9 +30,8 @@ class TestModule(unittest.TestCase):
 class TestWager(unittest.TestCase):
     def test_init(self):
         w1 = bicycle.table.Wager()
-        self.assertEqual(w1.amount, 0)
-
         w2 = bicycle.table.Wager(amount=1)
+        self.assertEqual(w1.amount, 0)
         self.assertEqual(w2.amount, 1)
 
     def test_eq(self):
@@ -57,28 +55,29 @@ class TestWager(unittest.TestCase):
         self.assertGreater(w1, 1)
         self.assertGreater(w2, 1)
 
-    def test_bool(self):
+    def test_bool_nonzero(self):
         w1 = bicycle.table.Wager()
+        w2 = bicycle.table.Wager(amount=0.0)
+        w3 = bicycle.table.Wager(amount=0.1)
         self.assertFalse(w1)
+        self.assertFalse(w2)
+        self.assertFalse(w2.__nonzero__())
+        self.assertTrue(w3)
+        self.assertTrue(w3.__nonzero__())
 
-        w1 = bicycle.table.Wager(amount=0.0)
-        self.assertFalse(w1)
-
-        w1 = bicycle.table.Wager(amount=0.1)
-        self.assertTrue(w1)
-
-    def test_nonzero(self):
-        w1 = bicycle.table.Wager()
-        self.assertFalse(w1)
-
-        w1 = bicycle.table.Wager(amount=0.0)
-        self.assertFalse(w1.__nonzero__())
-
-        w1 = bicycle.table.Wager(amount=0.1)
-        self.assertTrue(w1.__nonzero__())
+    def test_json(self):
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=5)
+        self.assertEqual(w1.__json__(), {'amount': 10})
+        self.assertEqual(w2.__json__(), {'amount': 5})
 
     def test_repr(self):
-        assert False, "Should be test code here."
+        w1 = bicycle.table.Wager(amount=10)
+        w2 = bicycle.table.Wager(amount=5)
+        self.assertEqual(repr(w1), "Wager(amount=%s) @ %s" % (w1.amount,
+                                                              hex(id(w1))))
+        self.assertEqual(repr(w2), "Wager(amount=%s) @ %s" % (w2.amount,
+                                                              hex(id(w2))))
 
 
 class TestSeats(unittest.TestCase):
@@ -152,7 +151,15 @@ class TestSeats(unittest.TestCase):
         self.assertRaises(ValueError, lambda: s1.remove(False))
 
     def test_pop(self):
-        assert False, "Should be test code here."
+        s1 = bicycle.table.Seats(6)
+        s1[0] = True
+        s1[1] = False
+        s1[2] = True
+        s1[3] = False
+        s1[4] = True
+        s1[5] = False
+        self.assertTrue(s1.pop(0))
+        self.assertIsNone(s1[0])
 
     def test_insert(self):
         s1 = bicycle.table.Seats(6)
@@ -625,7 +632,23 @@ class TestCardWagerTable(unittest.TestCase):
         self.assertEqual(t1.to_wager, {})
 
     def test_iter(self):
-        assert False, "Should be test code here."
+        t1 = WagerCardTable()
+        p1 = bicycle.player.Player(bankroll=1000)
+        p2 = bicycle.player.Player(bankroll=1000)
+        p3 = bicycle.player.Player(bankroll=1000)
+
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.sit(p3)
+        t1.wager(p1, 100)
+        t1.wager(p2, 200)
+        t1.wager(p3, 300)
+        t1.prepare()
+
+        ti = iter(t1)
+        self.assertEqual((p1, 100), ti.next())
+        self.assertEqual((p2, 200), ti.next())
+        self.assertEqual((p3, 300), ti.next())
 
     def test_leave(self):
         t1 = WagerCardTable()
@@ -638,15 +661,22 @@ class TestCardWagerTable(unittest.TestCase):
         self.assertNotIn(p1, t1.to_wager)
 
     def test_wager(self):
-        assert False, "Should be test code here."
+        t1 = WagerCardTable()
+        p1 = bicycle.player.Player(bankroll=1000)
+        p2 = bicycle.player.Player(bankroll=1000)
+        p3 = bicycle.player.Player(bankroll=1000)
 
-    def test_resolve(self):
-        assert False, "Should be test code here."
+        t1.sit(p1)
+        t1.sit(p2)
+        t1.sit(p3)
+        t1.prepare()
 
-    def test_collect_wagers(self):
-        assert False, "Should be test code here."
+        self.assertEqual(t1.wager(p1, 100), 100)
+        self.assertEqual(p1.bankroll, 900)
+        self.assertRaises(bicycle.table.InsufficientBankroll,
+                          lambda: t1.wager(p2, 1001))
 
-    def test_place_wagers(self):
+    def prepare(self):
         assert False, "Should be test code here."
 
     def cleanup(self):
