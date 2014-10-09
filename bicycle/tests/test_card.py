@@ -197,6 +197,8 @@ class TestCards(unittest.TestCase):
         h.build()
         self.assertEqual(int(h), 364)
 
+        assert False, "Need to test `snoop` keyword arg on __int__"
+
     def test_diff_check(self):
         assert False, "Cards.diff_check is completely wrong. Revisit this"
         # There are more checks that can be put here.

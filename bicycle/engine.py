@@ -23,20 +23,20 @@ class EngineStep(object):
         """
 
         self.step = step
-        self.step.execute = self # Set callback on the step. The neccesity for
-                                 # this indicates there is a better factor.
+        self.step.execute = self # Set callback on the step.
+                                 # This indicates there is a better factor.
         self.step.delay = self.delay
         self.__start_timer()
 
     def __call__(self):
-        """Essentially the "Next"
+        """Cancel the timer and store the result from the `GameStep`.
         """
         self.cancel()
         self.result = self.step()
         return self.result
 
     def __start_timer(self):
-        # 
+        #
         self.__timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
                                        self)
         self.__timer.start()
@@ -50,8 +50,6 @@ class EngineStep(object):
 
         if self.__timer is not None and not self.__timer.finished:
             self.__timer.cancel()
-
-
 
 
 class Engine(threading.Thread):
@@ -81,11 +79,10 @@ class Engine(threading.Thread):
         while self.alive is True:
             time.sleep(ENGINE_TICK)
             step = steps.next()(self)   # Iterate to next step and
-                                        #   instance `GameStep.` 
+                                        #   instance `GameStep.`
+            hasattr(step, '__start__') and step.__start__()
             while step.to_execute and self.alive is True:
                 engine_step = EngineStep(step)
-                hasattr(step, '__start__') and step.__start__()
-                print step.timeout
                 yield step
                 
                 # Wait for a result.
@@ -109,7 +106,7 @@ class Engine(threading.Thread):
         handler = iter(self)
         while self.alive:
             self.game = handler.next()
-            print(self.game)    # This will ultimately be a message
+            # print(self.game)  # This will ultimately be a message
                                 #   out to the appropriate websocket.
 
     def stop(self):
