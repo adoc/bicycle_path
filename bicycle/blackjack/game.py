@@ -1,34 +1,43 @@
+"""Blackjack Game.
 """
-"""
-
-import itertools
 
 import bicycle.game
 import bicycle.blackjack.card
 import bicycle.blackjack.table
 
 
-# Allow betting during the prep step.
 class PrepareStep(bicycle.game.WagerGameStepMixin, bicycle.game.PrepareStep):
+    """Prepare the game round.
+    Allow betting during the `PrepareStep`
+    """
     def __init__(self, engine):
         bicycle.game.PrepareStep.__init__(self, engine)
         bicycle.game.WagerGameStepMixin.__init__(self)
 
 
 class InsuranceStep(bicycle.game.GameStep):
-    """
+    """Ask the table for insurance.
     """
 
     __timeout__ = 10
 
     @property
     def to_execute(self):
+        """Execute when the dealer is showing an Ace.
+        """
+
         return self.table.dealer_hand[1] == bicycle.blackjack.card.ace
 
     def insurance(self, player, amount):
+        """
+        """
+
         pass
 
     def __call__(self):
+        """
+        """
+
         return True
 
 
@@ -38,35 +47,39 @@ class HandActionStepMixin(object):
 
     @property
     def player(self):
+        """
+        """
+
         return self._play_item[0]
 
     @property
     def hand(self):
+        """
+        """
+
         return self._play_item[1]
 
-    # Player Actions
-    # ==============
     def hit(self):
         """
         """
+
         self.table.deal(self.hand)
         if self.hand.stop is True:
-            self.execute()
-            # self.engine.execute_step() # Finish step.
+            self.execute()  # Finish step.
         else:
-            self.delay()
-            # self.engine.set_timer() # Reset timer.
+            self.delay()    # Reset timer.
 
 
-# Some pieces here can moved back in to bicycle.game.
 class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
     """
-    Iterates through 
     """
 
     __timeout__ = 22
 
     def __init__(self, engine):
+        """
+        """
+
         bicycle.game.PlayerStep.__init__(self, engine)
         HandActionStepMixin.__init__(self)
 
@@ -78,22 +91,23 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         return not self.table.dealer_hand.blackjack
 
     def next(self):
+        """
+        """
+
         n = bicycle.game.PlayerStep.next(self)
 
         if n is True:
             self.hand.up()
-
             if self.hand.stop is True:
                 self.execute()
-                # self.engine.execute_step()
 
         return n
 
     def stand(self):
         """
         """
+
         self.execute()
-        # self.engine.execute_step()
 
     def double(self):
         """
@@ -102,7 +116,6 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
 
         self.hit()
         self.execute()
-        # self.engine.execute_step()
 
     def split(self):
         """
@@ -124,6 +137,7 @@ class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
     def __init__(self, engine):
         """
         """
+
         bicycle.game.GameStep.__init__(self, engine)
         HandActionStepMixin.__init__(self)
 
@@ -156,10 +170,16 @@ class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     timeout = 8
 
     def __init__(self, engine):
+        """
+        """
+
         bicycle.game.ResolveStep.__init__(self, engine)
         bicycle.game.WagerGameStepMixin.__init__(self)
 
     def __call__(self):
+        """
+        """
+
         return True
 
 

@@ -11,10 +11,8 @@ import bicycle.table
 import bicycle.marshal
 
 
-ENGINE_TICK = 0.1  # In seconds.
+ENGINE_TICK = 0.1   # In seconds.
 
-
-# This can possibly become part of the GameStep base.
 
 class EngineStep(object):
     """
@@ -39,6 +37,7 @@ class EngineStep(object):
         return self.result
 
     def __start_timer(self):
+        # 
         self.__timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
                                        self)
         self.__timer.start()
@@ -47,6 +46,9 @@ class EngineStep(object):
     delay = __start_timer
 
     def cancel(self):
+        """
+        """
+
         if self.__timer is not None and not self.__timer.finished:
             self.__timer.cancel()
 
@@ -68,47 +70,49 @@ class Engine(threading.Thread):
     def __init__(self, state):
         """
         """
+
         threading.Thread.__init__(self)
         assert isinstance(state, bicycle.game.GameState)
 
         self.state = state
         self.table = state.table
-
-        # self.__steps = self.game_steps = itertools.cycle(state.__game__)
-
         self.alive = False  # Engine thread alive.
 
     def __iter__(self):
         """
         """
+
         steps = itertools.cycle(self.state.__game__)
 
         while self.alive is True:
-            time.sleep(ENGINE_TICK)
-            step = steps.next()(self)
-            # step = self.__steps.next()(self)    # Iterate to next step and
-            #                                     # instance `GameStep.`
+            step = steps.next()(self)   # Iterate to next step and
+                                        #   instance `GameStep.` 
             while step.to_execute and self.alive is True:
+                time.sleep(ENGINE_TICK)
                 engine_step = EngineStep(step)
+                hasattr(step, '__start__') and step.__start__()
                 yield step
+                
+                # Wait for a result.
                 while not hasattr(engine_step, 'result') and self.alive is True:
                     time.sleep(ENGINE_TICK)
+
                 if engine_step.result is True:
+                    break
+                elif self.alive is not True:
+                    engine_step.cancel()
                     break
 
     def run(self):
-        """
+        """Very simple execution example.
         """
 
         self.alive = True
-        # self.tick_count = 0
-
         handler = iter(self)
-
         while self.alive:
             self.game = handler.next()
-            print(self.game)
-            #time.sleep(ENGINE_TICK)
+            print(self.game)    # This will ultimately be a message
+                                #   out to the appropriate websocket.
 
     def stop(self):
         """
@@ -118,5 +122,6 @@ class Engine(threading.Thread):
         # self.timer.cancel()
         self.join()
         return True
+
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

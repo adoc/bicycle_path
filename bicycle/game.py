@@ -1,37 +1,8 @@
 """
 """
 
-import itertools
-
 import bicycle.table
 import bicycle.engine
-
-
-class GameStep(object):
-    """
-    GameStep instances should handle the various exceptions the lower
-    order objects can raise.
-    * GameStep instances never have a state that is used outside if its
-    own context. I.e.; Don't serialize GameStep or assign instance
-    vars that will be used outside of the GameStep instance.
-    """
-
-    __timeout__ = 0
-    __persistent_keys__ = ['timeout', 'table']
-    __view_keys__ = ['timeout', 'table']
-
-    to_execute = True
-
-    def __init__(self, engine):
-        assert isinstance(engine, bicycle.engine.Engine)
-        self.engine = engine
-        self.table = engine.table
-        self.state = engine.state
-        # May remove `timeout` and place it in the engine.
-        self.timeout = self.__timeout__
-
-    def __call__(self):
-        raise NotImplementedError()
 
 
 class SittableGameStepMixin(object):
@@ -69,11 +40,45 @@ class WagerGameStepMixin(object):
         return True
 
 
+class GameStep(object):
+    """
+    * GameStep instances never have a state that is used outside if its
+    own context. I.e.; Don't serialize GameStep or assign instance
+    vars that will be used outside of the GameStep instance.
+    """
+    # GameStep instances should handle the various exceptions the lower
+    #   order objects can raise.
+
+    __timeout__ = 0
+    __persistent_keys__ = ['table']
+    __view_keys__ = ['table']
+
+    to_execute = True
+
+    def __init__(self, engine):
+        """
+        """
+
+        assert isinstance(engine, bicycle.engine.Engine)
+        self.engine = engine
+        self.table = engine.table
+        self.state = engine.state
+
+    def __call__(self):
+        """
+        """
+
+        raise NotImplementedError()
+
+
 class PrepareStep(SittableGameStepMixin, GameStep):
     """
     """
 
     def __init__(self, engine):
+        """
+        """
+
         GameStep.__init__(self, engine)
         SittableGameStepMixin.__init__(self)
 
@@ -92,6 +97,9 @@ class WagerStep(SittableGameStepMixin, WagerGameStepMixin, GameStep):
     __timeout__ = 5
 
     def __init__(self, engine):
+        """
+        """
+
         GameStep.__init__(self, engine)
         WagerGameStepMixin.__init__(self)
         SittableGameStepMixin.__init__(self)
@@ -120,7 +128,8 @@ class DealStep(GameStep):
 
 
 class PlayerStep(GameStep):
-    """One or many players are acting on the game state.
+    """One or many players are acting on the game state. Iterate
+    through the players.
     """
 
     __timeout__ = 15
@@ -130,14 +139,17 @@ class PlayerStep(GameStep):
         """
 
         GameStep.__init__(self, engine)
-
         self._play_all = self.table._play_all_iter() # Set up iterator.
 
+    def __start__(self):
         next = self.next() # Get first player.
         assert next is True     # Assert on second line in case code is
                                 # optimized to .pyo
 
     def next(self):
+        """
+        """
+
         try:
             self._play_item = self._play_all.next()
             return True
