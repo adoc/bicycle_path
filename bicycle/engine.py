@@ -35,14 +35,18 @@ class EngineStep(object):
         self.result = self.step()
         return self.result
 
-    def __start_timer(self):
+    def __start_timer(self, timeout=None):
         #
-        self.__timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
-                                       self)
+        self.__timer = threading.Timer(timeout or self.step.__timeout__ or
+                                       ENGINE_TICK, self)
         self.__timer.start()
-        self.step._started = time.time()
+        self.started = self.step._started = time.time()
 
-    delay = __start_timer
+    def delay(self, timeout=None):
+        if timeout:
+            timeout = self.step.timeout + timeout
+        self.__timer.cancel()
+        self.__start_timer(timeout)
 
     def cancel(self):
         """

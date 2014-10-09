@@ -35,6 +35,7 @@ class WagerGameStepMixin(object):
     def wager(self, player, amount):
         """
         """
+        self.delay(1)
 
         # What checks do we run here? bankroll check?
 

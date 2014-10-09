@@ -167,7 +167,7 @@ class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     """
     """
 
-    __timeout__ = 8
+    __timeout__ = 4
 
     def __init__(self, engine):
         """
