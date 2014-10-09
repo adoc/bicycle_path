@@ -85,8 +85,7 @@
             </div>
             <div class="clearfix"></div>
             <a name="table1"></a>
-            <h3 class="step"></h3>
-            <p>Timeout: <span class="timeout"></span></p>
+            
         </div>
 
         <div class="well">
@@ -95,6 +94,10 @@
 
             <div style="margin: 4px 4px;">
                 <div style="float: left;" class="player player5"></div>
+                <div style="text-align: center;">
+                    <h3 class="step"></h3>
+                    <p class="timeout"></p>
+                </div>
                 <div style="float: right;" class="player player0"></div>
             </div>
             <div class="clearfix"></div>
@@ -140,7 +143,7 @@
     </div>
 </div>
 
-<div style="min-height: 400px" class="container">
+## <div style="min-height: 400px" class="container">
 
 </div>
 <%def name="scripts()">
