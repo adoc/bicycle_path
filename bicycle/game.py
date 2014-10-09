@@ -1,6 +1,8 @@
 """
 """
 
+import math
+import time
 import bicycle.table
 import bicycle.engine
 
@@ -51,7 +53,7 @@ class GameStep(object):
 
     __timeout__ = 0
     __persistent_keys__ = ['table']
-    __view_keys__ = ['table']
+    __view_keys__ = ['table', 'timeout']
 
     to_execute = True
 
@@ -63,6 +65,14 @@ class GameStep(object):
         self.engine = engine
         self.table = engine.table
         self.state = engine.state
+
+    @property
+    def timeout(self):
+        """
+        """
+
+        return math.floor(self.__timeout__ -
+                          (time.time() - self._started))
 
     def __call__(self):
         """

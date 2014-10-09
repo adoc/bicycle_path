@@ -198,10 +198,11 @@ class Cards(list):
         assert deal_idx == 0 or deal_idx == -1, "`deal_idx` must be 0 or -1."
         self._deal_idx = deal_idx
 
-    def __int__(self):
+    def __int__(self, snoop=False):
         """Sum all the cards in the list.
         """
-        return sum(int(val) for val in self)
+        return sum(int(card) if snoop is True or card.up is True else 0
+                        for card in self)
 
     def diff_check(self, threshold):
         """

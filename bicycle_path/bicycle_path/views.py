@@ -85,6 +85,12 @@ def engine_double(request):
         return True
 
 
+@view_config(route_name='engine_pause', renderer='json')
+def engine_pause(request):
+    _, engine, player = _get_engine_player(request)
+    engine.pause()
+
+
 def _engine_observation(engine_id, engine, player):
     """
     """
@@ -99,14 +105,16 @@ def _engine_observation(engine_id, engine, player):
                         player in engine.table.seats and
                         player not in engine.table.to_leave)
 
-
     def sum_cards(hand):
+        # Broken handling does not account for aces.
+        # We need a sum in the Hand class that doesn't total
+        # face down cards.
         for card in hand:
             if card.up is True:
                 yield int(card)
 
-    yield 'dealer_total', sum(sum_cards(engine.table.dealer_hand))
-    yield 'shown_totals', [sum(sum_cards(hand)) if hand else 0 for hand in engine.table.hands]
+    yield 'dealer_total', int(engine.table.dealer_hand) #  sum(sum_cards(engine.table.dealer_hand))
+    yield 'shown_totals', [int(hand) if hand else 0 for hand in engine.table.hands] # [sum(sum_cards(hand)) if hand else 0 for hand in engine.table.hands]
 
     if player in engine.table.seats:
         idx = engine.table.seats.index(player)

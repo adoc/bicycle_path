@@ -1,7 +1,6 @@
 """
 """
 
-import math
 import time
 import threading
 import itertools
@@ -41,7 +40,7 @@ class EngineStep(object):
         self.__timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
                                        self)
         self.__timer.start()
-        self.started = time.time()
+        self.step._started = time.time()
 
     delay = __start_timer
 
@@ -52,13 +51,7 @@ class EngineStep(object):
         if self.__timer is not None and not self.__timer.finished:
             self.__timer.cancel()
 
-    @property
-    def timeout(self):
-        """
-        """
 
-        return math.floor(self.step.__timeout__ -
-                          (time.time() - self.started))
 
 
 class Engine(threading.Thread):
@@ -77,6 +70,7 @@ class Engine(threading.Thread):
         self.state = state
         self.table = state.table
         self.alive = False  # Engine thread alive.
+        self.paused = False
 
     def __iter__(self):
         """
@@ -85,17 +79,21 @@ class Engine(threading.Thread):
         steps = itertools.cycle(self.state.__game__)
 
         while self.alive is True:
+            time.sleep(ENGINE_TICK)
             step = steps.next()(self)   # Iterate to next step and
                                         #   instance `GameStep.` 
             while step.to_execute and self.alive is True:
-                time.sleep(ENGINE_TICK)
                 engine_step = EngineStep(step)
                 hasattr(step, '__start__') and step.__start__()
+                print step.timeout
                 yield step
                 
                 # Wait for a result.
                 while not hasattr(engine_step, 'result') and self.alive is True:
                     time.sleep(ENGINE_TICK)
+                    while self.paused is True:
+                        engine_step.delay()
+                        time.sleep(ENGINE_TICK)
 
                 if engine_step.result is True:
                     break
@@ -122,6 +120,9 @@ class Engine(threading.Thread):
         # self.timer.cancel()
         self.join()
         return True
+
+    def pause(self):
+        self.paused = not self.paused
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

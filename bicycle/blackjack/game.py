@@ -167,7 +167,7 @@ class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     """
     """
 
-    timeout = 8
+    __timeout__ = 8
 
     def __init__(self, engine):
         """
@@ -191,7 +191,7 @@ class StandardBlackjack(bicycle.game.GameState):
     __game__ = (PrepareStep,
                 bicycle.game.WagerStep,
                 bicycle.game.DealStep,
-                InsuranceStep,
+                # InsuranceStep,
                 PlayerStep,
                 DealerStep,
                 ResolveStep,

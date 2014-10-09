@@ -37,10 +37,10 @@ class Hand(bicycle.card.Cards):
     """
     """
 
-    def __int__(self):
+    def __int__(self, snoop=False):
         """
         """
-        s = bicycle.card.Cards.__int__(self)
+        s = bicycle.card.Cards.__int__(self, snoop)
 
         if s <= 11 and ace in self:
             s += 10
@@ -52,21 +52,22 @@ class Hand(bicycle.card.Cards):
         """The hand is a blackjack.
         """
 
-        return len(self) == 2 and int(self) == 21
+        return len(self) == 2 and self.__int__(snoop=True) == 21
 
     @property
     def busted(self):
         """The hand is busted.
         """
 
-        return int(self) > 21
+        return self.__int__(snoop=True) > 21
 
     @property
     def soft(self):
         """The hand is soft; has an ace.
         """
-
-        return ace in self
+        return bicycle.card.Cards.__int__(self) <= 11 and ace in self
+        #return ace in self  # Nope, this isn't soft. Soft is where the
+                            # ace is acting like an 11.
 
     @property
     def splittable(self):
@@ -80,7 +81,7 @@ class Hand(bicycle.card.Cards):
         """All player actions stop on this Hand.
         """
 
-        return int(self) >= 21
+        return self.__int__(snoop=True) >= 21
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved
