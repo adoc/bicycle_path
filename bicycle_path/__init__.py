@@ -32,6 +32,9 @@ def main(global_config, **settings):
     config.add_route('engine_stand', '/api/v1/engines/{engine}/stand')
     config.add_route('engine_double', '/api/v1/engines/{engine}/double')
 
+    # This should only be available to engines in debug!!!
+    config.add_route('engine_pause', '/api/v1/engines/{engine}/pause')
+
     config.add_route('engine_meta', '/api/v1/meta')
 
     config.add_view('bicycle_path.views.meta_view', route_name='engine_meta',

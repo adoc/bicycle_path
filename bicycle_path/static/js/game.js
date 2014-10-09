@@ -25,17 +25,19 @@ function hand_view(hand) {
 }
 
 function wager_view(wager) {
-    return "<p>Wager: <span>"+wager.amount+"</span></p>"
+    return "<div>Wager: <span>"+wager.amount+"</span></div>"
 }
 
 function total_view(total) {
-    return "<p>Total: <span>"+total+"</span></p>"
+    return "<div>Total: <span>"+total+"</span></div>"
 }
 
 var step_translations = {
     'PrepareStep': "Please take a seat.",
     'WagerStep': "Have a seat and place your bets.",
-    'PlayerStep': "Let's play!"
+    'PlayerStep': "Let's play!",
+    'ResolveStep': "Round Over!",
+    'CleanupStep': ""
 };
 
 
@@ -90,13 +92,13 @@ function update_table_view(data) {
 
     $("#bj1 .step").html(translate_step(data.step));
     $("#bj1 .timeout").html(data.timeout);
-    $("#bj1 .dealer").html(hand_view(data.table.dealer_hand) + "<br />" +
+    $("#bj1 .dealer").html(hand_view(data.table.dealer_hand) +
                             total_view(data.dealer_total));
     
     
     for (var i=0; i<6; i++) {
-        $("#bj1 .player"+i).html(hand_view(data.table.hands[i]) + "<br />" +
-            wager_view(data.table.wagers[i]) + "<br />" +
+        $("#bj1 .player"+i).html(hand_view(data.table.hands[i]) +
+            wager_view(data.table.wagers[i]) +
             total_view(data.shown_totals[i]));
     }
 }
@@ -164,6 +166,18 @@ function player_double(el) {
     var engine_id = $(el).parents('.game_table').attr('data-id');
 
     apiWrapper('/api/v1/engines/'+engine_id+'/double', function(result) {
+        console.log("Double! " + result)
+    },
+    function() { console.error("404"); },
+    function() { console.error('error'); }
+    );
+}
+
+
+function debug_pause(el) {
+    var engine_id = $(el).parents('.game_table').attr('data-id');
+
+    apiWrapper('/api/v1/engines/'+engine_id+'/pause', function(result) {
         console.log("Double! " + result)
     },
     function() { console.error("404"); },

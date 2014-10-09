@@ -55,7 +55,7 @@
     .well .player {
         
         min-width: 148px;
-        min-height: 103px;
+        min-height: 150px;
         border: 1px solid #555;
         margin: 0 4px;
     }
@@ -64,12 +64,19 @@
         border: 4px solid #555 !important;
     }
 
-    .well .dealer {
-        min-height: 103px;
+    .well .dealer_wrap {
+        text-align: center;
     }
 
-    .dealer .hand {
+    .well .dealer {
+        min-height: 170px;
+        min-width: 148px;
+        border: 1px solid #552222;
         margin: 0 auto;
+    }
+
+     .dealer .hand {
+         margin: 0 auto;
     }
     </style>
 
@@ -77,28 +84,24 @@
     <div id="bj1" class="game_table" data-id="">
         <div class="page-header">
             <h1 style="float: left; margin-right: 20px;">Blackjack Table</h1>
-            <div class="sit" style="margin-top: 23px; display: none; float: left;">
-                <a href="#" onclick="player_sit(this); return false;" class="btn btn-sm btn-primary" role="button">Sit</a>
-            </div>
-            <div class="leave" style="margin-top: 23px; display: none; float: left;">
-                <a href="#" onclick="player_leave(this); return false;" class="btn btn-sm btn-warning" role="button">Leave</a>
-            </div>
             <div class="clearfix"></div>
-            <a name="table1"></a>
-            
+            <a name="table1"></a>            
         </div>
 
         <div class="well">
-            <div class="dealer"></div>
+            <div class="dealer_wrap">
+                <div class="dealer"></div>
+            </div>
             <div class="clearfix"></div>
 
             <div style="margin: 4px 4px;">
                 <div style="float: left;" class="player player5"></div>
+
+                <div style="float: right;" class="player player0"></div>
                 <div style="text-align: center;">
                     <h3 class="step"></h3>
                     <p class="timeout"></p>
                 </div>
-                <div style="float: right;" class="player player0"></div>
             </div>
             <div class="clearfix"></div>
 
@@ -116,14 +119,17 @@
         </div>
         <div class="clearfix"></div>
 
-            <div class="sit" style="margin-top: 23px; display: none; float: left;">
+            <div class="sit" style="display: none; float: left; margin-right: 4px;">
                 <a href="#" onclick="player_sit(this); return false;" class="btn btn-sm btn-primary" role="button">Sit</a>
             </div>
-            <div class="leave" style="margin-top: 23px; display: none; float: left;">
+            <div class="leave" style="display: none; float: left; margin-right: 4px;">
                 <a href="#" onclick="player_leave(this); return false;" class="btn btn-sm btn-warning" role="button">Leave</a>
             </div>
+            <div class="pause" style="float: left; margin-right: 4px;">
+                <a href="#" onclick="debug_pause(this); return false;" class="btn btn-sm btn-danger" role="button">Pause</a>
+            </div>
 
-        <ul class="wager">
+        <ul class="wager" style="float: left;">
             <li><h4>Wagers</h4></li>
             <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 1); return false;" >$1</a></li>
             <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 10); return false;" >$10</a></li>
@@ -131,9 +137,9 @@
             <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 1000); return false;" >$1000</a></li>
             <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager_reset(this); return false;" >Clear</a></li>
         </ul>
-        <div class="clearfix"></div>
+        ##<div class="clearfix"></div>
 
-        <ul class="play">
+        <ul class="play" style="border-left: 1px solid black; float: left;">
             <li><a class="btn btn-sm btn-success" href="#" onclick="player_hit(this); return false;" >Hit</a></li>
             <li><a class="btn btn-sm btn-warning" href="#" onclick="player_double(this); return false;" >Double</a></li>
             <li><a class="btn btn-sm btn-primary" href="#" onclick="player_stand(this); return false;" >Stand</a></li>
@@ -143,7 +149,7 @@
     </div>
 </div>
 
-## <div style="min-height: 400px" class="container">
+<div style="min-height: 14px" class="container">
 
 </div>
 <%def name="scripts()">

@@ -11,13 +11,14 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 requires = [
     'pyramid',
     'pyramid_chameleon',
+    'pyramid_beaker',
     'pyramid_mako',
     'pyramid_debugtoolbar',
     'waitress',
     ]
 
 setup(name='bicycle_path',
-      version='0.01',
+      version='0.1',
       description='bicycle_path',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
