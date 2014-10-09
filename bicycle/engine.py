@@ -26,21 +26,29 @@ class EngineStep(object):
         """
 
         self.step = step
-        self.step.execute = self
-        # self.result = None
-        self.timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
-                                     self)
-        self.started = time.time()
-        self.timer.start()
+        self.step.execute = self # Set callback on the step. The neccesity for
+                                 # this indicates there is a better factor.
+        self.step.delay = self.delay
+        self.__start_timer()
 
     def __call__(self):
         """Essentially the "Next"
         """
-
-        if self.timer is not None and not self.timer.finished:
-            self.timer.cancel()
+        self.cancel()
         self.result = self.step()
         return self.result
+
+    def __start_timer(self):
+        self.__timer = threading.Timer(self.step.__timeout__ or ENGINE_TICK,
+                                       self)
+        self.__timer.start()
+        self.started = time.time()
+
+    delay = __start_timer
+
+    def cancel(self):
+        if self.__timer is not None and not self.__timer.finished:
+            self.__timer.cancel()
 
     @property
     def timeout(self):
@@ -66,18 +74,20 @@ class Engine(threading.Thread):
         self.state = state
         self.table = state.table
 
-        self.__steps = self.game_steps = itertools.cycle(state.__game__)
+        # self.__steps = self.game_steps = itertools.cycle(state.__game__)
 
         self.alive = False  # Engine thread alive.
 
     def __iter__(self):
         """
         """
+        steps = itertools.cycle(self.state.__game__)
 
         while self.alive is True:
             time.sleep(ENGINE_TICK)
-            step = self.__steps.next()(self)    # Iterate to next step and
-                                                # instance `GameStep.`
+            step = steps.next()(self)
+            # step = self.__steps.next()(self)    # Iterate to next step and
+            #                                     # instance `GameStep.`
             while step.to_execute and self.alive is True:
                 engine_step = EngineStep(step)
                 yield step
@@ -91,7 +101,7 @@ class Engine(threading.Thread):
         """
 
         self.alive = True
-        self.tick_count = 0
+        # self.tick_count = 0
 
         handler = iter(self)
 
@@ -103,9 +113,9 @@ class Engine(threading.Thread):
     def stop(self):
         """
         """
-        
+
         self.alive = False
-        self.timer.cancel()
+        # self.timer.cancel()
         self.join()
         return True
 

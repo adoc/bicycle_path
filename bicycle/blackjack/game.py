@@ -51,9 +51,11 @@ class HandActionStepMixin(object):
         """
         self.table.deal(self.hand)
         if self.hand.stop is True:
-            self.engine.execute_step() # Finish step.
+            self.execute()
+            # self.engine.execute_step() # Finish step.
         else:
-            self.engine.set_timer() # Reset timer.
+            self.delay()
+            # self.engine.set_timer() # Reset timer.
 
 
 # Some pieces here can moved back in to bicycle.game.
@@ -62,7 +64,7 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
     Iterates through 
     """
 
-    __timeout__ = 30
+    __timeout__ = 22
 
     def __init__(self, engine):
         bicycle.game.PlayerStep.__init__(self, engine)
@@ -82,14 +84,16 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
             self.hand.up()
 
             if self.hand.stop is True:
-                self.engine.execute_step()
+                self.execute()
+                # self.engine.execute_step()
 
         return n
 
     def stand(self):
         """
         """
-        self.engine.execute_step()
+        self.execute()
+        # self.engine.execute_step()
 
     def double(self):
         """
@@ -97,7 +101,8 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         # Double the wager here too using self.wager!
 
         self.hit()
-        self.engine.execute_step()
+        self.execute()
+        # self.engine.execute_step()
 
     def split(self):
         """
@@ -147,6 +152,8 @@ class DealerStep(HandActionStepMixin, bicycle.game.GameStep):
 class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     """
     """
+
+    timeout = 8
 
     def __init__(self, engine):
         bicycle.game.ResolveStep.__init__(self, engine)

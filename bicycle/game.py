@@ -177,6 +177,8 @@ class CleanupStep(GameStep):
         return True # Cleanup always returns True??
 
 
+# Possibly refactor The GameStep iterations to be part of the
+#   GameState.
 class GameState(object):
     """
     Passed to an engine. Game state and its `dict` and nested objects should
