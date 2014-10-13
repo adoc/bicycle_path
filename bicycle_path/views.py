@@ -105,6 +105,8 @@ def _engine_observation(engine_id, engine, player):
                         player in engine.table.seats and
                         player not in engine.table.to_leave)
 
+    yield 'player_bankroll', player.bankroll
+
     def sum_cards(hand):
         # Broken handling does not account for aces.
         # We need a sum in the Hand class that doesn't total

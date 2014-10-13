@@ -129,6 +129,8 @@
                 <a href="#" onclick="debug_pause(this); return false;" class="btn btn-sm btn-danger" role="button">Pause</a>
             </div>
 
+        <div style="float:left; font-size: 2em;" class="bankroll"></div>
+
         <ul class="wager" style="float: left;">
             <li><h4>Wagers</h4></li>
             <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 1); return false;" >$1</a></li>
@@ -144,6 +146,7 @@
             <li><a class="btn btn-sm btn-warning" href="#" onclick="player_double(this); return false;" >Double</a></li>
             <li><a class="btn btn-sm btn-primary" href="#" onclick="player_stand(this); return false;" >Stand</a></li>
         </ul>
+
         <div class="clearfix"></div>
         
     </div>
