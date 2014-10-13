@@ -95,7 +95,9 @@ function update_table_view(data) {
     $("#bj1 .dealer").html(hand_view(data.table.dealer_hand) +
                             total_view(data.dealer_total));
     
-    
+    $("#bj1 .bankroll").html('$'+data.player_bankroll);
+
+
     for (var i=0; i<6; i++) {
         $("#bj1 .player"+i).html(hand_view(data.table.hands[i]) +
             wager_view(data.table.wagers[i]) +

@@ -15,13 +15,14 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
                      bicycle.table.CardTable.__view_keys__ +
                      ['dealer', 'dealer_hand', 'insurance_wagers'])
 
-
     def __init__(self, num_seats=6,
                  dealer=bicycle.player.Player(bankroll=100000000),
                  reshuffle_threshold=0.2, face_up=False, 
                  wager_cls=bicycle.table.Wager, **kwa):
         """
         """
+        self.win_payout = 1
+        self.bj_payout = 1.5
 
         assert num_seats <= 6, "Too many seats."
         assert isinstance(dealer, bicycle.player.Player)
@@ -76,7 +77,21 @@ class BlackjackTable(bicycle.table.WagerTableMixin,
 
         for player, hand, wager, _ in self:
             if player and wager:
-                yield player, hand
+                yield player, hand, wager
+
+    def resolve(self):
+        for player, hand, wager in self._play_all_iter():
+            if hand.blackjack is True and self.dealer_hand.blackjack is not True:
+                print("BJ WIN!")
+                wager *= 1 + self.bj_payout
+            elif hand > self.dealer_hand:
+                print("WIN")
+                wager *= 1 + self.win_payout
+            elif hand < self.dealer_hand or hand.busted:
+                print("LOSE")
+                self.collect_wager_func(self.dealer, wager)
+            else:
+                print("PUSH")
 
     def cleanup(self):
         """

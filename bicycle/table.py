@@ -32,7 +32,6 @@ class InsufficientBankroll(Exception):
 def wager(player, amount):
     """
     """
-
     if player.bankroll >= amount:
         player.bankroll -= amount
         return amount
@@ -40,12 +39,13 @@ def wager(player, amount):
         raise InsufficientBankroll()
 
 
-def collect(player, amount):
+def collect(player, wager):
     """
     """
-
-    player.bankroll += amount
-    return amount
+    assert isinstance(wager, Wager)
+    player.bankroll += wager.amount
+    wager.amount = 0
+    return wager
 
 
 @functools.total_ordering
@@ -72,6 +72,58 @@ class Wager(object):
         return self.amount > 0
 
     __bool__ = __nonzero__
+
+    def __add__(self, num):
+        if isinstance(num, Wager):
+            return self.amount + num.amount
+        else:
+            return self.amount + num
+
+    def __sub__(self, num):
+        if isinstance(num, Wager):
+            return self.amount - num.amount
+        else:
+            return self.amount - num
+
+    def __mul__(self, num):
+        if isinstance(num, Wager):
+            return self.amount * num.amount
+        else:
+            return self.amount * num
+
+    def __truediv__(self, num):
+        if isinstance(num, Wager):
+            return self.amount / num.amount
+        else:
+            return self.amount / num
+
+    def __iadd__(self, num):
+        if isinstance(num, Wager):
+            self.amount += num.amount
+        else:
+            self.amount += num
+        return self
+
+    def __isub__(self, num):
+        if isinstance(num, Wager):
+            self.amount -= num.amount
+        else:
+            self.amount -= num
+        return self
+
+    def __imul__(self, num):
+        if isinstance(num, Wager):
+            self.amount *= num.amount
+        else:
+            self.amount *= num
+        return self
+
+    def __itruediv__(self, num):
+        if isinstance(num, Wager):
+            self.amount /= num.amount
+        else:
+            self.amount /= num
+        return self
 
     def __json__(self, *args):
         return {'amount': self.amount}
@@ -524,7 +576,8 @@ class WagerTableMixin(object):
 
         for player, wager in WagerTableMixin.__iter__(self):
             if player in self.to_wager:
-                wager.amount = self.to_wager.pop(player)
+                wager += self.to_wager.pop(player)
+                # wager.amount = 
 
     def cleanup(self):
         """
@@ -532,8 +585,7 @@ class WagerTableMixin(object):
 
         for player, wager in WagerTableMixin.__iter__(self):
             if player and wager:
-                self.collect_wager_func(player, wager.amount)
-                wager.amount = 0
+                self.collect_wager_func(player, wager)
 
         super(WagerTableMixin, self).cleanup()
 

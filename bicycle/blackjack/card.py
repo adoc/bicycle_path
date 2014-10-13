@@ -33,19 +33,10 @@ class Card(bicycle.card.Card):
 ace = Card.from_str('AS')
 
 
+#@functools.total_ordering
 class Hand(bicycle.card.Cards):
     """
     """
-
-    def __int__(self, snoop=False):
-        """
-        """
-        s = bicycle.card.Cards.__int__(self, snoop)
-
-        if s <= 11 and ace in self:
-            s += 10
-
-        return s
 
     @property
     def blackjack(self):
@@ -82,6 +73,32 @@ class Hand(bicycle.card.Cards):
         """
 
         return self.__int__(snoop=True) >= 21
+
+    @staticmethod
+    def quant(hand):
+        return (hand.busted is not True and hand.__int__(snoop=True) or 0 + 
+                hand.blackjack is True and 1 or 0)
+
+    def __eq__(self, other):
+        return self.quant(self) == self.quant(other)
+
+    def __gt__(self, other):
+        return self.quant(self) > self.quant(other)
+
+    def __lt__(self, other):
+        return self.quant(self) < self.quant(other)
+
+    def __int__(self, snoop=False):
+        """
+        * int is not used to quantify the hand for comparison. This
+        might be changed.
+        """
+        s = bicycle.card.Cards.__int__(self, snoop)
+
+        if s <= 11 and ace in self:
+            s += 10
+
+        return s
 
 
 # (c) 2011-2014 StudioCoda & Nicholas Long. All Rights Reserved

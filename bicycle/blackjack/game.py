@@ -59,6 +59,13 @@ class HandActionStepMixin(object):
 
         return self._play_item[1]
 
+    @property
+    def wager(self):
+        """
+        """
+
+        return self._play_item[2]
+
     def hit(self):
         """
         """
@@ -114,6 +121,9 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         """
         # Double the wager here too using self.wager!
 
+        self.wager.amount += self.table.wager_func(self.player,
+                                                   self.wager.amount)
+
         self.hit()
         self.execute()
 
@@ -167,7 +177,7 @@ class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
     """
     """
 
-    __timeout__ = 4
+    __timeout__ = 4 
 
     def __init__(self, engine):
         """
@@ -176,10 +186,12 @@ class ResolveStep(bicycle.game.WagerGameStepMixin, bicycle.game.ResolveStep):
         bicycle.game.ResolveStep.__init__(self, engine)
         bicycle.game.WagerGameStepMixin.__init__(self)
 
+    def __start__(self):
+        self.table.resolve()
+
     def __call__(self):
         """
         """
-
         return True
 
 

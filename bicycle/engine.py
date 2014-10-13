@@ -84,9 +84,10 @@ class Engine(threading.Thread):
             time.sleep(ENGINE_TICK)
             step = steps.next()(self)   # Iterate to next step and
                                         #   instance `GameStep.`
-            hasattr(step, '__start__') and step.__start__()
+            
             while step.to_execute and self.alive is True:
                 engine_step = EngineStep(step)
+                hasattr(step, '__start__') and step.__start__()
                 yield step
                 
                 # Wait for a result.
