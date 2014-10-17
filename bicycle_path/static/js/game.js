@@ -1,5 +1,6 @@
-/*
-*/
+// DEPRECATED - see blackjack.js
+
+
 
 function engine_url(engine_id, action) {
     return '/api/v1/engines/'+engine_id+'/'+action
@@ -10,8 +11,8 @@ var card_theme = "/static/assets/oxygen/";
 var card_ext = ".png";
 var card_width = 74;
 
-// Generates a "hand" widget.
-// Can migrate this to underscore templating.
+
+// Moved to hand.base.html.tmpl
 function hand_view(hand) {
     var hand_tmpl = '<div class="hand" style="width: %width%px;">%cards%</div>';
     var card_tmpl = '<img src="'+card_theme+'%card%'+card_ext+'" />';
@@ -24,10 +25,12 @@ function hand_view(hand) {
     return hand_tmpl.replace('%cards%', cards).replace('%width%', card_width * hand.length);
 }
 
+// * Moved to player.base.html.tmpl
 function wager_view(wager) {
     return "<div>Wager: <span>"+wager.amount+"</span></div>"
 }
 
+// * Moved to player.base.html.tmpl
 function total_view(total) {
     return "<div>Total: <span>"+total+"</span></div>"
 }
@@ -71,18 +74,16 @@ function update_table_view(data) {
 
 
     if (data.in_game === true &&
-        (data.step == "PrepareStep" || data.step == "WagerStep" || data.step == "InsuranceStep"
-        || data.step == "ResolveStep")) {
+        (data.step == "PrepareStep" || data.step == "WagerStep" ||
+            data.step == "InsuranceStep" || data.step == "ResolveStep")) {
         $("#bj1 .wager").show();
     } else {
         $("#bj1 .wager").hide();
     }
 
-
     if (data.in_seat > -1) {
         $("#bj1 .player"+data.in_seat).addClass('is_player')
     }
-
 
     if (data.your_turn === true) {
         $("#bj1 .play").show();
@@ -189,16 +190,13 @@ function debug_pause(el) {
 
 
 $(document).ready(function() {
-
     apiWrapper('/api/v1/engines', 
         function(data) {
             var engine_id = data[0]; // First available engine
-            window.poller_observer = poll(engine_url(engine_id, 'observe'), poll_success);
+            window.poller_observer = poll(engine_url(engine_id, 'observe'),
+                                          poll_success);
         },
         function() { console.error("404"); },
         function() { console.error('error'); }
     );
-
-    //$('#bj1').html(hand_view(['AS','AD','AC','AH', 'xx']));
-
 });
