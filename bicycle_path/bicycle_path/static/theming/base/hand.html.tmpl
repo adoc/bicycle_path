@@ -1,8 +1,8 @@
 <div class="hand">
 <%
 for (var i=0; i<ctx.length; i++) { 
-    var card = ctx[i],
+    var card = ctx[i];
 %>
-    <img src="<%=Theming.cardAsset(card)%>" alt="<%=card%>" />
+    <img src="<%=getCardAsset(card)%>" alt="<%=card%>" />
 <% } %>
 </div>

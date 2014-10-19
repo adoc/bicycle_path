@@ -3,125 +3,132 @@
     (c) 2010 - 2014 C. Nicholas Long
 */
 
+define(['require', 'config'],
+    function(require, Config) {
 
-define(['underscore', 'config', 'templating'],
-    function(_, Config, Templating) {
+        var Views = {};
 
-        // BaseView Pseudoclass. Inherits from Templating.
-        var BaseView = function(opts) {
-            _.extend(this, {
-            }, opts || {});
-            return this;
-        };
-        BaseView.prototype = new Templating();
+        // Tricky AMD usage to make the Theme dynamic.
+        require(['jquery', 'underscore',  'backbone', Config.themeName],
+            function($, _, Backbone, Theme) {
+                console.log('did');
 
-        // Base Game Views.
-        var HandView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.handTemplate
-            }, opts || {});
-            return this;
-        };
-        HandView.prototype = new BaseView();
+                // BaseView Pseudoclass. Inherits from Templating.
+                var BaseView = Backbone.View.extend({
+                    _render: function(context) {
+                        console.log(this);
+                        return this.template(_.extend({
+                                                Config: Config,
+                                                ctx: context || {}
+                                            }, this));
+                    },
+                    constructor: function() {
+                        // Make sure this is available to child instances.
+                        this.getCardAsset = function(card) {
+                            /* Given a `card` string ("KA"), return the card image file
+                            name ("ka.png").
+                            */
+                            var cardFile = join_ext(card.toLowerCase(),
+                                                    Theme.cardImageExt);
+                            // console.log(join_path(Theme.cardImageFolder, cardFile));
+                            return join_path(Theme.cardImageFolder, cardFile);
+                        }
+                        Backbone.View.apply(this, arguments);
+                    }
+                });
 
-        var PlayerView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.playerTemplate,
-                handView: new HandView();
-            }, opts || {});
-            return this;
-        };
-        PlayerView.prototype = new BaseView();
+                // Player Card Views.
+                Views.HandView = BaseView.extend({
+                    className: "hand",
+                    template: Theme.handTemplate
+                });
 
-        var DealerView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.dealerTemplate,
-                handView: new HandView();
-            }, opts || {});
-            return this;
-        };
-        DealerView.prototype = new BaseView();
+                Views.PlayerView = BaseView.extend({
+                    className: "player",
+                    template: Theme.playerTemplate,
+                    handView: new Views.HandView()
+                });
 
-        var TableStatusView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.tableStatusTemplate
-            }, opts || {});
-            return this;
-        };
-        tableStatusView.prototype = new BaseView();
+                Views.DealerView = BaseView.extend({
+                    className: "dealer",
+                    template: Theme.dealerTemplate,
+                    handView: new Views.HandView()
+                });
 
-        var PlayerStatusView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.playerStatusTemplate
-            }, opts || {});
-            return this;
-        };
-        PlayerStatusView.prototype = new BaseView();
+                // Status Views.
+                Views.TableStatusView = BaseView.extend({
+                    template: Theme.tableStatusTemplate,
+                    className: "table_status"
+                });
 
+                Views.PlayerStatusView = BaseView.extend({
+                    template: Theme.playerStatusTemplate,
+                    className: "player_status"
+                });
 
-        // Controls
-        var TableControlsView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.tableControlsTemplate
-            }, opts || {});
-            return this;
-        };
-        TableControlsView.prototype = new BaseView();
+                // Controls
+                Views.TableControlsView = BaseView.extend({
+                    template: Theme.tableControlsTemplate,
+                    className: "table_controls"
+                });
 
-        var WagerControlsView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.wagerControlsTemplate
-            }, opts || {});
-            return this;
-        };
-        WagerControlsView.prototype = new BaseView();
+                Views.WagerControlsView = BaseView.extend({
+                    template: Theme.wagerControlsTemplate,
+                    className: "wager_controls"
+                });
 
-        var GameControlsView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.gameControlsTemplate
-            }, opts || {});
-            return this;
-        }
-        GameControlsView.prototype = new BaseView();
+                Views.GameControlsView = BaseView.extend({
+                    template: Theme.gameControlsTemplate,
+                    className: "game_controls"
+                });
 
-        var DebugControlsView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.debugControlsTemplate
-            }, opts || {});
-            return this;
-        };
-        DebugControlsView.prototype = new BaseView();
+                Views.DebugControlsView = BaseView.extend({
+                    template: Theme.debugControlsTemplate,
+                    className: "debug_controls",
+                    events: {
+                        "click .debug_pause": "pause",
+                        "click .debug_start": "start"
+                    },
+                    pause: function(ev) {
+                        $.ajax({url: ""});
+                    },
+                    start: function(ev) {
+                        $.ajax({url: ""});
+                    }
+                });
 
+                // Main Game View
+                Views.GameView = BaseView.extend({
+                    template: Theme.gameTemplate,
+                    className: "game",
+                    debugControlsView: new Views.DebugControlsView(),
+                    dealerView: new Views.DealerView(),
+                    playerView: new Views.PlayerView(),
+                    tableStatusView: new Views.TableStatusView(),
+                    playerStatusView: new Views.PlayerStatusView(),
+                    tableControlsView: new Views.TableControlsView(),
+                    wagerControlsView: new Views.WagerControlsView(),
+                    gameControlsView: new Views.GameControlsView()
+                });
+            }
+        );
 
-        // Main Game View
-        var GameView = function(opts) {
-            _.extend(this, {
-                _templateString: Config.Theme.gameTemplate,
-                debugControlsView: new DebugControlsView(),
-                dealerView: new DealerView(),
-                playerView: new PlayerView(),
-                tableStatusView: new TableStatusView(),
-                playerStatusView: new PlayerStatusView(),
-                tableControlsView: new TableControlsView(),
-                wagerControlsView: new WagerControlsView(),
-                gameControlsView: new GameControlsView()
-            }, opts || {});
-            return this;
-        };
-        GameView.prototype = new BaseView();
+        /*
+        // Let's get the theme as dictated by the config.
+        require([Config.themeName], function(Theme) {
+            HandView.prototype.template = Theme.handTemplate;
+            PlayerView.prototype.template = Theme.playerTemplate;
+            DealerView.prototype.template = Theme.dealerTemplate;
+            TableStatusView.prototype.template = Theme.tableStatusTemplate;
+            PlayerStatusView.prototype.template = Theme.playerStatusTemplate;
+            TableControlsView.prototype.template = Theme.tableControlsTemplate;
+            WagerControlsView.prototype.template = Theme.wagerControlsTemplate;
+            GameControlsView.prototype.template = Theme.gameControlsTemplate;
+            DebugControlsView.prototype.template = Theme.debugControlsTemplate;
+            GameView.prototype.template = Theme.gameTemplate;
+        });
+        */
 
-        return {
-            HandView: HandView,
-            PlayerView: PlayerView,
-            DealerView: DealerView,
-            TableStatusView: TableStatusView,
-            PlayerStatusView: PlayerStatusView,
-            TableControlsView: TableControlsView,
-            WagerControlsView: WagerControlsView,
-            GameControlsView: GameControlsView,
-            DebugControlsView: DebugControlsView,
-            GameView: GameView
-        };
-
+        return Views;
     }
 );
