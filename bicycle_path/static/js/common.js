@@ -8,8 +8,9 @@ require.config({
     paths: {
         jquery: 'lib/jquery.min',
         underscore: 'lib/underscore.min',
+        backbone: 'lib/backbone.min',
         bootstrap: 'lib/bootstrap.min',
-        text: 'lib/text',
+        text: 'lib/text.min',
     },
     shim: {
     }
