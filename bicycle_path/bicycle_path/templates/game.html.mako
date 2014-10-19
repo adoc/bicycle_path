@@ -24,10 +24,6 @@
         <br />
         <p><a href="#table1" class="btn btn-primary btn-lg" role="button">Go Play! &raquo;</a></p>
     </div>
-    <div class="page-header">
-        <h1>You</h1>
-        <p>Bankroll: <span class="bankroll">${player.bankroll}</span></p>
-    </div>
 ##  The game table will be loaded from it's own template and placed in to this div.
     <div id="bj1" class="game_table" data-id=""></div>
 </div>
@@ -35,13 +31,19 @@
 <div style="min-height: 14px" class="container"></div>
 ##  Hook script for this page. This will most likely no longer be the entry point once this project matures.
 <%def name="style()">
-    <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/game.base.css')}">
+    <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/base/game.css')}">
 </%def>
 <%def name="scripts()">
     <script type="text/javascript">
-    require(['blackjack'], 
-        function(blackjack) {
-            blackjack.boot();
-        });
+    /* Front End Entry Point. */
+    require(['config', 'views'], function (Config, Views) {
+        require([Config.themeName, 'blackjack'], 
+            function(Theme, blackjack) {
+                console.log(Views);
+                d = new Views.HandView();
+                //d.render();*/
+            }
+        );
+    });
     </script>
 </%def>

@@ -5,36 +5,36 @@
 </div>
 <div class="well">
     <div class="dealer_wrap">
-        <%=dealerView.render(ctx.dealer)%>
+        <%=dealerView._render(ctx.dealer)%>
     </div>
     <div class="clearfix"></div>
     <div style="margin: 4px 4px;">
         <div class="left player_5_wrap">
-            <%=playerView.render(ctx.players[5])%>
+            <%=playerView._render(ctx.players[5])%>
         </div>
         <div class="right player_0_wrap">
-            <%=playerView.render(ctx.players[0])%>
+            <%=playerView._render(ctx.players[0])%>
         </div>
     </div>
     <div style="text-align: center;">
-        <%=tableStatusView.render(ctx.table)%>
+        <%=tableStatusView._render(ctx.table)%>
     </div>
-    <div class="clearfix"></div>
+    <div class="clearfix"></div> 
     <div style="margin: 4px 72px;">
         <div class="left player_4_wrap">
-            <%=playerView.render(ctx.players[4])%>
+            <%=playerView._render(ctx.players[4])%>
         </div>
         <div class="right player_1_wrap">
-            <%=playerView.render(ctx.players[1])%>
+            <%=playerView._render(ctx.players[1])%>
         </div>
     </div>
     <div class="clearfix"></div>
     <div style="margin: 4px 136px;">
         <div class="left player_3_wrap">
-            <%=playerView.render(ctx.players[3])%>
+            <%=playerView._render(ctx.players[3])%>
         </div>
         <div class="right player_2_wrap">
-            <%=playerView.render(ctx.players[2])%>
+            <%=playerView._render(ctx.players[2])%>
         </div>
     </div>
     <div class="clearfix"></div>
@@ -42,14 +42,14 @@
 <div class="clearfix"></div>
 <div class="controls">
     <!-- Debug Stuff -->
-    <%=debugControlsView.render()%>
+    <%=debugControlsView._render()%>
     <!-- Table Controls Section -->
-    <%=tableControlsView.render()%>
+    <%=tableControlsView._render()%>
     <!-- Player Status View -->
-    <%=playerStatusView.render(ctx.current_player)%>
+    <%=playerStatusView._render(ctx.current_player)%>
     <!-- Wager Controls -->
-    <%=wagerControlsView.render(ctx.current_player.wager)%>
+    <%=wagerControlsView._render(ctx.current_player.wager)%>
     <!-- Game Controls -->
-    <%=gameControlsView.render(ctx)%>
+    <%=gameControlsView._render(ctx)%>
 </div>
 <div class="clearfix"></div>
