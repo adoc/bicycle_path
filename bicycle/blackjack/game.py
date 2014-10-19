@@ -120,7 +120,6 @@ class PlayerStep(HandActionStepMixin, bicycle.game.PlayerStep):
         """
         """
         # Double the wager here too using self.wager!
-
         self.wager.amount += self.table.wager_func(self.player,
                                                    self.wager.amount)
 

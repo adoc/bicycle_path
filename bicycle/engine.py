@@ -87,9 +87,13 @@ class Engine(threading.Thread):
             
             while step.to_execute and self.alive is True:
                 engine_step = EngineStep(step)
+
+                # Running this in PlayerStep means this potentially can run
+                # multiple times. This is part of the bad factoring in
+                # PlayerStep and the Engine it self.
                 hasattr(step, '__start__') and step.__start__()
                 yield step
-                
+
                 # Wait for a result.
                 while not hasattr(engine_step, 'result') and self.alive is True:
                     time.sleep(ENGINE_TICK)

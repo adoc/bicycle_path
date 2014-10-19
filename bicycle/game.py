@@ -153,9 +153,13 @@ class PlayerStep(GameStep):
         self._play_all = self.table._play_all_iter() # Set up iterator.
 
     def __start__(self):
-        next = self.next() # Get first player.
-        assert next is True     # Assert on second line in case code is
-                                # optimized to .pyo
+        # This fixes the problem with this being called multiple times.
+        # But this indicates the Engine and Step architecture is not
+        #   factored correctly.
+        if not hasattr(self, '_play_item'):
+            next = self.next() # Get first player.
+            assert next is True     # Assert on second line in case code is
+                                    # optimized to .pyo
 
     def next(self):
         """
