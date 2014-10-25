@@ -5,17 +5,10 @@
 
 define(['underscore'],
     function(_) {
-
         return {
             apiRoot: '/api/v1',
-            themeName: 'base.theme'
+            engineUri: 'engines',
+            themeModuleName: 'base.theme'
         };
-
-        return _.extend(config, {
-            // This goes elsewhere.
-            engine_url: function (id, action) {
-                return join_path(config.apiRoot, 'engines', id, action);
-            }
-        });
     }
 );

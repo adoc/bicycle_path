@@ -12,7 +12,7 @@ define(['underscore',
         "text!/static/theming/base/debug.controls.html.tmpl",
         "text!/static/theming/base/table.controls.html.tmpl",
         "text!/static/theming/base/wager.controls.html.tmpl",
-        "text!/static/theming/blackjack/game.controls.tmpl"
+        "text!/static/theming/base/blackjack.game.controls.tmpl"
         ],
     function(_, gameTemplate, playerTemplate, dealerTemplate,
             handTemplate, tableStatusTemplate, playerStatusTemplate,

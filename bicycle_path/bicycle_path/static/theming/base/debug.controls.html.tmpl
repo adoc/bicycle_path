@@ -1,4 +1,8 @@
-<div class="debug_controls" style="float: left; margin-right: 4px;">
+<% // .debug_controls %>
+<div class="debug_controls">
+<% if (ctx.paused === true) { %>
+    <a class="debug_start btn btn-sm btn-success" href="#" role="button">Start</a>
+<% } else { %>
     <a class="debug_pause btn btn-sm btn-danger" href="#" role="button">Pause</a>
-    <a class="debug_start btn btn-sm btn-danger" href="#" role="button">Start</a>
+<% } %>
 </div>

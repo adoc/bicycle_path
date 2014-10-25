@@ -10,7 +10,7 @@ requires = [
     ]
 
 setup(name='bicycle',
-      version='0.1',
+      version='0.2',
       description='Standard Playing Card Primitives, Games, Strategy and "AI".',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
