@@ -20,7 +20,7 @@
 }
 
 .well .player {
-    
+    float: left;
     min-width: 148px;
     min-height: 150px;
     border: 1px solid #555;
@@ -44,4 +44,23 @@
 
  .dealer .hand {
      margin: 0 auto;
+}
+
+.debug_controls {
+    float: left;
+    margin-right: 4px;
+}
+
+.game_controls {
+    float: left;
+    border-left: 1px solid black;
+}
+
+.table_controls {
+    float: left;
+    margin-right: 4px;
+}
+
+.wager_controls {
+    float: left;
 }

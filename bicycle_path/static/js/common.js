@@ -8,15 +8,29 @@ require.config({
     paths: {
         jquery: 'lib/jquery.min',
         underscore: 'lib/underscore.min',
-        backbone: 'lib/backbone.min',
+        backbone: 'lib/backbone',
+        // socketio: '//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min',
+        socketio: 'lib/socket.io.min',
         bootstrap: 'lib/bootstrap.min',
         text: 'lib/text.min',
     },
     shim: {
+        socketio: {
+            exports: 'io'
+        }
     }
 });
 
 /* General lib includes from my gist. (https://gist.github.com/adoc) */
+
+// http://stackoverflow.com/a/1608546
+function construct(constructor, args) {
+    function F() {
+        return constructor.apply(this, args);
+    }
+    F.prototype = constructor.prototype;
+    return new F();
+}
 
 // src: http://stackoverflow.com/a/646643
 // Add `startsWith` and `endsWith` to the String prototype.
@@ -49,11 +63,12 @@ window.join_path = function(a) {
     var path = a;
     for(var i=1; i<arguments.length; i++) {
         var b = arguments[i];
-        if(b.startsWith('/')) {
+        if(typeof b !== 'undefined' && b.startsWith('/')) {
             path = b;
-        } else if (path == '' || path.endsWith('/')) {
+        } else if (typeof path !== 'undefined' &&
+                        (path == '' || path.endsWith('/'))) {
             path = path.concat(b);
-        } else {
+        } else if (typeof b !== 'undefined') {
             path = path.concat('/' + b);
         }
     }
@@ -68,4 +83,26 @@ window.join_ext = function(base, ext) {
     } else {
         return base + '.' + ext;
     }
+}
+
+
+// TEmp hack out!
+function apiWrapper(url, foundCallback, notFoundCallback, errorCallback) {
+    $.ajax({
+        url: url,
+        success: function (data, xhr) {
+            if (data) {
+                foundCallback(data);
+            } else {
+                errorCallback(xhr);
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status == 404) {
+                notFoundCallback();
+            } else {
+                errorCallback(xhr);
+            }
+        }
+    });
 }
