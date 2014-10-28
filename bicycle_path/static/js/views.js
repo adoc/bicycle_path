@@ -63,7 +63,7 @@ define(['require', 'config', 'models'],
                         */
 
                         if (this.modelClass) {
-                            this.model = new this.modelClass(opts);
+                            this.model = new this.modelClass({}, opts);
                         }
 
                         // Make sure this is available to child instances.
@@ -134,6 +134,8 @@ define(['require', 'config', 'models'],
                     },
                     sit: function(ev) {
                         var self = this;
+
+
 
                         // All these Ajax calls can be wrapped.
                         $.ajax({

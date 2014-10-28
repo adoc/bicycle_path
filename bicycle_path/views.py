@@ -7,6 +7,9 @@ import socketio.namespace
 import pyramid.httpexceptions
 from pyramid.view import view_config
 
+
+import bicycle.engine
+
 from bicycle.game import (PrepareStep, WagerStep, PlayerStep,
                           ResolveStep, CleanupStep)
 from bicycle.blackjack.game import InsuranceStep
@@ -246,7 +249,7 @@ from pprint import pprint
 
 
 # SocketIO Connectivity.
-class EngineSpace(socketio.namespace.BaseNamespace, socketio.mixins.RoomsMixin):
+class EnabledNamespace(socketio.namespace.BaseNamespace):
     """
     """
 
@@ -255,14 +258,23 @@ class EngineSpace(socketio.namespace.BaseNamespace, socketio.mixins.RoomsMixin):
         self.greenlets = self.request.registry.settings['greenlets']
         self.player = meta_view(self.request)['player']
 
-    def _e(self, engine_id, engine, greenlet):
-        _laststep = None
+
+class CrudSpace(socketio.namespace.BaseNamespace):
+    pass
+
+
+class EngineSpace(EnabledNamespace, socketio.mixins.RoomsMixin):
+    """
+    """
+
+    def watch_engine(self, engine_id, engine, greenlet, pulse_on_join=True):
+        _laststep = None if pulse_on_join is True else greenlet.game
         while True:
-            gevent.sleep(0.01)
+            gevent.sleep(bicycle.engine.ENGINE_TICK)
 
             if _laststep is not greenlet.game: # When engine changes, `pulse` out the state change.
                 _laststep = greenlet.game
-                self.emit('pulse',
+                self.emit('change',
                         dict(_engine_observe(engine_id, greenlet, self.player)));
 
     def on_join(self, engine_id):
@@ -271,7 +283,19 @@ class EngineSpace(socketio.namespace.BaseNamespace, socketio.mixins.RoomsMixin):
         self.join(engine_id)
         engine = self.engines[engine_id]
         greenlet = self.greenlets[engine_id]
-        self.spawn(self._e, engine_id, engine, greenlet)
+        self.spawn(self.watch_engine, engine_id, engine, greenlet,
+                    pulse_on_join=False)
+
+    def on_read(self, data):
+        """
+        """
+        engine_id = data['id']
+        engine = self.greenlets[engine_id]
+
+        if data['ns'] == "game":
+            response_data = dict(_engine_observe(engine_id, engine, self.player))
+
+        self.emit("response_"+data['request_id'], response_data);
 
 
 @view_config(route_name='socket_endpoint', renderer='json')

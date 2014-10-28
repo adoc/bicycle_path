@@ -8,14 +8,15 @@ require.config({
     paths: {
         jquery: 'lib/jquery.min',
         underscore: 'lib/underscore.min',
-        backbone: 'lib/backbone',
-        // socketio: '//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min',
+        backbone: 'lib/backbone.min',
         socketio: 'lib/socket.io.min',
         bootstrap: 'lib/bootstrap.min',
+        //iobind: 'lib/backbone.iobind.min',
+        //iosync: 'lib/backbone.iosync',
         text: 'lib/text.min',
     },
     shim: {
-        socketio: {
+        'socket.io': {
             exports: 'io'
         }
     }
