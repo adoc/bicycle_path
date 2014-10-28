@@ -46,7 +46,7 @@ def main(global_config, **settings):
     config.add_route('socket_endpoint', '/api/v1/sock/*remaining')
 
     # SocketIO Namespace routes.
-    config.add_route('ions_engine_namespace', '/engine/{engine_id}')
+    # config.add_route('ions_engine_namespace', '/engine/{engine_id}')
 
     # This should only be available to engines in debug!!!
     config.add_route('engine_start', '/api/v1/engines/{engine}/start')

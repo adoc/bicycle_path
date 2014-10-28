@@ -50,48 +50,37 @@
                     apiWrapper('/api/v1/engines', 
                         function(data) {
                             var engine_id = data[0]; // First available engine
-
-                            // Need to figure out a way to abstract the engine url in to all the actions.
-                            // It doesn't work like a traditional backbone model, but we need to find
-                            // the best hack to make it happen.
-                            e1 = new Controllers.Engine({"id": engine_id});
-
-                            g1 = new Views.GameView({"controller": e1});
-
-                            // g1.update(function() { $("#bj1").append(g1.$el); });
-                            $("#bj1").append(g1.$el);
-
-
-                            // m1 = new Models.Game({"controller": e1});
-                            // console.log(m1.url());
-
-                            /*
-                            p1 = new Views.PlayerView({"controller": e1});
-                            p1.update();
-                             $("#bj1").append(p1.$el);
-                            debugView = new Views.DebugControlsView({"controller": e1});
-                            $("#bj1").append(debugView.render().$el);
-                            playerModel = new Models.PlayerModel({"controller": e1});
-                            console.log(playerModel.url());
-                            */
-                            // console.log('', e1.url('sock'));
-
-
+                            
                             var engineSock = io.connect('/engine', {resource: 'api/v1/sock'});
-
                             $(window).bind("beforeunload", function() {
                                 engineSock.disconnect();
                             });
 
-                            engineSock.on('disconnect', function() {
-                                console.log("DISCONNECT");
+                            // Need to figure out a way to abstract the engine url in to all the actions.
+                            // It doesn't work like a traditional backbone model, but we need to find
+                            // the best hack to make it happen.
+                            
+                            e1 = new Controllers.Engine({"id": engine_id});
+
+                            /* Socket model very very simple example */
+                            /* m1 = new Models.Nothing({}, {socketio: engineSock});
+                            m1.socket = engineSock;
+                            m1.fetch(); */
+
+                            //engineSock.emit('join', engine_id);
+
+
+                            //console.log(m1.url());
+
+                            //e1 = new Controllers.Engine({"id": engine_id});
+                            g1 = new Views.GameView({"controller": e1, socketio: engineSock});
+                            g1.model.id = engine_id;
+
+                            g1.update(function() {
+                                console.log("gamestate!", g1.model.attributes);
+                                $("#bj1").append(g1.$el);
                             });
 
-                            engineSock.on('pulse', function(d) {
-                                console.log(d);
-                            });
-
-                            engineSock.emit('join', engine_id);
 
                         },
                         function() { console.error("404"); },

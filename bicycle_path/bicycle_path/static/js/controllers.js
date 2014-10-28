@@ -2,8 +2,8 @@
     (c) 2010 - 2014 C. Nicholas Long
 */
 
-define(['jquery', 'underscore', 'backbone', 'socketio', 'config'],
-    function($, _, Backbone, io, config) {
+define(['jquery', 'underscore', 'backbone', 'config'],
+    function($, _, Backbone, config) {
         
         var Controller = function (opts) {
             /* Controller is similar to a `Model` in that it handles
