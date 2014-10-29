@@ -7,6 +7,7 @@ define(['underscore'],
     function(_) {
         return {
             apiRoot: '/api/v1',
+            socketResource: 'api/v1/sock',
             engineUri: 'engines',
             themeModuleName: 'base.theme'
         };

@@ -55,13 +55,13 @@ define(['require', 'config', 'models'],
                         _.extend(this, opts);
 
                         // Build subviews and pass `opts` in to it.
-                        // Possibly removing this.
-                        /*
-                        _.each(this.subviews, function(value, key) {
-                            self[key] = new value(opts);
+                        _.each(this.subViews, function(value, key) {
+                            self[key] = function () {
+                                return new value(opts);
+                            }
                         });
-                        */
 
+                        // Build model and pass `opts` in to it.
                         if (this.modelClass) {
                             this.model = new this.modelClass({}, opts);
                         }
@@ -132,22 +132,13 @@ define(['require', 'config', 'models'],
                         "click .table_sit": "sit",
                         "click .table_leave": "leave"
                     },
+                    modelClass: Model.TableControls,
                     sit: function(ev) {
                         var self = this;
 
-
-
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('sit'),
+                        this.model.request("sit", {
                             success: function(data) {
-                                //this.context.in_game = data;
-                                //self.trigger('update_context');
-
                                 self.render({in_game: data});
-                            },
-                            error: function() {
-                                console.log("`sit` error!");
                             }
                         });
 
@@ -156,15 +147,9 @@ define(['require', 'config', 'models'],
                     leave: function(ev) {
                         var self = this;
 
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('leave'),
+                        this.model.request("leave", {
                             success: function(data) {
-                                this.context.in_game = !data;
-                                self.trigger('update_context');
-                            },
-                            error: function() {
-                                console.log("`leave` error!");
+                                self.render({in_game: !data});
                             }
                         });
 
@@ -324,43 +309,64 @@ define(['require', 'config', 'models'],
                     template: Theme.gameTemplate,
                     className: "game",
                     modelClass: Model.Game,
+                    subViews: {
+                        DealerView: Views.DealerView,
+                        TableStatusView: Views.TableStatusView,
+                        PlayerView: Views.PlayerView,
+                        DebugControlsView: Views.DebugControlsView,
+                        TableControlsView: Views.TableControlsView,
+                        PlayerStatusView: Views.PlayerStatusView,
+                        WagerControlsView: Views.WagerControlsView,
+                        GameControlsView: Views.GameControlsView
+                    },
+                    initialize: function () {
+                        var self = this;
+                        // Simply update the view when the model changes.
+                        /* This is very basic and will need to be expanded to
+                        include animations and other datasets from the engine.*/
+                        this.model.on("change", function(data) {
+                            self.render(data);
+                        });
+                    },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
                         context = _.extend(context || {}, this.model.attributes);
 
                         // Render Dealer and Table Status.
-                        var dealerView = new Views.DealerView({controller: this.controller}),
-                            tableStatusView = new Views.TableStatusView({controller: this.controller});
+                        var dealerView = new this.DealerView(),
+                            tableStatusView = new this.TableStatusView();
+
                         $(".dealer_wrap", this.$el).append(dealerView.render(context.dealer).$el);
                         $(".table_status_wrap", this.$el).append(tableStatusView.render(context).$el);
 
                         // Render Players.
                         for (var i=0; i < context.seats.length; i++) {
-                            var playerView = new Views.PlayerView({controller: this.controller});
+                            var playerView = new this.PlayerView();
                             $(".player_"+i+"_wrap", this.$el).append(
                                     playerView.render(context.seats[i]).$el);
                         }
 
                         // Construct controls subviews.
                         var controlsEl = $(".controls", this.$el),
-                            debugControlsView = new Views.DebugControlsView({controller: this.controller}),
-                            tableControlsView = new Views.TableControlsView({controller: this.controller});
+                            debugControlsView = new this.DebugControlsView(),
+                            tableControlsView = new this.TableControlsView();
+
                         controlsEl.append(debugControlsView.render().$el);
                         controlsEl.append(tableControlsView.render().$el);
 
                         var current_player = context.seats[context.current_player || 0];
 
-                        var playerStatusView = new Views.PlayerStatusView({controller: this.controller});
+                        var playerStatusView = new this.PlayerStatusView();
                         controlsEl.append(playerStatusView.render(current_player).$el);
 
                         if (context.in_game === true &&
                                 context.accept_wager === true) {
-                            var wagerControlsView = new Views.WagerControlsView({controller: this.controller});
+                            var wagerControlsView = new this.WagerControlsView();
                             controlsEl.append(wagerControlsView.render(current_player.wager).$el);
                         }
 
                         if (current_player) {
-                            var gameControlsView = new Views.GameControlsView({controller: this.controller});
+                            var gameControlsView = new this.GameControlsView();
                             controlsEl.append(gameControlsView.render().$el);
                         }
                         return this;

@@ -41,51 +41,28 @@
 <%def name="scripts()">
     <script type="text/javascript">
     /* Front End Entry Point. */
-    require(['jquery', 'config', 'models', 'views', 'controllers', 'socketio'],
-        function ($, Config, Models, Views, Controllers, io) {
+    require(['jquery', 'config', 'views', 'sockets'],
+        function ($, Config, Views, Sockets) {
+
+            // AMD Trick to ensure the theme module is loaded before instantiating the game.
             require([Config.themeModuleName, 'blackjack'], 
                 function(Theme, blackjack) {
 
-                    // Just a hack to get the engine id.
-                    apiWrapper('/api/v1/engines', 
-                        function(data) {
+                    // Get engine list.
+                    socketRequest(Sockets.engine, "list", {}, {
+                        success: function (data) {
                             var engine_id = data[0]; // First available engine
-                            
-                            var engineSock = io.connect('/engine', {resource: 'api/v1/sock'});
-                            $(window).bind("beforeunload", function() {
-                                engineSock.disconnect();
+
+                            g1 = new Views.GameView({
+                                id: engine_id
                             });
 
-                            // Need to figure out a way to abstract the engine url in to all the actions.
-                            // It doesn't work like a traditional backbone model, but we need to find
-                            // the best hack to make it happen.
-                            
-                            e1 = new Controllers.Engine({"id": engine_id});
+                            $("#bj1").append(g1.$el);
 
-                            /* Socket model very very simple example */
-                            /* m1 = new Models.Nothing({}, {socketio: engineSock});
-                            m1.socket = engineSock;
-                            m1.fetch(); */
+                            g1.model.watch();
+                        }
+                    });
 
-                            //engineSock.emit('join', engine_id);
-
-
-                            //console.log(m1.url());
-
-                            //e1 = new Controllers.Engine({"id": engine_id});
-                            g1 = new Views.GameView({"controller": e1, socketio: engineSock});
-                            g1.model.id = engine_id;
-
-                            g1.update(function() {
-                                console.log("gamestate!", g1.model.attributes);
-                                $("#bj1").append(g1.$el);
-                            });
-
-
-                        },
-                        function() { console.error("404"); },
-                        function() { console.error('error'); }
-                    );
                 }
             );
         }

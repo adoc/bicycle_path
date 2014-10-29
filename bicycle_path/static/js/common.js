@@ -11,14 +11,9 @@ require.config({
         backbone: 'lib/backbone.min',
         socketio: 'lib/socket.io.min',
         bootstrap: 'lib/bootstrap.min',
-        //iobind: 'lib/backbone.iobind.min',
-        //iosync: 'lib/backbone.iosync',
         text: 'lib/text.min',
     },
     shim: {
-        'socket.io': {
-            exports: 'io'
-        }
     }
 });
 
@@ -106,4 +101,35 @@ function apiWrapper(url, foundCallback, notFoundCallback, errorCallback) {
             }
         }
     });
+}
+
+
+/* Mimics a very simple Request/Response dynamic through a
+socket.
+
+TODO:
+    Move to it's own AMD/hybrid module.
+*/
+function socketRequest(socket, method, data, options) {
+    data || (data = {});
+    options || (options = {});
+    options.timeout || (options.timeout = 10000);
+    options.success || (options.success = function () {});
+    options.timeoutFail || (options.timeoutFail = function() {
+        throw "'socketRequest' expected a response ";
+    });
+
+    var self = this,
+        syncId = _.uniqueId(method),
+        timeoutTimer = setTimeout(options.timeoutFail, options.timeout);
+
+    socket.once("response_"+syncId, function(responseData) {
+        clearTimeout(timeoutTimer);
+        options.success(responseData);
+    });
+
+    // Send the command through the socket.
+    socket.emit(method, _.extend({
+        request_id: syncId,
+    }, data));
 }

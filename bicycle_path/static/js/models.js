@@ -4,9 +4,10 @@
 
 "use strict";
 
-define(['jquery', 'underscore', 'backbone', 'socketio'],
-    function($, _, Backbone, io) {
+define(['jquery', 'underscore', 'backbone', 'sockets'],
+    function($, _, Backbone, Sockets) {
 
+        // Deprecated but good reference??
         var BaseViewModel = Backbone.Model.extend({
             url: function() {
                 return this.controller.url(this.action);
@@ -25,50 +26,29 @@ define(['jquery', 'underscore', 'backbone', 'socketio'],
             }
         });
 
-
-        /* Mimics a very simple Request/Response dynamic through a
-        socket.
-        */
-        function socketRequest(socket, method, data, options) {
-            data || (data = {});
-            options || (options = {});
-            options.timeout || (options.timeout = 10000);
-            options.success || (options.success = function () {});
-            options.timeoutFail || (options.timeoutFail = function() {
-                throw "'socketRequest' expected a response ";
-            });
-
-            var self = this,
-                syncId = _.uniqueId(method),
-                timeoutTimer = setTimeout(options.timeoutFail, options.timeout);
-
-            socket.once("response_"+syncId, function(responseData) {
-                clearTimeout(timeoutTimer);
-                options.success(responseData);
-            });
-
-            // Send the command through the socket.
-            socket.emit(method, _.extend({
-                    request_id: syncId,
-                }, data));
-        }
-
         /* Interesting idea to unify Backbone.Model and socketio
         Several implementations already exist but seem to run in to trouble
         of trying to do "too much".
         */
+        //
         var SocketioModel = Backbone.Model.extend({
+            //
             constructor: function (attributes, options) {
                 options || (options = {});
-                if (options.socketio) {
-                    this.socketio = options.socketio;
-                }
-                if (options.controller) {
-                    this.controller = options.controller;
-                }
+                if (options.socket) this.socket = options.socket;
+                if (options.controller) this.controller = options.controller;
+                if (options.id) this.id = options.id;
 
                 Backbone.Model.apply(this, arguments);
             },
+            //
+            request: function (method, options) {
+                socketRequest(this.socket, method, {
+                    ns: this.url(),
+                    id: this.id
+                    }, options);
+            },
+            //
             sync: function (method, model, options) {
                 var self = this,
                     success;
@@ -82,30 +62,51 @@ define(['jquery', 'underscore', 'backbone', 'socketio'],
                     }
                 }
 
-                socketRequest(this.socketio, method, {
+                socketRequest(this.socket, method, {
                     ns: model.url(),
                     id: this.id,
                     data: this.changed
                     }, {
                     success: success
                 });
+            },
+            // Watch the model and receive a "change" event when updated.
+            watch: function (options) {
+                var self = this;
 
-                return;
+                // Join on inintialize. This can probably be moved elsewhere.
+                socketRequest(this.socket, 'watch', {
+                    id: this.id
+                },{
+                    success: function(data) {
+                        self.socket.on("change",
+                            function (data) {
+                                self.set(data);
+                            }
+                        );
+                    }
+                });
             }
         });
 
-
         var Player = BaseViewModel.extend({
-            urlRoot: "player"
+            urlRoot: "player",
+            socket: Sockets.player
         });
 
         var Game = SocketioModel.extend({
-            urlRoot: "game"
+            urlRoot: "game",
+            socket: Sockets.engine
         });
 
+        var TableControls =  SocketioModel.extend({
+            urlRoot: 'table_controls',
+            socket: Sockets.tableControls
+        });
 
         return {Player: Player,
-                Game: Game};
+                Game: Game,
+                TableControls: TableControls};
 
     }
 ); 

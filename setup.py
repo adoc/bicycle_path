@@ -15,6 +15,7 @@ requires = [
     'pyramid_mako',
     'pyramid_debugtoolbar',
     'waitress',
+    'gevent',
     'gevent_socketio'
     ]
 
