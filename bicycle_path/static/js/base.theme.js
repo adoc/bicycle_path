@@ -4,7 +4,7 @@
 
 define(['underscore',
         "text!/static/theming/base/game.html.tmpl",
-        "text!/static/theming/base/player.html.tmpl",
+        "text!/static/theming/base/seat.html.tmpl",
         "text!/static/theming/base/dealer.html.tmpl",
         "text!/static/theming/base/hand.html.tmpl",
         "text!/static/theming/base/table.status.html.tmpl",
@@ -14,7 +14,7 @@ define(['underscore',
         "text!/static/theming/base/wager.controls.html.tmpl",
         "text!/static/theming/base/blackjack.game.controls.tmpl"
         ],
-    function(_, gameTemplate, playerTemplate, dealerTemplate,
+    function(_, gameTemplate, seatTemplate, dealerTemplate,
             handTemplate, tableStatusTemplate, playerStatusTemplate,
             debugControlsTemplate, tableControlsTemplate, wagerControlsTemplate,
             gameControlsTemplate) {
@@ -24,7 +24,7 @@ define(['underscore',
             cardImageExt: "png",
 
             gameTemplate: _.template(gameTemplate),
-            playerTemplate: _.template(playerTemplate),
+            seatTemplate: _.template(seatTemplate),
             dealerTemplate: _.template(dealerTemplate),
             handTemplate: _.template(handTemplate),
             tableStatusTemplate: _.template(tableStatusTemplate),

@@ -65,7 +65,7 @@ define(['require', 'config', 'models'],
 
                         // Build model and pass `opts` in to it.
                         if (this.modelClass) {
-                            console.log(this);
+                            // console.log(this);
                             this.model = new this.modelClass({}, opts);
                         }
 
@@ -90,11 +90,11 @@ define(['require', 'config', 'models'],
                     template: Theme.handTemplate
                 });
 
-                Views.PlayerView = BaseView.extend({
-                    className: "player",
+                Views.SeatView = BaseView.extend({
+                    className: "seat",
                     tagName: "div",
-                    template: Theme.playerTemplate,
-                    modelClass: Model.Player,
+                    template: Theme.seatTemplate,
+                    modelClass: Model.Seat,
                     subViews: {
                         HandView: Views.HandView
                     },
@@ -118,8 +118,12 @@ define(['require', 'config', 'models'],
                     className: "dealer",
                     tagName: "div",
                     template: Theme.dealerTemplate,
+                    modelClass: Model.Dealer,
                     subViews: {
                         HandView: Views.HandView
+                    },
+                    initialize: function () {
+
                     },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
@@ -204,7 +208,7 @@ define(['require', 'config', 'models'],
                     tagName: "ul", // This needs to be abstracted!
                     events: {
                         "click .wager": "wager",
-                        "click .wager_reset": "wager_reset"
+                        "click .wager_clear": "clear"
                     },
                     context: {
                         wager: {
@@ -232,23 +236,17 @@ define(['require', 'config', 'models'],
                                 amount: amount
                             },
                             success: function(data) {
-                                console.log("wager", data);
                                 self.render(data);
                             }
                         });
 
                         return false;
                     },
-                    wager_reset: function(ev) {
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('wager_reset'),
+                    clear: function(ev) {
+                        var self=this;
+                        this.model.request("clear", {
                             success: function(data) {
-                                console.log('wager_reset', data);
-                                self.trigger('update_context');
-                            },
-                            error: function() {
-                                console.log("`wager_reset` error!");
+                                self.render(data);
                             }
                         });
 
@@ -368,7 +366,7 @@ define(['require', 'config', 'models'],
                     subViews: {
                         DealerView: Views.DealerView,
                         TableStatusView: Views.TableStatusView,
-                        PlayerView: Views.PlayerView,
+                        SeatView: Views.SeatView,
                         DebugControlsView: Views.DebugControlsView,
                         TableControlsView: Views.TableControlsView,
                         PlayerStatusView: Views.PlayerStatusView,
@@ -380,6 +378,7 @@ define(['require', 'config', 'models'],
                         // Simply update the view when the model changes.
                         /* This is very basic and will need to be expanded to
                         include animations and other datasets from the engine.*/
+                        
                         this.model.on("change", function(data) {
                             self.render(data.attributes);
                         });
@@ -397,7 +396,7 @@ define(['require', 'config', 'models'],
 
                         // Render Players.
                         for (var i=0; i < context.seats.length; i++) {
-                            var playerView = new this.PlayerView();
+                            var playerView = new this.SeatView();
                             $(".player_"+i+"_wrap", this.$el).append(
                                     playerView.render(context.seats[i]).$el);
                         }

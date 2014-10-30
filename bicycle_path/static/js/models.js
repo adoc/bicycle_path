@@ -90,9 +90,13 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
             }
         });
 
-        var Player = BaseViewModel.extend({
-            urlRoot: "player",
-            socket: Sockets.player
+        var Seat = BaseViewModel.extend({
+            //urlRoot: "player",
+            socket: Sockets.seat
+        });
+
+        var Dealer = BaseViewModel.extend({
+            socket: Sockets.dealer
         });
 
         var Game = SocketioModel.extend({
@@ -115,7 +119,7 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
             socket: Sockets.wagerControls
         });
 
-        return {Player: Player,
+        return {Seat: Seat,
                 Game: Game,
                 PlayerStatus: PlayerStatus,
                 TableControls: TableControls,

@@ -264,15 +264,8 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
             gevent.sleep(bicycle.engine.ENGINE_TICK)
             _current_state = get_state()
             
-            #if _last_state != _current_state:
-            #print(_last_state, _current_state)
-            #print(set(_last_state.items()) & set(_current_state.items()))
-            #if set(_last_state.items()) - set(_current_state.items()):
-
             _last_state_set = frozenset(_last_state.items())
             _current_state_set = frozenset(_current_state.items())
-
-            # print(len(_last_state_set & _current_state_set) == len(_last_state_set) == len(_current_state_set))
 
             if _last_state_set != _current_state_set:
                 _last_state = _current_state
@@ -335,7 +328,12 @@ class EngineNamespace(EnabledNamespace):
         self.response(data, response_data);
 
 
-class PlayerNamespace(EnabledNamespace):
+class DealerNamespace(EnabledNamespace):
+    """
+    """
+    pass
+
+class SeatNamespace(EnabledNamespace):
     """
     """
 
@@ -419,7 +417,13 @@ class WagerControlsNamespace(EnabledNamespace):
         engine.game.wager(self.player, data['amount'])
         self.emit("response_"+data['request_id'], {'to_wager': engine.table.to_wager[self.player]})
 
+    def on_clear(self, data):
+        """
+        """
+        engine_id, engine = self._event_data(data)
 
+        engine.game.clear_wager(self.player)
+        self.response(data, {'to_wager': engine.table.to_wager[self.player]})
 
 
 @view_config(route_name='socket_endpoint', renderer='json')
@@ -429,7 +433,8 @@ def socket_endpoint(request):
 
     return socketio.socketio_manage(request.environ, {
                                     '/engine': EngineNamespace,
-                                    '/player': PlayerNamespace,
+                                    '/dealer': DealerNamespace,
+                                    '/seat': SeatNamespace,
                                     '/player_status': PlayerStatusNamespace,
                                     '/table_controls': TableControlsNamespace,
                                     '/wager_controls': WagerControlsNamespace
