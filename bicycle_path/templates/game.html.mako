@@ -40,6 +40,8 @@
 </%def>
 <%def name="scripts()">
     <script type="text/javascript">
+    "use strict";
+
     /* Front End Entry Point. */
     require(['jquery', 'config', 'views', 'sockets'],
         function ($, Config, Views, Sockets) {
@@ -53,13 +55,13 @@
                         success: function (data) {
                             var engine_id = data[0]; // First available engine
 
-                            g1 = new Views.GameView({
-                                id: engine_id
+                            window.g1 = new Views.GameView({
+                                model_id: engine_id
                             });
 
                             $("#bj1").append(g1.$el);
 
-                            g1.model.watch();
+                            window.g1.model.watch();
                         }
                     });
 

@@ -1,6 +1,8 @@
 <% // .table %>
-<% if (ctx.in_game !== true) { %>
-    <a class="table_sit btn btn-sm btn-primary" href="#" role="button">Sit</a>
+<% if (ctx.in_seat === -1) { %>
+    <a class="table_sit btn btn-sm btn-primary" href="#" role="button" title="Sit at this table.">Sit</a>
+<% } else if (ctx.to_leave === true) { %>
+    <a class="table_leave_cancel btn btn-sm btn-default" href="#" role="button" title="Leaving this table after this round. Click to cancel.">Leave</a>
 <% } else { %>
-    <a class="table_leave btn btn-sm btn-warning" href="#" role="button">Leave</a>
+    <a class="table_leave btn btn-sm btn-warning" href="#" role="button" title="Leave this table.">Leave</a>
 <% } %>

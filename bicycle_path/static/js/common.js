@@ -2,6 +2,8 @@
     (c) 2010 - 2014 C. Nicholas Long
 */
 
+"use strict";
+
 // Configure Require.js
 require.config({
     baseUrl: "static/js",
@@ -113,6 +115,7 @@ TODO:
 function socketRequest(socket, method, data, options) {
     data || (data = {});
     options || (options = {});
+    options.data || (options.data ={});
     options.timeout || (options.timeout = 10000);
     options.success || (options.success = function () {});
     options.timeoutFail || (options.timeoutFail = function() {
@@ -131,5 +134,5 @@ function socketRequest(socket, method, data, options) {
     // Send the command through the socket.
     socket.emit(method, _.extend({
         request_id: syncId,
-    }, data));
+    }, data, options.data));
 }

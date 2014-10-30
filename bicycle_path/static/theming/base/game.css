@@ -1,13 +1,19 @@
 /*
 */
 
+/*
 .wager,
 .play {
     list-style-type: none;
     display: none;
 }
+*/
 
-.wager li,
+.wager_controls {
+    list-style-type: none;
+}
+
+.wager_controls li,
 .play li {
     float: left;
     margin-right: 4px;

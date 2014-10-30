@@ -37,7 +37,7 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
                 options || (options = {});
                 if (options.socket) this.socket = options.socket;
                 if (options.controller) this.controller = options.controller;
-                if (options.id) this.id = options.id;
+                if (options.model_id) this.id = options.model_id;
 
                 Backbone.Model.apply(this, arguments);
             },
@@ -81,6 +81,7 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
                     success: function(data) {
                         self.socket.on("change",
                             function (data) {
+                                // console.log("Model change", data);
                                 self.set(data);
                             }
                         );
@@ -99,14 +100,26 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
             socket: Sockets.engine
         });
 
+        var PlayerStatus = SocketioModel.extend({
+            urlRoot: "player_status",
+            socket: Sockets.playerStatus
+        });
+
         var TableControls =  SocketioModel.extend({
             urlRoot: 'table_controls',
             socket: Sockets.tableControls
         });
 
+        var WagerControls = SocketioModel.extend({
+            urlRoot: 'wager_controls',
+            socket: Sockets.wagerControls
+        });
+
         return {Player: Player,
                 Game: Game,
-                TableControls: TableControls};
+                PlayerStatus: PlayerStatus,
+                TableControls: TableControls,
+                WagerControls: WagerControls};
 
     }
 ); 

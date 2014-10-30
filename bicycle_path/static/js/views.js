@@ -3,6 +3,8 @@
     (c) 2010 - 2014 C. Nicholas Long
 */
 
+"use strict";
+
 
 define(['require', 'config', 'models'],
     function(require, Config, Model) {
@@ -63,6 +65,7 @@ define(['require', 'config', 'models'],
 
                         // Build model and pass `opts` in to it.
                         if (this.modelClass) {
+                            console.log(this);
                             this.model = new this.modelClass({}, opts);
                         }
 
@@ -83,6 +86,7 @@ define(['require', 'config', 'models'],
                 Views.HandView = BaseView.extend({
                     className: "hand",
                     tagName: "div",
+                    context: [],
                     template: Theme.handTemplate
                 });
 
@@ -91,9 +95,20 @@ define(['require', 'config', 'models'],
                     tagName: "div",
                     template: Theme.playerTemplate,
                     modelClass: Model.Player,
+                    subViews: {
+                        HandView: Views.HandView
+                    },
+                    context: {
+                        wager: {
+                            amount: 0
+                        },
+                        hand_total: 0
+                    },
                     render: function(context) {
+                        // console.log("PlayerView context", context);
                         BaseView.prototype.render.apply(this, arguments);
-                        var handView = new Views.HandView({controller: this.controller});
+
+                        var handView = new this.HandView();
                         this.$el.append(handView.render());
                         return this;
                     }
@@ -103,9 +118,12 @@ define(['require', 'config', 'models'],
                     className: "dealer",
                     tagName: "div",
                     template: Theme.dealerTemplate,
+                    subViews: {
+                        HandView: Views.HandView
+                    },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
-                        var handView = new Views.HandView({controller: this.controller});
+                        var handView = new this.HandView();
                         this.$el.append(handView.render());
                         return this;
                     }
@@ -120,7 +138,18 @@ define(['require', 'config', 'models'],
 
                 Views.PlayerStatusView = BaseView.extend({
                     template: Theme.playerStatusTemplate,
-                    className: "player_status"
+                    className: "player_status",
+                    modelClass: Model.PlayerStatus,
+                    initialize: function () {
+                        var self = this;
+
+                        this.model.watch();
+
+                        this.model.on("change", function(data) {
+                            // console.log("TableControlsView Change", data.attributes);
+                            self.render(data.attributes);
+                        });
+                    }
                 });
 
                 // Controls
@@ -130,9 +159,20 @@ define(['require', 'config', 'models'],
                     tagName: "div",
                     events: {
                         "click .table_sit": "sit",
-                        "click .table_leave": "leave"
+                        "click .table_leave": "leave",
+                        "click .table_leave_cancel": "sit"
                     },
                     modelClass: Model.TableControls,
+                    initialize: function () {
+                        var self = this;
+
+                        this.model.watch();
+
+                        this.model.on("change", function(data) {
+                            // console.log("TableControlsView Change", data.attributes);
+                            self.render(data.attributes);
+                        });
+                    },
                     sit: function(ev) {
                         var self = this;
 
@@ -159,25 +199,41 @@ define(['require', 'config', 'models'],
 
                 Views.WagerControlsView = BaseView.extend({
                     template: Theme.wagerControlsTemplate,
+                    modelClass: Model.WagerControls,
                     className: "wager_controls", // This needs to be abstracted!
                     tagName: "ul", // This needs to be abstracted!
                     events: {
                         "click .wager": "wager",
                         "click .wager_reset": "wager_reset"
                     },
+                    context: {
+                        wager: {
+                            amount: 0
+                        }
+                    },
+                    initialize: function () {
+                        var self = this;
+
+                        this.model.watch();
+
+                        this.model.on("change", function(data) {
+                            console.log("WagerControlsView Change", data.attributes);
+
+                            self.render(data.attributes);
+                        });
+                    },
                     wager: function(ev) {
-                        var amount = parseInt(
+                        var self=this,
+                            amount = parseInt(
                                         ev.target.getAttribute('data-amount'));
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('wager'),
-                            data: {amount: amount},
-                            success: function(data) {
-                                console.log('wager', data);
-                                self.trigger('update_context');
+
+                        this.model.request("wager", {
+                            data: {
+                                amount: amount
                             },
-                            error: function() {
-                                console.log("`wager` error!");
+                            success: function(data) {
+                                console.log("wager", data);
+                                self.render(data);
                             }
                         });
 
@@ -325,7 +381,7 @@ define(['require', 'config', 'models'],
                         /* This is very basic and will need to be expanded to
                         include animations and other datasets from the engine.*/
                         this.model.on("change", function(data) {
-                            self.render(data);
+                            self.render(data.attributes);
                         });
                     },
                     render: function(context) {
@@ -359,11 +415,16 @@ define(['require', 'config', 'models'],
                         var playerStatusView = new this.PlayerStatusView();
                         controlsEl.append(playerStatusView.render(current_player).$el);
 
+                        /*
                         if (context.in_game === true &&
                                 context.accept_wager === true) {
                             var wagerControlsView = new this.WagerControlsView();
                             controlsEl.append(wagerControlsView.render(current_player.wager).$el);
-                        }
+                        }*/
+
+                        var wagerControlsView = new this.WagerControlsView();
+                        controlsEl.append(wagerControlsView.render().$el);
+
 
                         if (current_player) {
                             var gameControlsView = new this.GameControlsView();

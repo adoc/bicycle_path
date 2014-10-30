@@ -1,6 +1,6 @@
 <% // .wager_controls %>
 <li><h4>Wagers</h4></li>
-<li>Current:&nbsp;<%=ctx.wager.amount%></li>
+<li>¤<%=ctx.amount%>&nbsp;(<%=ctx.to_wager || 0%>)</li>
 <li><a class="wager btn btn-sm btn-default" data-amount="1" href="#" role="button">$1</a></li>
 <li><a class="wager btn btn-sm btn-default" data-amount="10" href="#" role="button">$10</a></li>
 <li><a class="wager btn btn-sm btn-default" data-amount="100" href="#" role="button">$100</a></li>

@@ -182,22 +182,24 @@ def _player_list(engine_id, engine, player):
                                     engine.table.wagers):
 
         def base_player():
-            if _player:
+            #if _player:
                 for k, v in marshal_object(_player, persist=_player is player).items():
                     yield k, v
 
-        this = dict(base_player())
-        this['hand'] = marshal_object(hand, persist=_player is player)
-        this['hand_total'] = int(hand)
-        this['wager'] = wager.amount
+        if _player:
+            this = dict(base_player())
+            this['hand'] = marshal_object(hand, persist=_player is player)
+            this['hand_total'] = int(hand)
+            this['wager'] = wager.amount
 
-        yield this
+            yield this
+        else:
+            yield None
 
 
 def _player_observe(engine_id, engine, player):
     """Observe the consuming player.
     """
-    print(player)
 
     yield 'bankroll', player.bankroll
 
@@ -209,6 +211,7 @@ def _player_observe(engine_id, engine, player):
         yield 'wager', wager.amount
         yield 'hand', marshal_object(hand, persist=True)
         yield 'hand_total', int(hand)
+        yield 'in_seat', engine.table.seats.index(player)
 
 
 def _engine_observe(engine_id, engine, player):
@@ -224,8 +227,7 @@ def _engine_observe(engine_id, engine, player):
                                 InsuranceStep, ResolveStep, CleanupStep))
 
     if isinstance(engine.game, PlayerStep):
-        yield 'current_player', engine.game.player
-
+        yield 'current_player', marshal_object(engine.game.player, persist=engine.game.player is player)
 
 
 import gevent
@@ -241,6 +243,7 @@ class RoomsMixin(socketio.mixins.RoomsMixin):
 class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
     """
     """
+    response_prefix = "response"
 
     def _event_data(self, data):
         """
@@ -254,40 +257,69 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
         self.greenlets = self.request.registry.settings['greenlets']
         self.player = meta_view(self.request)['player']
 
+    def _watch(self, get_state, on_change, init_state_none=True):
+
+        _last_state = {} if init_state_none is True else get_state()
+        while True:
+            gevent.sleep(bicycle.engine.ENGINE_TICK)
+            _current_state = get_state()
+            
+            #if _last_state != _current_state:
+            #print(_last_state, _current_state)
+            #print(set(_last_state.items()) & set(_current_state.items()))
+            #if set(_last_state.items()) - set(_current_state.items()):
+
+            _last_state_set = frozenset(_last_state.items())
+            _current_state_set = frozenset(_current_state.items())
+
+            # print(len(_last_state_set & _current_state_set) == len(_last_state_set) == len(_current_state_set))
+
+            if _last_state_set != _current_state_set:
+                _last_state = _current_state
+                self.emit('change',
+                            on_change())
+
+    def response(self, request_data, response_data):
+        self.emit('_'.join([self.response_prefix, request_data['request_id']]),
+                  response_data)
+
     def on_watch(self, data):
         """Simply watch/join an engine's stream.
         """
+        def handle():
+            print("uh ohhhh")
+
         # TODO: Might deprecate `pulse_on_join`
         id_, engine = self._event_data(data)
         if not self.in_room(id_): # Only if the socket is not already watching.
             self.join(id_)
-            self.spawn(self._watch, id_, engine,
-                        pulse_on_join=True)
-
-            self.emit("response_"+data['request_id'], True)
+            self.spawn(self.watch, id_, engine).link_exception(handle)
+            self.response(data, True)
         else:
-            self.emit("response_"+data['request_id'], False)
+            self.response(data, False)
 
 
-class EngineSpace(EnabledNamespace):
+class EngineNamespace(EnabledNamespace):
     """
     """
 
-    def _watch(self, engine_id, engine, pulse_on_join=True):
-        _laststep = None if pulse_on_join is True else engine.game
-        while True:
-            gevent.sleep(bicycle.engine.ENGINE_TICK)
-            if _laststep is not engine.game: # When engine changes,
-                                             # emit the state change.
-                _laststep = engine.game
-                self.emit('change',
-                        dict(_engine_observe(engine_id, engine, self.player)))
+    def watch(self, engine_id, engine):
+        """
+        """
+
+        # TODO: Should be reduced to the step. The rest of the game
+        #   state is exposed through other socket namespaces.
+
+        return self._watch(
+                lambda: {'step': engine.game},
+                lambda: dict(_engine_observe(engine_id, engine, self.player)),
+                init_state_none=True)
 
     def on_list(self, data):
         """
         """
 
-        self.emit("response_"+data['request_id'],
+        self.response(data,
                       [engine for engine in
                             self.request.registry.settings['engines']])
 
@@ -300,34 +332,49 @@ class EngineSpace(EnabledNamespace):
             response_data = dict(_engine_observe(engine_id, engine,
                                                  self.player))
 
-        self.emit("response_"+data['request_id'], response_data);
+        self.response(data, response_data);
 
 
-class PlayerSpace(EnabledNamespace):
+class PlayerNamespace(EnabledNamespace):
     """
     """
 
-    def _watch(self, engine):
-        # From EngineSpace, update to watch a player.
+    def watch(self, engine_id, engine):
+        """
+        """
 
-        def _get_player_hash():
-            return hash(frozenset(self.player.__dict__.items()))
-
-        _lasthash = _get_player_hash()
-
-        while True:
-            gevent.sleep(bicycle.engine.ENGINE_TICK)
-            _currenthash = _get_player_hash()
-            if _lasthash != _currenthash: # When engine changes,
-                                             # emit the state change.
-                _lasthash = _currenthash
-                self.emit('change',
-                        dict(_player_observe(engine_id, engine, player)))
+        return self._watch(
+                # lambda: hash(frozenset(self.player.__dict__.items())),
+                lambda: self.player.__dict__,
+                lambda: dict(_player_observe(engine_id, engine, player)),
+                init_state_none=True)
 
 
-class TableControlsSpace(EnabledNamespace):
+class PlayerStatusNamespace(EnabledNamespace):
+    
+    def watch(self, engine_id, engine):
+        """
+        """
+
+        def get_state():
+            return {'bankroll': self.player.bankroll}
+
+        return self._watch(get_state, get_state ,init_state_none=True)
+
+
+class TableControlsNamespace(EnabledNamespace):
     """
     """
+    def watch(self, engine_id, engine):
+        """
+        """
+        def get_state():
+            return {
+                'in_seat': engine.table.seats.index(self.player) if self.player in engine.table.seats else -1,
+                'to_leave': self.player in engine.table.to_leave
+            }
+
+        return self._watch(get_state, get_state, init_state_none=True)
 
     def on_sit(self, data):
         """
@@ -346,13 +393,44 @@ class TableControlsSpace(EnabledNamespace):
         self.emit("response_"+data['request_id'], True)
 
 
+class WagerControlsNamespace(EnabledNamespace):
+    """
+    """
+    def watch(self, engine_id, engine):
+        """
+        """
+
+        def get_state():
+            if self.player in engine.table.seats:
+                idx = engine.table.seats.index(self.player)
+                wager = engine.table.wagers[idx]
+                obj = marshal_object(wager, persist=True)
+                obj['to_wager'] = engine.table.to_wager[self.player] if self.player in engine.table.to_wager else 0
+                return obj
+            else:
+                return {}
+
+        return self._watch(get_state, get_state, init_state_none=True)
+
+    def on_wager(self, data):
+        """
+        """
+        engine_id, engine = self._event_data(data)
+        engine.game.wager(self.player, data['amount'])
+        self.emit("response_"+data['request_id'], {'to_wager': engine.table.to_wager[self.player]})
+
+
+
+
 @view_config(route_name='socket_endpoint', renderer='json')
 def socket_endpoint(request):
     """Create a socket endpoint for the client.
     """
 
     return socketio.socketio_manage(request.environ, {
-                                    '/engine': EngineSpace,
-                                    '/player': PlayerSpace,
-                                    '/table_controls': TableControlsSpace
+                                    '/engine': EngineNamespace,
+                                    '/player': PlayerNamespace,
+                                    '/player_status': PlayerStatusNamespace,
+                                    '/table_controls': TableControlsNamespace,
+                                    '/wager_controls': WagerControlsNamespace
                                     }, request=request)
