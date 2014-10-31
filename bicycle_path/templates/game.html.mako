@@ -61,7 +61,7 @@
 
                             $("#bj1").append(g1.$el);
 
-                            window.g1.model.watch();
+                            //window.g1.model.watch();
                         }
                     });
 

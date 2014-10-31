@@ -2,6 +2,8 @@
     (c) 2010 - 2014 C. Nicholas Long
 */
 
+"use strict";
+
 define(['underscore',
         "text!/static/theming/base/game.html.tmpl",
         "text!/static/theming/base/seat.html.tmpl",

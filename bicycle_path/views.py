@@ -1,3 +1,8 @@
+
+# TODO: Really need to refactor this thing soon before it gets out of
+#       hand.
+
+
 import json
 
 import socketio
@@ -369,7 +374,8 @@ class TableControlsNamespace(EnabledNamespace):
         def get_state():
             return {
                 'in_seat': engine.table.seats.index(self.player) if self.player in engine.table.seats else -1,
-                'to_leave': self.player in engine.table.to_leave
+                'to_leave': self.player in engine.table.to_leave,
+                'to_sit': self.player in engine.table.to_sit
             }
 
         return self._watch(get_state, get_state, init_state_none=True)

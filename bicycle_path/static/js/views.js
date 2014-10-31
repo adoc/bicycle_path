@@ -5,7 +5,6 @@
 
 "use strict";
 
-
 define(['require', 'config', 'models'],
     function(require, Config, Model) {
 
@@ -382,6 +381,8 @@ define(['require', 'config', 'models'],
                         this.model.on("change", function(data) {
                             self.render(data.attributes);
                         });
+
+                        this.model.watch();
                     },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);

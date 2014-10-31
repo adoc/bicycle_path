@@ -7,30 +7,10 @@
 define(['jquery', 'underscore', 'backbone', 'sockets'],
     function($, _, Backbone, Sockets) {
 
-        // Deprecated but good reference??
-        var BaseViewModel = Backbone.Model.extend({
-            url: function() {
-                return this.controller.url(this.action);
-            },
-            _url: function () {
-                return this.controller.url();
-            },
-            constructor: function(opts) {
-                var self = this,
-                    args = arguments;
-
-                // Extend any opts in to this view.
-                _.extend(this, opts);
-
-                Backbone.Model.apply(this, arguments);
-            }
-        });
-
         /* Interesting idea to unify Backbone.Model and socketio
         Several implementations already exist but seem to run in to trouble
         of trying to do "too much".
         */
-        //
         var SocketioModel = Backbone.Model.extend({
             //
             constructor: function (attributes, options) {
@@ -90,12 +70,12 @@ define(['jquery', 'underscore', 'backbone', 'sockets'],
             }
         });
 
-        var Seat = BaseViewModel.extend({
+        var Seat = SocketioModel.extend({
             //urlRoot: "player",
             socket: Sockets.seat
         });
 
-        var Dealer = BaseViewModel.extend({
+        var Dealer = SocketioModel.extend({
             socket: Sockets.dealer
         });
 
