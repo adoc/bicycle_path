@@ -2,6 +2,7 @@
     Application Theming.
     (c) 2010 - 2014 C. Nicholas Long
 */
+"use strict";
 
 define(['underscore', 'config'],
     function(_, Config) {

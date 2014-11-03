@@ -1,7 +1,6 @@
 /*  common.js
     (c) 2010 - 2014 C. Nicholas Long
 */
-
 "use strict";
 
 // Configure Require.js
