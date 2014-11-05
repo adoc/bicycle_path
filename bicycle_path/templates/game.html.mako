@@ -43,25 +43,80 @@
     "use strict";
 
     /* Front End Entry Point. */
-    require(['jquery', 'config', 'views', 'sockets'],
-        function ($, Config, Views, Sockets) {
+    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'sockets'],
+        function ($, BackboneSocketio, Config, Models, Views, Sockets) {
 
             // AMD Trick to ensure the theme module is loaded before instantiating the game.
-            require([Config.themeModuleName, 'blackjack'], 
-                function(Theme, blackjack) {
+            require([Config.themeModuleName], 
+                function(Theme) {
 
                     // Get engine list.
-                    socketRequest(Sockets.engine, "list", {}, {
+                    BackboneSocketio.socketRequest(Sockets.engine, "list", {}, {
                         success: function (data) {
-                            var engine_id = data[0]; // First available engine
+                            var engine_id = data[0]; // First available engine (game) for now.
 
+                            /*
                             window.g1 = new Views.GameView({
                                 model_id: engine_id
                             });
 
                             $("#bj1").append(g1.$el);
+                            */
 
-                            //window.g1.model.watch();
+                            /*
+                            window.table_controls = new Views.TableControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(table_controls.$el);
+
+                            window.wager_controls = new Views.WagerControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(wager_controls.$el);
+
+                            window.dealer = new Views.DealerView({
+                                model_id: engine_id
+                            });
+
+                            $("#bj1").append(dealer.$el);
+
+                            console.log(Object.prototype.toString.call(dealer));
+                            */
+
+                            /*
+                            var c = new Models.Card();
+                            c.set("KS");
+                            console.log(c);
+
+                            var h = new Models.Hand();
+                            h.set(['KS', 'KC']);
+                            console.log(h);
+                            */
+
+                            // Just a simple hand test.
+
+                            var hand = new Views.HandView();
+                            $("#bj1").append(hand.$el);
+                            $("#bj1").append("<br />");
+                            hand.model.reset(["XX", "XX", "AS"]);
+                            setTimeout(function() {hand.model.reset(["KC"]); }, 1000);
+                            setTimeout(function() {hand.model.reset(["AS"]); }, 2000);
+
+                            // Just a simple dealer test
+                            var dealer = new Views.DealerView();
+                            $("#bj1").append(dealer.$el);
+                            $("#bj1").append("<br />");
+                            dealer.model.set({hand:['XX', "AS", "KS"]});
+
+                            setTimeout(function() {dealer.model.set({hand: ["XX"]})}, 1000);
+                            setTimeout(function() {dealer.model.set({hand: ["AC","QC", "XX"]})}, 2000);
+
+                            var seat = new Views.SingleSeatView();
+                            $("#bj1").append(seat.$el);
+                            $("#bj1").append("<br />");
+                            seat.model.set({hand: ['XX']});
+                            setTimeout(function() {seat.model.set({hand: ["5D", "2S"]})}, 1000);
+                            setTimeout(function() {seat.model.set({hand: ["6H","AC", "XX"]})}, 2000);
                         }
                     });
 

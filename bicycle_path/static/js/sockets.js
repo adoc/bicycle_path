@@ -14,18 +14,20 @@ define(['socketio', 'config'],
         var Sockets = {
             engine: io.connect('/engine', opts),
             dealer: io.connect('/dealer', opts),
-            seat: io.connect('/seat', opts),
+            seats: io.connect('/seats', opts),
             tableControls: io.connect('/table_controls', opts),
             wagerControls: io.connect('/wager_controls', opts),
-            playerStatus: io.connect('/player_status', opts)
+            playerStatus: io.connect('/player_status', opts),
+            gameControls: io.connect('/game_controls', opts)
         };
 
         // Gracefully disconnect the socket.
         $(window).bind("beforeunload", function() {
-            Sockets.seat.disconnect();
+            Sockets.seats.disconnect();
             Sockets.dealer.disconnect();
             Sockets.tableControls.disconnect();
             Sockets.wagerControls.disconnect();
+            Sockets.gameControls.disconnect();
             Sockets.playerStatus.disconnect();
             Sockets.engine.disconnect();
         });

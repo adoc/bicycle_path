@@ -5,29 +5,33 @@
 "use strict";
 
 define(['require', 'config', 'models'],
-    function(require, Config, Model) {
+    function(require, Config, Models) {
 
         var Views = {};
 
         // Tricky AMD usage to make the Theme (Config.themeName) dynamic.
-        require(['jquery', 'underscore',  'backbone', Config.themeModuleName],
-            function($, _, Backbone, Theme) {
+        require(['underscore', 'backbone', Config.themeModuleName],
+            function(_, Backbone, Theme) {
 
                 var BaseView = Backbone.View.extend({
-                    context: {},
+                    __name__: "BaseView",
+                    // TODO: Clean this up.No more extending to
+                    //      this.context. Use the models!
                     render: function(context) {
-                        // Not sure if this is right.
-                        _.extend(this.context, context || {});
+                        // Not sure if this is right. (It wasn't!)
+                        // _.extend(this.context, context || {});
 
                         var page = this.template(_.extend({
                                                 Config: Config,
-                                                ctx: this.context
+                                                // ctx: this.context
                                             }, this));
 
                         this.$el.html(page);
                         return this;
                     },
                     // Fetch and render.
+                    // TODO: Should be deprecated.
+                    /*
                     update: function(callback) {
                         var self = this;
                         this.model.fetch({
@@ -42,30 +46,52 @@ define(['require', 'config', 'models'],
                             }
                         });
                     },
+                    */
                     initialize: function() {
-                        this.on("update_context", function(ev) {
-                            this.render();
-                        });
+                        var self = this;
+
+                        if (this.model instanceof Backbone.Model) {
+                            this.model.on("change", function(data) {
+                                // Re-render the view on model change.
+                                self.render();
+                                if (Config.debug === true) {    // Debug Info.
+                                    console.log(self.__name__, data.attributes);
+                                }
+                            });
+                        } else if (this.model instanceof Backbone.Collection) {
+                            this.model.on("reset", function(data) {
+                                // Re-render the view on model change.
+                                self.render();
+                                if (Config.debug === true) {    // Debug Info.
+                                    console.log(self.__name__, data);
+                                }
+                            });
+                        }
+
+                        // Watch the socket via the model if socket
+                        //  enabled.
+                        if (this.model.hasOwnProperty("watch")) {
+                            this.model.watch();
+                        }
                     },
                     constructor: function(opts) {
-                        var self = this,
-                            args = arguments;
+                        var self = this;
+                        opts || (opts = {});
 
                         // Extend any opts in to this view.
                         _.extend(this, opts);
 
+                        // Build model and pass `opts` in to it.
+                        // Again, crappy and unneeded!
+                        this.model = new this.modelClass({}, opts);
+
                         // Build subviews and pass `opts` in to it.
                         _.each(this.subViews, function(value, key) {
                             self[key] = function () {
+                                //opts.model = self.model; // SubViews
                                 return new value(opts);
                             }
                         });
-
-                        // Build model and pass `opts` in to it.
-                        if (this.modelClass) {
-                            // console.log(this);
-                            this.model = new this.modelClass({}, opts);
-                        }
 
                         // Make sure this is available to child instances.
                         this.getCardAsset = function(card) {
@@ -80,75 +106,120 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                // Player Card Views.
                 Views.HandView = BaseView.extend({
+                    __name__: "HandView", // For debug only.
                     className: "hand",
                     tagName: "div",
-                    context: [],
-                    template: Theme.handTemplate
-                });
-
-                Views.SeatView = BaseView.extend({
-                    className: "seat",
-                    tagName: "div",
-                    template: Theme.seatTemplate,
-                    modelClass: Model.Seat,
-                    subViews: {
-                        HandView: Views.HandView
-                    },
-                    context: {
-                        wager: {
-                            amount: 0
-                        },
-                        hand_total: 0
-                    },
-                    render: function(context) {
-                        // console.log("PlayerView context", context);
-                        BaseView.prototype.render.apply(this, arguments);
-
-                        var handView = new this.HandView();
-                        this.$el.append(handView.render());
-                        return this;
-                    }
+                    template: Theme.handTemplate,
+                    modelClass: Models.Hand
                 });
 
                 Views.DealerView = BaseView.extend({
+                    __name__: "DealerView",
                     className: "dealer",
                     tagName: "div",
                     template: Theme.dealerTemplate,
-                    modelClass: Model.Dealer,
+                    modelClass: Models.Dealer,
                     subViews: {
                         HandView: Views.HandView
                     },
                     initialize: function () {
+                        var self = this;
+                        BaseView.prototype.initialize.apply(this, arguments);
+                        this.handView = new this.HandView();
 
+                        // TODO: There must be a way to abstract this,
+                        //  but this is fine for now.
+                        // Update subview model.
+                        this.model.on("change", function(data) {
+                            self.handView.model.reset(data.attributes.hand);
+                        });
                     },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
-                        var handView = new this.HandView();
-                        this.$el.append(handView.render());
+                        this.$el.append(this.handView.$el);
+                        return this;
+                    }
+                });
+
+                Views.SingleSeatView = BaseView.extend({
+                    __name__: "SingleSeatView",
+                    className: "seat",
+                    tagName: "div",
+                    template: Theme.seatTemplate,
+                    modelClass: Models.Seat,
+                    subViews: {
+                        HandView: Views.HandView
+                    },
+                    initialize: function() {
+                        var self = this;
+                        BaseView.prototype.initialize.apply(this, arguments);
+                        this.handView = new this.HandView();
+
+                        // TODO: There must be a way to abstract this,
+                        //  but this is fine for now.
+                        // Update subview model.
+                        this.model.on("change", function(data) {
+                            self.handView.model.reset(data.attributes.hand);
+                        });
+                    },
+                    render: function(context) {
+                        context || (context={
+                                            wager: {
+                                                amount: 0
+                                            },
+                                            hand_total: 0
+                                        });
+
+                        BaseView.prototype.render.apply(this, arguments);
+                        this.$el.append(this.handView.$el);
+                        return this;
+                    }
+                });
+
+                Views.SeatsView = BaseView.extend({
+                    __name__: "SeatsView",
+                    modelClass: Models.Seats,
+                    subViews: {
+                        SingleSeatView: Views.SingleSeatView
+                    },
+                    initialize: function () {
+                        var self = this;
+                        this.model.on("change", function (data) {
+                            console.log("SeatsView Change", data.attributes);
+                            self.render(data.attributes);
+                        });
+                        this.model.watch();
+                    },
+                    render: function(context) {
+                        for (var i=0; i < context.seats.length; i++) {
+                            var seatView = new this.SingleSeatView();
+                            $(".player_"+i+"_wrap", this.el).html(
+                                    seatView.render(context.seats[i]).$el);
+                        }
                         return this;
                     }
                 });
 
                 // Status Views.
                 Views.TableStatusView = BaseView.extend({
+                    __name__: "TableStatusView",
                     template: Theme.tableStatusTemplate,
                     className: "table_status",
                     tagName: "div"
                 });
 
                 Views.PlayerStatusView = BaseView.extend({
+                    __name__: "PlayerStatusView",
                     template: Theme.playerStatusTemplate,
                     className: "player_status",
-                    modelClass: Model.PlayerStatus,
+                    modelClass: Models.PlayerStatus,
                     initialize: function () {
                         var self = this;
 
                         this.model.watch();
 
                         this.model.on("change", function(data) {
-                            // console.log("TableControlsView Change", data.attributes);
                             self.render(data.attributes);
                         });
                     }
@@ -156,6 +227,7 @@ define(['require', 'config', 'models'],
 
                 // Controls
                 Views.TableControlsView = BaseView.extend({
+                    __name__: "TableControlsView",
                     template: Theme.tableControlsTemplate,
                     className: "table_controls",
                     tagName: "div",
@@ -164,16 +236,15 @@ define(['require', 'config', 'models'],
                         "click .table_leave": "leave",
                         "click .table_leave_cancel": "sit"
                     },
-                    modelClass: Model.TableControls,
+                    modelClass: Models.TableControls,
                     initialize: function () {
                         var self = this;
-
-                        this.model.watch();
-
                         this.model.on("change", function(data) {
-                            // console.log("TableControlsView Change", data.attributes);
+                            console.log("TableControlsView Change",
+                                        data.attributes);
                             self.render(data.attributes);
                         });
+                        this.model.watch();
                     },
                     sit: function(ev) {
                         var self = this;
@@ -200,8 +271,9 @@ define(['require', 'config', 'models'],
                 });
 
                 Views.WagerControlsView = BaseView.extend({
+                    __name__: "WagerControlsView",
                     template: Theme.wagerControlsTemplate,
-                    modelClass: Model.WagerControls,
+                    modelClass: Models.WagerControls,
                     className: "wager_controls", // This needs to be abstracted!
                     tagName: "ul", // This needs to be abstracted!
                     events: {
@@ -254,6 +326,7 @@ define(['require', 'config', 'models'],
 
                 // blackjack game to be abstracted later.
                 Views.GameControlsView = BaseView.extend({
+                    __name__: "GameControlsView",
                     template: Theme.gameControlsTemplate,
                     className: "game_controls", // This needs to be abstracted!
                     tagName: "ul", // This needs to be abstracted!
@@ -315,6 +388,7 @@ define(['require', 'config', 'models'],
                 });
 
                 Views.DebugControlsView = BaseView.extend({
+                    __name__: "DebugControlsView",
                     template: Theme.debugControlsTemplate,
                     className: "debug_controls",
                     tagName: "div",
@@ -357,14 +431,19 @@ define(['require', 'config', 'models'],
                 });
 
                 // Main Game View
+                /*
+                this has to be reworked. game state changes should no re-render
+                the entire thing.
+                */
                 Views.GameView = BaseView.extend({
+                    __name__: "GameView",
                     template: Theme.gameTemplate,
                     className: "game",
-                    modelClass: Model.Game,
+                    modelClass: Models.Game,
                     subViews: {
                         DealerView: Views.DealerView,
                         TableStatusView: Views.TableStatusView,
-                        SeatView: Views.SeatView,
+                        SeatsView: Views.SeatsView,
                         DebugControlsView: Views.DebugControlsView,
                         TableControlsView: Views.TableControlsView,
                         PlayerStatusView: Views.PlayerStatusView,
@@ -382,24 +461,36 @@ define(['require', 'config', 'models'],
                         });
 
                         this.model.watch();
+
+                        this.dealerView = new this.DealerView();
+                        this.tableStatusView = new this.TableStatusView();
+
                     },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
                         context = _.extend(context || {}, this.model.attributes);
 
                         // Render Dealer and Table Status.
-                        var dealerView = new this.DealerView(),
-                            tableStatusView = new this.TableStatusView();
+                        //var dealerView = new this.DealerView(),
+                        //    tableStatusView = new this.TableStatusView();
 
-                        $(".dealer_wrap", this.$el).append(dealerView.render(context.dealer).$el);
-                        $(".table_status_wrap", this.$el).append(tableStatusView.render(context).$el);
+                        $(".dealer_wrap", this.$el).append(
+                                    this.dealerView.render(context.dealer).$el);
+                        $(".table_status_wrap", this.$el).append(
+                                    this.tableStatusView.render(context).$el);
 
                         // Render Players.
+                        /*
                         for (var i=0; i < context.seats.length; i++) {
-                            var playerView = new this.SeatView();
+                            var seatView = new this.SeatsView();
                             $(".player_"+i+"_wrap", this.$el).append(
-                                    playerView.render(context.seats[i]).$el);
-                        }
+                                    seatView.render(context.seats[i]).$el);
+                        }*/
+                        var seatsView = new this.SeatsView();
+
+                        //console.log(this.el);
+                        seatsView.el = this.el;
+                        //seatsView.render(context.seats);
 
                         // Construct controls subviews.
                         var controlsEl = $(".controls", this.$el),

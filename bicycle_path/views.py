@@ -175,7 +175,7 @@ def _dealer_observe(engine_id, engine, player):
     for k, v in marshal_object(engine.table.dealer).items():
         yield k, v
 
-    yield 'hand', marshal_object(engine.table.dealer_hand)
+    yield 'hand', tuple(marshal_object(engine.table.dealer_hand))
     yield 'hand_total', int(engine.table.dealer_hand)
 
 
@@ -245,6 +245,32 @@ class RoomsMixin(socketio.mixins.RoomsMixin):
         return self._get_room_name(room) in self.session['rooms']
 
 
+def freeze(obj):
+    """
+    """
+
+    def do_list():
+        for i in obj:
+            yield freeze(i)
+
+    def do_dict():
+        for k, v in obj.items():
+            yield k, freeze(v)
+
+
+    if isinstance(obj, tuple):
+        return tuple(do_list())
+
+    elif isinstance(obj, list):
+        return tuple(do_list())
+
+    elif isinstance(obj, dict):
+        return tuple(sorted(dict(do_dict()).items()))
+
+    else:
+        return obj
+
+
 class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
     """
     """
@@ -269,11 +295,23 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
             gevent.sleep(bicycle.engine.ENGINE_TICK)
             _current_state = get_state()
             
-            _last_state_set = frozenset(_last_state.items())
-            _current_state_set = frozenset(_current_state.items())
+            # Function this out to get inner dicts!
+            #_last_state_set = frozenset(sorted(_last_state.items()))
+            #_current_state_set = frozenset(sorted(_current_state.items()))
+
+            _last_state_set = frozenset(freeze(_last_state))
+            
+            #print(frozenset(freeze(_current_state)))
+            
+            _current_state_set = frozenset(freeze(_current_state))
+
+            # print(_last_state_set, _current_state_set)
 
             if _last_state_set != _current_state_set:
+                #print("last:", _last_state_set)
+                #print("current:", _current_state_set)
                 _last_state = _current_state
+                print("change", self.__class__.__name__, _current_state)
                 self.emit('change',
                             on_change())
 
@@ -326,8 +364,8 @@ class EngineNamespace(EnabledNamespace):
         """
         engine_id, engine = self._event_data(data)
 
-        if data['ns'] == "game":
-            response_data = dict(_engine_observe(engine_id, engine,
+        #if data['ns'] == "game":
+        response_data = dict(_engine_observe(engine_id, engine,
                                                  self.player))
 
         self.response(data, response_data);
@@ -336,9 +374,20 @@ class EngineNamespace(EnabledNamespace):
 class DealerNamespace(EnabledNamespace):
     """
     """
-    pass
+    
+    def watch(self, engine_id, engine):
+        """
+        """
 
-class SeatNamespace(EnabledNamespace):
+        def get_state():
+            s = dict(_dealer_observe(engine_id, engine, self.player))
+
+            return s
+
+        return self._watch(get_state, get_state, init_state_none=True)
+
+
+class SeatsNamespace(EnabledNamespace):
     """
     """
 
@@ -346,11 +395,13 @@ class SeatNamespace(EnabledNamespace):
         """
         """
 
-        return self._watch(
-                # lambda: hash(frozenset(self.player.__dict__.items())),
-                lambda: self.player.__dict__,
-                lambda: dict(_player_observe(engine_id, engine, player)),
-                init_state_none=True)
+        def get_state():
+            s = {'seats': tuple(_player_list(engine_id, engine, self.player))}
+
+            # print(s)
+            return s
+
+        return self._watch(get_state, get_state, init_state_none=True)
 
 
 class PlayerStatusNamespace(EnabledNamespace):
@@ -432,6 +483,12 @@ class WagerControlsNamespace(EnabledNamespace):
         self.response(data, {'to_wager': engine.table.to_wager[self.player]})
 
 
+class GameControlsNamespace(EnabledNamespace):
+    """
+    """
+    pass
+
+
 @view_config(route_name='socket_endpoint', renderer='json')
 def socket_endpoint(request):
     """Create a socket endpoint for the client.
@@ -440,8 +497,9 @@ def socket_endpoint(request):
     return socketio.socketio_manage(request.environ, {
                                     '/engine': EngineNamespace,
                                     '/dealer': DealerNamespace,
-                                    '/seat': SeatNamespace,
+                                    '/seats': SeatsNamespace,
                                     '/player_status': PlayerStatusNamespace,
                                     '/table_controls': TableControlsNamespace,
-                                    '/wager_controls': WagerControlsNamespace
+                                    '/wager_controls': WagerControlsNamespace,
+                                    '/game_controls': GameControlsNamespace
                                     }, request=request)

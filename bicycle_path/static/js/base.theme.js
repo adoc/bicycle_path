@@ -21,7 +21,7 @@ define(['underscore',
             gameControlsTemplate) {
 
         var baseTheme = {
-            cardImageFolder: "static/assets/oxygen",
+            cardImageFolder: "static/assets/bicycle",
             cardImageExt: "png",
 
             gameTemplate: _.template(gameTemplate),

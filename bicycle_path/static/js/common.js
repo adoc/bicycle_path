@@ -11,6 +11,7 @@ require.config({
         underscore: 'lib/underscore.min',
         backbone: 'lib/backbone.min',
         socketio: 'lib/socket.io.min',
+        backbone_socketio: 'lib/backbone.socket.io',
         bootstrap: 'lib/bootstrap.min',
         text: 'lib/text.min',
     },
@@ -82,7 +83,6 @@ window.join_ext = function(base, ext) {
     }
 }
 
-
 // TEmp hack out!
 function apiWrapper(url, foundCallback, notFoundCallback, errorCallback) {
     $.ajax({
@@ -102,36 +102,4 @@ function apiWrapper(url, foundCallback, notFoundCallback, errorCallback) {
             }
         }
     });
-}
-
-
-/* Mimics a very simple Request/Response dynamic through a
-socket.
-
-TODO:
-    Move to it's own AMD/hybrid module.
-*/
-function socketRequest(socket, method, data, options) {
-    data || (data = {});
-    options || (options = {});
-    options.data || (options.data ={});
-    options.timeout || (options.timeout = 10000);
-    options.success || (options.success = function () {});
-    options.timeoutFail || (options.timeoutFail = function() {
-        throw "'socketRequest' expected a response ";
-    });
-
-    var self = this,
-        syncId = _.uniqueId(method),
-        timeoutTimer = setTimeout(options.timeoutFail, options.timeout);
-
-    socket.once("response_"+syncId, function(responseData) {
-        clearTimeout(timeoutTimer);
-        options.success(responseData);
-    });
-
-    // Send the command through the socket.
-    socket.emit(method, _.extend({
-        request_id: syncId,
-    }, data, options.data));
 }
