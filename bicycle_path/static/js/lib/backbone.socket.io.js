@@ -103,7 +103,7 @@ define(['backbone'],
                 options || (options = {});
                 if (options.socket) this.socket = options.socket;
                 if (options.model_id) this.id = options.model_id;
-                Backbone.Model.apply(this, arguments);
+                Backbone.Collection.apply(this, arguments);
             },
             watch: function (options) {
                 var self = this;

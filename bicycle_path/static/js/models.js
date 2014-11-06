@@ -16,10 +16,9 @@ define(['backbone', 'backbone_socketio', 'sockets'],
             }),
             Seat: Backbone.Model.extend({
                 defaults: {
-                        wager: {
-                            amount: 0
-                        },
-                        hand_total: 0
+                    hand: [],
+                    wager: {amount: 0},
+                    hand_total: 0
                 }
             }),
             PlayerStatus: BackboneSocketio.Model.extend({

@@ -11,7 +11,7 @@ define(['underscore'],
             socketResource: 'api/v1/sock',
             engineUri: 'engines',
             themeModuleName: 'base.theme',
-            debug: true
+            debug: false
         };
     }
 );

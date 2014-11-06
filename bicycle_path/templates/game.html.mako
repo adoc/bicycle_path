@@ -28,8 +28,7 @@
 </%doc>
 ##  The game table will be loaded from it's own template and placed in to this div.
 
-    <div id="bj1" class="game_table" data-id="">
-    </div>
+    <div id="bj1" class="game_table" data-id=""></div>
 
 </div>
 ##  Just a temporary empty footer.
@@ -59,11 +58,8 @@
                             window.g1 = new Views.GameView({
                                 model_id: engine_id
                             });
-
                             $("#bj1").append(g1.$el);
-                            */
 
-                            /*
                             window.table_controls = new Views.TableControlsView({
                                 model_id: engine_id
                             });
@@ -77,46 +73,32 @@
                             window.dealer = new Views.DealerView({
                                 model_id: engine_id
                             });
-
                             $("#bj1").append(dealer.$el);
-
-                            console.log(Object.prototype.toString.call(dealer));
                             */
 
-                            /*
-                            var c = new Models.Card();
-                            c.set("KS");
-                            console.log(c);
-
-                            var h = new Models.Hand();
-                            h.set(['KS', 'KC']);
-                            console.log(h);
-                            */
-
-                            // Just a simple hand test.
-
-                            var hand = new Views.HandView();
-                            $("#bj1").append(hand.$el);
+                            var seats = new Views.SeatsView();
+                            $("#bj1").append(seats.$el);
                             $("#bj1").append("<br />");
-                            hand.model.reset(["XX", "XX", "AS"]);
-                            setTimeout(function() {hand.model.reset(["KC"]); }, 1000);
-                            setTimeout(function() {hand.model.reset(["AS"]); }, 2000);
 
-                            // Just a simple dealer test
-                            var dealer = new Views.DealerView();
-                            $("#bj1").append(dealer.$el);
-                            $("#bj1").append("<br />");
-                            dealer.model.set({hand:['XX', "AS", "KS"]});
+                            seats.model.reset([{
+                                                    hand: ["AS"],
+                                                    wager: {
+                                                        amount: 0
+                                                    },
+                                                    hand_total: 0
+                                            }, {
+                                                    hand: ["ks", "2c"],
+                                                    wager: {
+                                                        amount: 0
+                                                    },
+                                                    hand_total: 0
+                                            }]);
 
-                            setTimeout(function() {dealer.model.set({hand: ["XX"]})}, 1000);
-                            setTimeout(function() {dealer.model.set({hand: ["AC","QC", "XX"]})}, 2000);
+                            
+                            //seats.render();
 
-                            var seat = new Views.SingleSeatView();
-                            $("#bj1").append(seat.$el);
-                            $("#bj1").append("<br />");
-                            seat.model.set({hand: ['XX']});
-                            setTimeout(function() {seat.model.set({hand: ["5D", "2S"]})}, 1000);
-                            setTimeout(function() {seat.model.set({hand: ["6H","AC", "XX"]})}, 2000);
+                            //console.log(seats.model);
+
                         }
                     });
 

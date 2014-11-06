@@ -1,4 +1,6 @@
-<% // .table %>
+<% // .table
+var ctx = this.model.attributes;
+%>
 <% if (ctx.to_sit) { %>
     <a class="table_sit_cancel btn btn-sm btn-default" href="#" role="button" title="Waiting to be seated.">Sit</a>
 <% } else if (ctx.in_seat === -1) { %>

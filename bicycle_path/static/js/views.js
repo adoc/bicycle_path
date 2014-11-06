@@ -21,12 +21,11 @@ define(['require', 'config', 'models'],
                         // Not sure if this is right. (It wasn't!)
                         // _.extend(this.context, context || {});
 
-                        var page = this.template(_.extend({
-                                                Config: Config,
-                                                // ctx: this.context
-                                            }, this));
-
-                        this.$el.html(page);
+                        if (this.template) {
+                            this.$el.html(this.template(_.extend({
+                                            Config: Config,
+                                        }, this)));
+                        }
                         return this;
                     },
                     // Fetch and render.
@@ -47,8 +46,9 @@ define(['require', 'config', 'models'],
                         });
                     },
                     */
-                    initialize: function() {
+                    initialize: function(opts) {
                         var self = this;
+                        opts || (opts = {});
 
                         if (this.model instanceof Backbone.Model) {
                             this.model.on("change", function(data) {
@@ -70,7 +70,8 @@ define(['require', 'config', 'models'],
 
                         // Watch the socket via the model if socket
                         //  enabled.
-                        if (this.model.hasOwnProperty("watch")) {
+
+                        if (typeof this.model.watch !== "undefined" && opts.model_id) {
                             this.model.watch();
                         }
                     },
@@ -83,7 +84,11 @@ define(['require', 'config', 'models'],
 
                         // Build model and pass `opts` in to it.
                         // Again, crappy and unneeded!
-                        this.model = new this.modelClass({}, opts);
+                        if (this.modelClass.prototype instanceof Backbone.Model) {
+                            this.model = new this.modelClass({}, opts);
+                        } else if (this.modelClass.prototype instanceof Backbone.Collection) {
+                            this.model = new this.modelClass([], opts);
+                        }
 
                         // Build subviews and pass `opts` in to it.
                         _.each(this.subViews, function(value, key) {
@@ -135,7 +140,7 @@ define(['require', 'config', 'models'],
                             self.handView.model.reset(data.attributes.hand);
                         });
                     },
-                    render: function(context) {
+                    render: function() {
                         BaseView.prototype.render.apply(this, arguments);
                         this.$el.append(this.handView.$el);
                         return this;
@@ -163,14 +168,7 @@ define(['require', 'config', 'models'],
                             self.handView.model.reset(data.attributes.hand);
                         });
                     },
-                    render: function(context) {
-                        context || (context={
-                                            wager: {
-                                                amount: 0
-                                            },
-                                            hand_total: 0
-                                        });
-
+                    render: function() {
                         BaseView.prototype.render.apply(this, arguments);
                         this.$el.append(this.handView.$el);
                         return this;
@@ -179,26 +177,53 @@ define(['require', 'config', 'models'],
 
                 Views.SeatsView = BaseView.extend({
                     __name__: "SeatsView",
+                    template: Theme.seatsTemplate,
                     modelClass: Models.Seats,
                     subViews: {
                         SingleSeatView: Views.SingleSeatView
                     },
                     initialize: function () {
                         var self = this;
-                        this.model.on("change", function (data) {
-                            console.log("SeatsView Change", data.attributes);
-                            self.render(data.attributes);
+                        BaseView.prototype.initialize.apply(this, arguments);
+
+                        // Ambiguous section.
+                        /*
+                        this.seatView = [];
+                        BaseView.prototype.render.call(this);
+                        $(".player_wrap", this.el).each(function (i, v) {
+                            self.seatView.push(new self.SingleSeatView());
+
+                            var seatView = self.seatView[i];
+
+                            seatView.listenTo(self.model, "reset", function(data) {
+                                data = data.at(i);
+                                if (data) {
+                                    seatView.model.set(data.attributes);
+                                }
+                            });
+
+                            //console.log(v);
+                            $(v).html(seatView.$el);
                         });
-                        this.model.watch();
+                        */
+
                     },
                     render: function(context) {
-                        for (var i=0; i < context.seats.length; i++) {
-                            var seatView = new this.SingleSeatView();
-                            $(".player_"+i+"_wrap", this.el).html(
-                                    seatView.render(context.seats[i]).$el);
+                        //return;
+
+                        BaseView.prototype.render.apply(this, arguments);
+                        for (var i=0; i < this.model.length; i++) {
+                            var seatView = new this.SingleSeatView(); // I don't think I want to instance this here....
+                                                                        // But I don't have a better option yet.
+
+                            seatView.model.set(this.model.at(i).attributes);
+                            
+                            $(".player_wrap.player_"+i, this.el).html(
+                                    seatView.$el);
                         }
                         return this;
                     }
+
                 });
 
                 // Status Views.
@@ -237,15 +262,6 @@ define(['require', 'config', 'models'],
                         "click .table_leave_cancel": "sit"
                     },
                     modelClass: Models.TableControls,
-                    initialize: function () {
-                        var self = this;
-                        this.model.on("change", function(data) {
-                            console.log("TableControlsView Change",
-                                        data.attributes);
-                            self.render(data.attributes);
-                        });
-                        this.model.watch();
-                    },
                     sit: function(ev) {
                         var self = this;
 
@@ -279,22 +295,6 @@ define(['require', 'config', 'models'],
                     events: {
                         "click .wager": "wager",
                         "click .wager_clear": "clear"
-                    },
-                    context: {
-                        wager: {
-                            amount: 0
-                        }
-                    },
-                    initialize: function () {
-                        var self = this;
-
-                        this.model.watch();
-
-                        this.model.on("change", function(data) {
-                            console.log("WagerControlsView Change", data.attributes);
-
-                            self.render(data.attributes);
-                        });
                     },
                     wager: function(ev) {
                         var self=this,

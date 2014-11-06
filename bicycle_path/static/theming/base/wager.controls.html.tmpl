@@ -1,4 +1,6 @@
-<% // .wager_controls %>
+<% // .wager_controls
+var ctx = this.model.attributes;
+%>
 <li><h4>Wagers</h4></li>
 <li>¤<%=ctx.amount%>&nbsp;(<%=ctx.to_wager || 0%>)</li>
 <li><a class="wager btn btn-sm btn-default" data-amount="1" href="#" role="button">$1</a></li>
