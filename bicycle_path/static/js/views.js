@@ -182,32 +182,6 @@ define(['require', 'config', 'models'],
                     subViews: {
                         SingleSeatView: Views.SingleSeatView
                     },
-                    initialize: function () {
-                        var self = this;
-                        BaseView.prototype.initialize.apply(this, arguments);
-
-                        // Ambiguous section.
-                        /*
-                        this.seatView = [];
-                        BaseView.prototype.render.call(this);
-                        $(".player_wrap", this.el).each(function (i, v) {
-                            self.seatView.push(new self.SingleSeatView());
-
-                            var seatView = self.seatView[i];
-
-                            seatView.listenTo(self.model, "reset", function(data) {
-                                data = data.at(i);
-                                if (data) {
-                                    seatView.model.set(data.attributes);
-                                }
-                            });
-
-                            //console.log(v);
-                            $(v).html(seatView.$el);
-                        });
-                        */
-
-                    },
                     render: function(context) {
                         //return;
 
@@ -223,7 +197,6 @@ define(['require', 'config', 'models'],
                         }
                         return this;
                     }
-
                 });
 
                 // Status Views.
@@ -231,7 +204,8 @@ define(['require', 'config', 'models'],
                     __name__: "TableStatusView",
                     template: Theme.tableStatusTemplate,
                     className: "table_status",
-                    tagName: "div"
+                    tagName: "div",
+                    modelClass: Models.TableStatus
                 });
 
                 Views.PlayerStatusView = BaseView.extend({
@@ -330,6 +304,7 @@ define(['require', 'config', 'models'],
                     template: Theme.gameControlsTemplate,
                     className: "game_controls", // This needs to be abstracted!
                     tagName: "ul", // This needs to be abstracted!
+                    modelClass: Models.GameControls,
                     events: {
                         "click .game_hit": "hit",
                         "click .game_stand": "stand",
@@ -392,6 +367,7 @@ define(['require', 'config', 'models'],
                     template: Theme.debugControlsTemplate,
                     className: "debug_controls",
                     tagName: "div",
+                    modelClass: Models.DebugControls,
                     events: {
                         "click .debug_pause": "pause",
                         "click .debug_start": "start"
@@ -451,16 +427,20 @@ define(['require', 'config', 'models'],
                         GameControlsView: Views.GameControlsView
                     },
                     initialize: function () {
-                        var self = this;
+                        BaseView.prototype.initialize.apply(this, arguments);
+
+                        // var self = this;
                         // Simply update the view when the model changes.
                         /* This is very basic and will need to be expanded to
                         include animations and other datasets from the engine.*/
                         
+                        /*
                         this.model.on("change", function(data) {
                             self.render(data.attributes);
                         });
 
                         this.model.watch();
+                        */
 
                         this.dealerView = new this.DealerView();
                         this.tableStatusView = new this.TableStatusView();

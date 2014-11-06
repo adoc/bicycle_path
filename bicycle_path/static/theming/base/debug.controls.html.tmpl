@@ -1,4 +1,6 @@
-<% // .debug_controls %>
+<% // .debug_controls
+var ctx = this.model.attributes;
+%>
 <div class="debug_controls">
 <% if (ctx.paused === true) { %>
     <a class="debug_start btn btn-sm btn-success" href="#" role="button">Start</a>

@@ -59,7 +59,9 @@
                                 model_id: engine_id
                             });
                             $("#bj1").append(g1.$el);
+                            */
 
+                            /*
                             window.table_controls = new Views.TableControlsView({
                                 model_id: engine_id
                             });
@@ -74,30 +76,14 @@
                                 model_id: engine_id
                             });
                             $("#bj1").append(dealer.$el);
+
+                            window.seats = new Views.SeatsView({
+                                model_id: engine_id
+                            });
                             */
 
-                            var seats = new Views.SeatsView();
-                            $("#bj1").append(seats.$el);
-                            $("#bj1").append("<br />");
-
-                            seats.model.reset([{
-                                                    hand: ["AS"],
-                                                    wager: {
-                                                        amount: 0
-                                                    },
-                                                    hand_total: 0
-                                            }, {
-                                                    hand: ["ks", "2c"],
-                                                    wager: {
-                                                        amount: 0
-                                                    },
-                                                    hand_total: 0
-                                            }]);
-
-                            
-                            //seats.render();
-
-                            //console.log(seats.model);
+                            var c = new Models.Card("AS");
+                            console.log(c);
 
                         }
                     });
