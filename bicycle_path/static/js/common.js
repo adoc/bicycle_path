@@ -46,8 +46,7 @@ if (typeof String.prototype.endsWith != 'function') {
 
 // src: http://stackoverflow.com/a/1418059
 // Add a whitespace strip to the String prototype.
-if(typeof(String.prototype.trim) === "undefined")
-{
+if(typeof(String.prototype.trim) === "undefined") {
     String.prototype.trim = function() 
     {
         return String(this).replace(/^\s+|\s+$/g, '');
@@ -71,7 +70,7 @@ window.join_path = function(a) {
         }
     }
     return path;
-}
+};
 
 window.join_ext = function(base, ext) {
     base = base.trim();
@@ -81,25 +80,20 @@ window.join_ext = function(base, ext) {
     } else {
         return base + '.' + ext;
     }
-}
+};
 
-// TEmp hack out!
-function apiWrapper(url, foundCallback, notFoundCallback, errorCallback) {
-    $.ajax({
-        url: url,
-        success: function (data, xhr) {
-            if (data) {
-                foundCallback(data);
-            } else {
-                errorCallback(xhr);
+window.simple_countdown = function(options) {
+    options || (options = {});
+    options.tick || (options.tick = function() {});
+    options.done || (options.done = function() {});
+    options.timeout || (options.timeout = 0);
+    options.interval || (options.interval = 1000);
+    
+    return setInterval(function(){
+            options.timeout -= 1;
+            options.tick(options.timeout);
+            if (options.timeout <= 0) {
+                options.done();
             }
-        },
-        error: function (xhr) {
-            if (xhr.status == 404) {
-                notFoundCallback();
-            } else {
-                errorCallback(xhr);
-            }
-        }
-    });
-}
+        }, options.interval);
+};

@@ -9,6 +9,12 @@
 }
 */
 
+body {
+    background-image: url(/static/assets/bg1.jpg);
+    background-size: 50%;
+    color: #fff;
+}
+
 .wager_controls {
     list-style-type: none;
 }

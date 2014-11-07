@@ -33,6 +33,7 @@
 </div>
 ##  Just a temporary empty footer.
 <div style="min-height: 14px" class="container"></div>
+
 ##  Hook script for this page. This will most likely no longer be the entry point once this project matures.
 <%def name="style()">
     <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/base/game.css')}">
@@ -54,17 +55,16 @@
                         success: function (data) {
                             var engine_id = data[0]; // First available engine (game) for now.
 
-                            /*
-                            window.g1 = new Views.GameView({
-                                model_id: engine_id
-                            });
-                            $("#bj1").append(g1.$el);
-                            */
 
                             var table_status = new Views.TableStatusView({
                                 model_id: engine_id
                             });
                             $("#bj1").append(table_status.$el);
+
+                            var player_status = new Views.PlayerStatusView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(player_status.$el);
 
                             var dealer = new Views.DealerView({
                                 model_id: engine_id
@@ -75,6 +75,11 @@
                                 model_id: engine_id
                             });
                             $("#bj1").append(seats.$el)
+
+                            var debug_controls = new Views.DebugControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(debug_controls.$el)
 
                             var table_controls = new Views.TableControlsView({
                                 model_id: engine_id

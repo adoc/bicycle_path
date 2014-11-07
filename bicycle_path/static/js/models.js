@@ -7,9 +7,9 @@ define(['backbone', 'backbone_socketio', 'sockets'],
     function(Backbone, BackboneSocketio, Sockets) {
 
         var Models = {
-            Game: BackboneSocketio.Model.extend({
+            /*Game: BackboneSocketio.Model.extend({
                 socket: Sockets.engine
-            }),
+            }),*/
             // Breaking a Backbone.Model a bit to be a one-value model.
             Card: Backbone.Model.extend({
                 constructor: function(value, options) {

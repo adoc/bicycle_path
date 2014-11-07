@@ -5,6 +5,8 @@
 
 import json
 
+import gevent
+
 import socketio
 import socketio.mixins
 import socketio.namespace
@@ -36,136 +38,9 @@ def _get_engine_player(request):
 
 # Website Views
 # =============
-@view_config(route_name='home', renderer='templates/mytemplate.pt')
-def my_view(request):
-    return {'project': 'bicycle_path'}
-
-
-## OUT!
 def meta_view(request):
     player = request.session['player'] = request.session.get('player', Player(bankroll=100000))
     return {'player': player}
-
-
-# RESTful Views
-# =============
-@view_config(route_name='engine_list', renderer='json')
-def engine_list(request):
-    print ("GET ENGIEN LIST!!!!")
-    return [engine for engine in request.registry.settings['engines']]
-
-
-@view_config(route_name='engine_wager', renderer='json')
-def engine_wager(request):
-    _, engine, player = _get_engine_player(request)
-    try:
-        amount = int(request.params['amount'])
-    except (KeyError, ValueError, TypeError):
-        raise pyramid.httpexceptions.HTTPBadRequest()
-    else:
-        engine.game.wager(player, amount)
-        return True
-# ----
-
-# Blackjack Game Controls.
-@view_config(route_name='engine_hit', renderer='json')
-def engine_hit(request):
-    _, engine, player = _get_engine_player(request)
-    if (hasattr(engine.game, 'player') and
-            player is engine.game.player): # If current player.
-        engine.game.hit()
-        return True
-
-
-@view_config(route_name='engine_stand', renderer='json')
-def engine_stand(request):
-    _, engine, player = _get_engine_player(request)
-    if player is engine.game.player:
-        engine.game.stand()
-        return True
-
-
-@view_config(route_name='engine_double', renderer='json')
-def engine_double(request):
-    _, engine, player = _get_engine_player(request)
-    if player is engine.game.player:
-        engine.game.double()
-        return True
-
-
-@view_config(route_name='engine_start', renderer='json')
-def engine_start(request):
-    _, engine, _ = _get_engine_player(request)
-    engine.unpause()
-    return True
-
-
-@view_config(route_name='engine_pause', renderer='json')
-def engine_pause(request):
-    _, engine, _ = _get_engine_player(request)
-    engine.pause()
-    return True
-# ----
-
-
-# deprecated. here for reference.
-def __out_engine_observe(engine_id, engine, player):
-    """
-    """
-
-    # Combine the marshaled game state.
-    for k, v in marshal_object(engine.game).items():
-        yield k, v
-
-    yield 'engine_id', engine_id
-    yield 'step', engine.game.__class__.__name__
-    yield 'in_game', (player in engine.table.to_sit or
-                        player in engine.table.seats and
-                        player not in engine.table.to_leave)
-
-    yield 'player_bankroll', player.bankroll
-
-    def sum_cards(hand):
-        # Broken handling does not account for aces.
-        # We need a sum in the Hand class that doesn't total
-        # face down cards.
-        for card in hand:
-            if card.up is True:
-                yield int(card)
-
-    yield 'dealer_total', int(engine.table.dealer_hand)
-    yield 'shown_totals', [int(hand)
-                                if hand else 0 for hand in engine.table.hands]
-
-    if player in engine.table.seats:
-        idx = engine.table.seats.index(player)
-        hand = engine.table.seats[idx]
-
-        # Some of these can be incorporated in to the table state.
-        yield 'your_turn', (hasattr(engine.game, 'player') and
-                            engine.game.player is player)
-
-        yield 'in_seat', (player in engine.table.seats and idx)
-
-        yield 'your_hand', marshal_object(hand, persist=True)
-        yield 'hand_total', int(hand)
-
-
-@view_config(route_name='engine_poll', renderer='json')
-def engine_poll(request):
-    """
-    """
-
-    return dict(_engine_observe(*_get_engine_player(request)))
-
-
-# Backbone Models - Player
-@view_config(route_name='player_observe', renderer='json')
-def player_observe(request):
-    """
-    """
-
-    return dict(_player_observe(*_get_engine_player(request)))
 
 
 def _dealer_observe(engine_id, engine, player):
@@ -233,10 +108,6 @@ def _engine_observe(engine_id, engine, player):
 
     if isinstance(engine.game, PlayerStep):
         yield 'current_player', marshal_object(engine.game.player, persist=engine.game.player is player)
-
-
-import gevent
-from pprint import pprint
 
 
 # SocketIO Connectivity.
@@ -330,6 +201,7 @@ class EngineNamespace(EnabledNamespace):
     """
     """
 
+    '''
     def watch(self, engine_id, engine):
         """
         """
@@ -341,6 +213,7 @@ class EngineNamespace(EnabledNamespace):
                 lambda: {'step': engine.game},
                 lambda: dict(_engine_observe(engine_id, engine, self.player)),
                 init_state_none=True)
+    '''
 
     def on_list(self, data):
         """
@@ -350,6 +223,7 @@ class EngineNamespace(EnabledNamespace):
                       [engine for engine in
                             self.request.registry.settings['engines']])
 
+    '''
     def on_read(self, data):
         """
         """
@@ -360,6 +234,7 @@ class EngineNamespace(EnabledNamespace):
                                                  self.player))
 
         self.response(data, response_data);
+    '''
 
 
 class DealerNamespace(EnabledNamespace):
@@ -397,15 +272,19 @@ class TableStatusNamespace(EnabledNamespace):
     def watch(self, engine_id, engine):
         """
         """
-
         def get_state():
             """
             """
+            return {'step': engine.game.__class__.__name__,
+                    # Trigger at 1/2 timeout.
+                    'timeout': engine.game.timeout <=
+                                        engine.game.__timeout__ / 2}
 
+        def show_state():
             return {'timeout': engine.game.timeout,
                     'step': engine.game.__class__.__name__}
 
-        return self._watch(get_state, get_state, init_state_none=True)
+        return self._watch(get_state, show_state, init_state_none=True)
 
 
 class PlayerStatusNamespace(EnabledNamespace):

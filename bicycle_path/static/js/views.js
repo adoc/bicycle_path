@@ -28,24 +28,6 @@ define(['require', 'config', 'models'],
                         }
                         return this;
                     },
-                    // Fetch and render.
-                    // TODO: Should be deprecated.
-                    /*
-                    update: function(callback) {
-                        var self = this;
-                        this.model.fetch({
-                            success: function() {
-                                // Extend the model attributes in to the
-                                //  view context.
-                                _.extend(self.context, self.model.attributes);
-                                self.render();
-                                if (callback) {
-                                    callback();
-                                }
-                            }
-                        });
-                    },
-                    */
                     initialize: function(opts) {
                         var self = this;
                         opts || (opts = {});
@@ -70,7 +52,6 @@ define(['require', 'config', 'models'],
 
                         // Watch the socket via the model if socket
                         //  enabled.
-
                         if (typeof this.model.watch !== "undefined" && opts.model_id) {
                             this.model.watch();
                         }
@@ -93,7 +74,6 @@ define(['require', 'config', 'models'],
                         // Build subviews and pass `opts` in to it.
                         _.each(this.subViews, function(value, key) {
                             self[key] = function () {
-                                //opts.model = self.model; // SubViews
                                 return new value(opts);
                             }
                         });
@@ -220,7 +200,25 @@ define(['require', 'config', 'models'],
                     template: Theme.tableStatusTemplate,
                     className: "table_status",
                     tagName: "div",
-                    modelClass: Models.TableStatus
+                    modelClass: Models.TableStatus,
+                    countDown: function() {},
+                    initialize: function() {
+                        var self = this;
+                        BaseView.prototype.initialize.apply(this, arguments);
+
+                        this.model.on("change", function(data) {
+                            clearInterval(self.countDown);
+                            self.countDown = simple_countdown({
+                                timeout: self.model.get("timeout"),
+                                tick: function(timeout) {
+                                    self.model.set("timeout", timeout);
+                                },
+                                done: function() {
+                                    clearInterval(self.countDown);
+                                }
+                            });
+                        });
+                    }
                 });
 
                 Views.TableControlsView = BaseView.extend({
@@ -307,6 +305,7 @@ define(['require', 'config', 'models'],
                         "click .game_split": "split",
                         "click .game_surrender": "surrender"
                     },
+                    /*
                     render: function() {
                         if (this.model.get("show") === true) {
                             BaseView.prototype.render.apply(this, arguments);
@@ -314,6 +313,7 @@ define(['require', 'config', 'models'],
                             this.$el.html("");
                         }
                     },
+                    */
                     hit: function(ev) {
                         this.model.request("hit");
                         return false;
@@ -372,16 +372,11 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                // Main Game View
-                /*
-                this has to be reworked. game state changes should no re-render
-                the entire thing.
-                */
                 Views.GameView = BaseView.extend({
                     __name__: "GameView",
                     template: Theme.gameTemplate,
                     className: "game",
-                    modelClass: Models.Game,
+                    // modelClass: Models.Game,
                     subViews: {
                         DealerView: Views.DealerView,
                         TableStatusView: Views.TableStatusView,
@@ -395,22 +390,8 @@ define(['require', 'config', 'models'],
                     initialize: function () {
                         BaseView.prototype.initialize.apply(this, arguments);
 
-                        // var self = this;
-                        // Simply update the view when the model changes.
-                        /* This is very basic and will need to be expanded to
-                        include animations and other datasets from the engine.*/
-                        
-                        /*
-                        this.model.on("change", function(data) {
-                            self.render(data.attributes);
-                        });
-
-                        this.model.watch();
-                        */
-
                         this.dealerView = new this.DealerView();
                         this.tableStatusView = new this.TableStatusView();
-
                     },
                     render: function(context) {
                         BaseView.prototype.render.apply(this, arguments);
