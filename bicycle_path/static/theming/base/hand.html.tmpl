@@ -2,8 +2,8 @@
 <%
 var ctx = this.model;
 for (var i=0; i<ctx.length; i++) { 
-    var card = ctx.at(i);
+    var card = ctx.at(i),
+        cardStr = card.get();
 %>
-<% console.log(card) %>
-    <img src="<%=getCardAsset(card)%>" alt="<%=card%>" />
-<% } %>
+    <img src="<%=getCardAsset(cardStr)%>" alt="<%=cardStr%>" />
+<%  } %>

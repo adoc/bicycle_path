@@ -182,8 +182,8 @@ define(['require', 'config', 'models'],
                     subViews: {
                         SingleSeatView: Views.SingleSeatView
                     },
-                    render: function(context) {
-                        //return;
+                    render: function() {
+                        // console.log("Seats Render", this.model);
 
                         BaseView.prototype.render.apply(this, arguments);
                         for (var i=0; i < this.model.length; i++) {
@@ -197,15 +197,6 @@ define(['require', 'config', 'models'],
                         }
                         return this;
                     }
-                });
-
-                // Status Views.
-                Views.TableStatusView = BaseView.extend({
-                    __name__: "TableStatusView",
-                    template: Theme.tableStatusTemplate,
-                    className: "table_status",
-                    tagName: "div",
-                    modelClass: Models.TableStatus
                 });
 
                 Views.PlayerStatusView = BaseView.extend({
@@ -224,7 +215,14 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                // Controls
+                Views.TableStatusView = BaseView.extend({
+                    __name__: "TableStatusView",
+                    template: Theme.tableStatusTemplate,
+                    className: "table_status",
+                    tagName: "div",
+                    modelClass: Models.TableStatus
+                });
+
                 Views.TableControlsView = BaseView.extend({
                     __name__: "TableControlsView",
                     template: Theme.tableControlsTemplate,
@@ -278,9 +276,6 @@ define(['require', 'config', 'models'],
                         this.model.request("wager", {
                             data: {
                                 amount: amount
-                            },
-                            success: function(data) {
-                                self.render(data);
                             }
                         });
 
@@ -312,52 +307,23 @@ define(['require', 'config', 'models'],
                         "click .game_split": "split",
                         "click .game_surrender": "surrender"
                     },
+                    render: function() {
+                        if (this.model.get("show") === true) {
+                            BaseView.prototype.render.apply(this, arguments);
+                        } else {
+                            this.$el.html("");
+                        }
+                    },
                     hit: function(ev) {
-                        var self = this;
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('hit'),
-                            success: function(data) {
-                                console.log('hit', data);
-                                self.trigger('update_context');
-                            },
-                            error: function() {
-                                console.log("`hit` error!");
-                            }
-                        });
-
+                        this.model.request("hit");
                         return false;
                     },
                     double: function(ev) {
-                        var self = this;
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('double'),
-                            success: function(data) {
-                                console.log('double', data);
-                                self.trigger('update_context');
-                            },
-                            error: function() {
-                                console.log("`double` error!");
-                            }
-                        });
-
+                        this.model.request("double");
                         return false;
                     },
                     stand: function(ev) {
-                        var self = this;
-                        // All these Ajax calls can be wrapped.
-                        $.ajax({
-                            url: this.controller.url('stand'),
-                            success: function(data) {
-                                console.log('stand', data);
-                                self.trigger('update_context');
-                            },
-                            error: function() {
-                                console.log("`stand` error!");
-                            }
-                        });
-
+                        this.model.request("stand");
                         return false;
                     }
                 });

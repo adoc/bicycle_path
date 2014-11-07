@@ -30,6 +30,7 @@ define(['socketio', 'config'],
             Sockets.tableControls.disconnect();
             Sockets.wagerControls.disconnect();
             Sockets.playerStatus.disconnect();
+            Sockets.tableStatus.disconnect();
             Sockets.gameControls.disconnect();
             Sockets.debugControls.disconnect();
             Sockets.engine.disconnect();

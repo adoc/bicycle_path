@@ -61,29 +61,35 @@
                             $("#bj1").append(g1.$el);
                             */
 
-                            /*
-                            window.table_controls = new Views.TableControlsView({
+                            var table_status = new Views.TableStatusView({
                                 model_id: engine_id
                             });
-                            $("#bj1").append(table_controls.$el);
+                            $("#bj1").append(table_status.$el);
 
-                            window.wager_controls = new Views.WagerControlsView({
-                                model_id: engine_id
-                            });
-                            $("#bj1").append(wager_controls.$el);
-
-                            window.dealer = new Views.DealerView({
+                            var dealer = new Views.DealerView({
                                 model_id: engine_id
                             });
                             $("#bj1").append(dealer.$el);
 
-                            window.seats = new Views.SeatsView({
+                            var seats = new Views.SeatsView({
                                 model_id: engine_id
                             });
-                            */
+                            $("#bj1").append(seats.$el)
 
-                            var c = new Models.Card("AS");
-                            console.log(c);
+                            var table_controls = new Views.TableControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(table_controls.$el);
+
+                            var wager_controls = new Views.WagerControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(wager_controls.$el);
+
+                            var game_controls = new Views.GameControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(game_controls.$el);
 
                         }
                     });

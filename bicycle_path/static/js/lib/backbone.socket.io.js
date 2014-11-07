@@ -7,7 +7,9 @@
 define(['backbone'],
     function(Backbone) {
 
-        //
+        /* Mimics a very simple Request/Response dynamic through a
+            socket.
+        */
         var socketRequest = function (socket, method, data, options) {
             data || (data = {});
             options || (options = {});
@@ -54,6 +56,8 @@ define(['backbone'],
                     id: this.id
                     }, options);
             },
+            /* Incomplete sync method.
+            */
             /*
             sync: function (method, model, options) {
                 var self = this,
@@ -88,7 +92,7 @@ define(['backbone'],
                     success: function(data) {
                         self.socket.on("change",
                             function (data) {
-                                // console.log("Model change", data);
+                                // console.log("Watch Change Model", data);
                                 self.set(data);
                             }
                         );
@@ -103,9 +107,11 @@ define(['backbone'],
                 options || (options = {});
                 if (options.socket) this.socket = options.socket;
                 if (options.model_id) this.id = options.model_id;
+
                 Backbone.Collection.apply(this, arguments);
             },
             watch: function (options) {
+                // console.log("Watch Collection", this, options);
                 var self = this;
 
                 // Join on inintialize. This can probably be moved elsewhere.
@@ -115,7 +121,8 @@ define(['backbone'],
                     success: function(data) {
                         self.socket.on("change",
                             function (data) {
-                                self.set(data);
+                                // console.log("Watch Change Collection", data);
+                                self.reset(data);
                             }
                         );
                     }

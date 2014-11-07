@@ -284,38 +284,30 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
         return engine_id, self.greenlets[engine_id]
 
     def initialize(self):
+        """
+        """
         self.engines = self.request.registry.settings['engines']
         self.greenlets = self.request.registry.settings['greenlets']
         self.player = meta_view(self.request)['player']
 
     def _watch(self, get_state, on_change, init_state_none=True):
-
+        """
+        """
         _last_state = {} if init_state_none is True else get_state()
         while True:
             gevent.sleep(bicycle.engine.ENGINE_TICK)
             _current_state = get_state()
             
-            # Function this out to get inner dicts!
-            #_last_state_set = frozenset(sorted(_last_state.items()))
-            #_current_state_set = frozenset(sorted(_current_state.items()))
-
             _last_state_set = frozenset(freeze(_last_state))
-            
-            #print(frozenset(freeze(_current_state)))
-            
             _current_state_set = frozenset(freeze(_current_state))
 
-            # print(_last_state_set, _current_state_set)
-
             if _last_state_set != _current_state_set:
-                #print("last:", _last_state_set)
-                #print("current:", _current_state_set)
                 _last_state = _current_state
-                print("change", self.__class__.__name__, _current_state)
-                self.emit('change',
-                            on_change())
+                self.emit('change', on_change())
 
     def response(self, request_data, response_data):
+        """
+        """
         self.emit('_'.join([self.response_prefix, request_data['request_id']]),
                   response_data)
 
@@ -325,7 +317,6 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
         def handle():
             print("uh ohhhh")
 
-        # TODO: Might deprecate `pulse_on_join`
         id_, engine = self._event_data(data)
         if not self.in_room(id_): # Only if the socket is not already watching.
             self.join(id_)
@@ -380,9 +371,7 @@ class DealerNamespace(EnabledNamespace):
         """
 
         def get_state():
-            s = dict(_dealer_observe(engine_id, engine, self.player))
-
-            return s
+            return dict(_dealer_observe(engine_id, engine, self.player))
 
         return self._watch(get_state, get_state, init_state_none=True)
 
@@ -396,10 +385,25 @@ class SeatsNamespace(EnabledNamespace):
         """
 
         def get_state():
-            s = {'seats': tuple(_player_list(engine_id, engine, self.player))}
+            return tuple(_player_list(engine_id, engine, self.player))
 
-            # print(s)
-            return s
+        return self._watch(get_state, get_state, init_state_none=True)
+
+
+class TableStatusNamespace(EnabledNamespace):
+    """
+    """
+
+    def watch(self, engine_id, engine):
+        """
+        """
+
+        def get_state():
+            """
+            """
+
+            return {'timeout': engine.game.timeout,
+                    'step': engine.game.__class__.__name__}
 
         return self._watch(get_state, get_state, init_state_none=True)
 
@@ -413,7 +417,7 @@ class PlayerStatusNamespace(EnabledNamespace):
         def get_state():
             return {'bankroll': self.player.bankroll}
 
-        return self._watch(get_state, get_state ,init_state_none=True)
+        return self._watch(get_state, get_state, init_state_none=True)
 
 
 class TableControlsNamespace(EnabledNamespace):
@@ -484,9 +488,54 @@ class WagerControlsNamespace(EnabledNamespace):
 
 
 class GameControlsNamespace(EnabledNamespace):
+    """Blackjack Game Controls.
     """
-    """
-    pass
+    def watch(self, engine_id, engine):
+        """
+        """
+
+        def get_state():
+            """
+            """
+            return {'show': hasattr(engine.game, 'player') and 
+                            engine.game.player is self.player and
+                            isinstance(engine.game, PlayerStep)}
+
+        return self._watch(get_state, get_state, init_state_none=True)
+
+    def on_hit(self, data):
+        """
+        """
+        engine_id, engine = self._event_data(data)
+
+        if (hasattr(engine.game, 'player') and
+                self.player is engine.game.player): # If current player.
+            engine.game.hit()
+            self.response(data, True)
+        else:
+            self.response(data, False)
+
+    def on_stand(self, data):
+        """
+        """
+        engine_id, engine = self._event_data(data)
+        if (hasattr(engine.game, 'player') and
+                self.player is engine.game.player):
+            engine.game.stand()
+            self.response(data, True)
+        else:
+            self.response(data, False)
+
+    def on_double(self, data):
+        """
+        """
+        engine_id, engine = self._event_data(data)
+        if (hasattr(engine.game, 'player') and
+                self.player is engine.game.player):
+            engine.game.double()
+            self.response(data, True)
+        else:
+            self.response(data, False)
 
 
 @view_config(route_name='socket_endpoint', renderer='json')
@@ -499,6 +548,7 @@ def socket_endpoint(request):
                                     '/dealer': DealerNamespace,
                                     '/seats': SeatsNamespace,
                                     '/player_status': PlayerStatusNamespace,
+                                    '/table_status': TableStatusNamespace,
                                     '/table_controls': TableControlsNamespace,
                                     '/wager_controls': WagerControlsNamespace,
                                     '/game_controls': GameControlsNamespace

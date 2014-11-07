@@ -10,15 +10,14 @@ define(['backbone', 'backbone_socketio', 'sockets'],
             Game: BackboneSocketio.Model.extend({
                 socket: Sockets.engine
             }),
+            // Breaking a Backbone.Model a bit to be a one-value model.
             Card: Backbone.Model.extend({
                 constructor: function(value, options) {
-                    return Backbone.Model.apply(this, {'_value': value}, options);
+                    Backbone.Model.prototype.constructor.call(
+                            this, {'_value': value}, options);
                 },
                 get: function() {
-                    return Backbone.Model.prototype.get.apply(this, "_value");
-                },
-                set: function (value, options) {
-                    return Backbone.Model.prototype.set.apply(this, {_value: value}, options);
+                    return Backbone.Model.prototype.get.call(this, "_value");
                 }
             }),
             Dealer: BackboneSocketio.Model.extend({
