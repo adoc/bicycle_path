@@ -23,7 +23,7 @@ define(['socketio', 'config'],
             debugControls: io.connect('/debug', opts)
         };
 
-        // Gracefully disconnect the socket.
+        // Gracefully (hopefully) disconnect the socket.
         $(window).bind("beforeunload", function() {
             Sockets.seats.disconnect();
             Sockets.dealer.disconnect();

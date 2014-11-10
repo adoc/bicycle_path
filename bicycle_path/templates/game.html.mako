@@ -56,6 +56,13 @@
                             var engine_id = data[0]; // First available engine (game) for now.
 
 
+                            var game = new Views.GameView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(game.$el);
+                            game.render();
+
+                            /*
                             var table_status = new Views.TableStatusView({
                                 model_id: engine_id
                             });
@@ -95,7 +102,7 @@
                                 model_id: engine_id
                             });
                             $("#bj1").append(game_controls.$el);
-
+                            */
                         }
                     });
 

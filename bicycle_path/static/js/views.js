@@ -28,34 +28,6 @@ define(['require', 'config', 'models'],
                         }
                         return this;
                     },
-                    initialize: function(opts) {
-                        var self = this;
-                        opts || (opts = {});
-
-                        if (this.model instanceof Backbone.Model) {
-                            this.model.on("change", function(data) {
-                                // Re-render the view on model change.
-                                self.render();
-                                if (Config.debug === true) {    // Debug Info.
-                                    console.log(self.__name__, data.attributes);
-                                }
-                            });
-                        } else if (this.model instanceof Backbone.Collection) {
-                            this.model.on("reset", function(data) {
-                                // Re-render the view on model change.
-                                self.render();
-                                if (Config.debug === true) {    // Debug Info.
-                                    console.log(self.__name__, data);
-                                }
-                            });
-                        }
-
-                        // Watch the socket via the model if socket
-                        //  enabled.
-                        if (typeof this.model.watch !== "undefined" && opts.model_id) {
-                            this.model.watch();
-                        }
-                    },
                     constructor: function(opts) {
                         var self = this;
                         opts || (opts = {});
@@ -65,9 +37,11 @@ define(['require', 'config', 'models'],
 
                         // Build model and pass `opts` in to it.
                         // Again, crappy and unneeded!
-                        if (this.modelClass.prototype instanceof Backbone.Model) {
+                        if (this.modelClass &&
+                                this.modelClass.prototype instanceof Backbone.Model) {
                             this.model = new this.modelClass({}, opts);
-                        } else if (this.modelClass.prototype instanceof Backbone.Collection) {
+                        } else if (this.modelClass &&
+                                this.modelClass.prototype instanceof Backbone.Collection) {
                             this.model = new this.modelClass([], opts);
                         }
 
@@ -88,6 +62,34 @@ define(['require', 'config', 'models'],
                         }
 
                         Backbone.View.apply(this, arguments);
+                    },
+                    initialize: function(opts) {
+                        var self = this;
+                        opts || (opts = {});
+
+                        if (this.model && this.model instanceof Backbone.Model) {
+                            this.model.on("change", function(data) {
+                                // Re-render the view on model change.
+                                self.render();
+                                if (Config.debug === true) {    // Debug Info.
+                                    console.log(self.__name__, data.attributes);
+                                }
+                            });
+                        } else if (this.model && this.model instanceof Backbone.Collection) {
+                            this.model.on("reset", function(data) {
+                                // Re-render the view on model change.
+                                self.render();
+                                if (Config.debug === true) {    // Debug Info.
+                                    console.log(self.__name__, data);
+                                }
+                            });
+                        }
+
+                        // Watch the socket via the model if socket
+                        //  enabled.
+                        if (this.model && typeof this.model.watch !== "undefined" && opts.model_id) {
+                            this.model.watch();
+                        }
                     }
                 });
 
@@ -376,77 +378,50 @@ define(['require', 'config', 'models'],
                     __name__: "GameView",
                     template: Theme.gameTemplate,
                     className: "game",
-                    // modelClass: Models.Game,
                     subViews: {
-                        DealerView: Views.DealerView,
                         TableStatusView: Views.TableStatusView,
+                        PlayerStatusView: Views.PlayerStatusView,
+                        DealerView: Views.DealerView,
                         SeatsView: Views.SeatsView,
                         DebugControlsView: Views.DebugControlsView,
                         TableControlsView: Views.TableControlsView,
-                        PlayerStatusView: Views.PlayerStatusView,
                         WagerControlsView: Views.WagerControlsView,
                         GameControlsView: Views.GameControlsView
                     },
                     initialize: function () {
-                        BaseView.prototype.initialize.apply(this, arguments);
 
-                        this.dealerView = new this.DealerView();
                         this.tableStatusView = new this.TableStatusView();
+                        this.playerStatusView = new this.PlayerStatusView();
+                        this.dealerView = new this.DealerView();
+                        this.seatsView = new this.SeatsView();
+                        this.debugControlsView = new this.DebugControlsView();
+                        this.tableControlsView = new this.TableControlsView();
+                        this.wagerControlsView = new this.WagerControlsView();
+                        this.gameControlsView = new this.GameControlsView();
+
                     },
-                    render: function(context) {
+                    render: function() {
                         BaseView.prototype.render.apply(this, arguments);
-                        context = _.extend(context || {}, this.model.attributes);
 
-                        // Render Dealer and Table Status.
-                        //var dealerView = new this.DealerView(),
-                        //    tableStatusView = new this.TableStatusView();
+                        $(".table_status_wrap", this.$el).html(
+                                    this.tableStatusView.$el);
 
-                        $(".dealer_wrap", this.$el).append(
-                                    this.dealerView.render(context.dealer).$el);
-                        $(".table_status_wrap", this.$el).append(
-                                    this.tableStatusView.render(context).$el);
+                        $(".player_status_wrap", this.$el).html(
+                                    this.playerStatusView.$el);
 
-                        // Render Players.
-                        /*
-                        for (var i=0; i < context.seats.length; i++) {
-                            var seatView = new this.SeatsView();
-                            $(".player_"+i+"_wrap", this.$el).append(
-                                    seatView.render(context.seats[i]).$el);
-                        }*/
-                        var seatsView = new this.SeatsView();
+                        $(".dealer_wrap", this.$el).html(
+                                    this.dealerView.$el);
 
-                        //console.log(this.el);
-                        seatsView.el = this.el;
-                        //seatsView.render(context.seats);
+                        $(".seats_wrap", this.$el).html(
+                                    this.seatsView.$el);
 
-                        // Construct controls subviews.
-                        var controlsEl = $(".controls", this.$el),
-                            debugControlsView = new this.DebugControlsView(),
-                            tableControlsView = new this.TableControlsView();
+                        var $controls = $(".controls", this.$el);
+                        $controls.html("");
+                        $controls.append(this.debugControlsView.$el);
+                        $controls.append(this.tableControlsView.$el);
+                        $controls.append(this.wagerControlsView.$el);
+                        $controls.append(this.gameControlsView.$el);
 
-                        controlsEl.append(debugControlsView.render().$el);
-                        controlsEl.append(tableControlsView.render().$el);
-
-                        var current_player = context.seats[context.current_player || 0];
-
-                        var playerStatusView = new this.PlayerStatusView();
-                        controlsEl.append(playerStatusView.render(current_player).$el);
-
-                        /*
-                        if (context.in_game === true &&
-                                context.accept_wager === true) {
-                            var wagerControlsView = new this.WagerControlsView();
-                            controlsEl.append(wagerControlsView.render(current_player.wager).$el);
-                        }*/
-
-                        var wagerControlsView = new this.WagerControlsView();
-                        controlsEl.append(wagerControlsView.render().$el);
-
-
-                        if (current_player) {
-                            var gameControlsView = new this.GameControlsView();
-                            controlsEl.append(gameControlsView.render().$el);
-                        }
                         return this;
                     }
                 });
