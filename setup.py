@@ -15,10 +15,12 @@ requires = [
     'pyramid_mako',
     'pyramid_debugtoolbar',
     'waitress',
+    'gevent',
+    'gevent_socketio'
     ]
 
 setup(name='bicycle_path',
-      version='0.1',
+      version='0.2',
       description='bicycle_path',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[

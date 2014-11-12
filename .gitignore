@@ -1,0 +1,7 @@
+#out
+*.pyc
+*.pyo
+*.ipynb
+*.egg-info
+env
+.ipynb_checkpoints

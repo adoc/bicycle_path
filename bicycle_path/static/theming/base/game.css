@@ -1,0 +1,78 @@
+/*
+*/
+
+/*
+.wager,
+.play {
+    list-style-type: none;
+    display: none;
+}
+*/
+
+body {
+    background-image: url(/static/assets/bg1.jpg);
+    background-size: 50%;
+    color: #fff;
+}
+
+.wager_controls {
+    list-style-type: none;
+}
+
+.wager_controls li,
+.play li {
+    float: left;
+    margin-right: 4px;
+    height: 30px;
+}
+
+.game_table .well {
+    min-height: 300px;
+    width: 900px;
+}
+
+.well .seat {
+    float: left;
+    min-width: 148px;
+    min-height: 150px;
+    border: 1px solid #555;
+    margin: 0 4px;
+}
+
+.is_player {
+    border: 4px solid #555 !important;
+}
+
+.well .dealer_wrap {
+    text-align: center;
+}
+
+.well .dealer {
+    min-height: 170px;
+    min-width: 148px;
+    border: 1px solid #552222;
+    margin: 0 auto;
+}
+
+ .dealer .hand {
+     margin: 0 auto;
+}
+
+.debug_controls {
+    float: left;
+    margin-right: 4px;
+}
+
+.game_controls {
+    float: left;
+    border-left: 1px solid black;
+}
+
+.table_controls {
+    float: left;
+    margin-right: 4px;
+}
+
+.wager_controls {
+    float: left;
+}

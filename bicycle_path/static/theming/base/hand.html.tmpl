@@ -1,0 +1,9 @@
+<% // .hand %>
+<%
+var ctx = this.model;
+for (var i=0; i<ctx.length; i++) { 
+    var card = ctx.at(i),
+        cardStr = card.get();
+%>
+    <img src="<%=getCardAsset(cardStr)%>" alt="<%=cardStr%>" />
+<%  } %>

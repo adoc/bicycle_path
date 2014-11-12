@@ -1,11 +1,11 @@
+## Mako template for the main game page.
 <%inherit file="root.html.mako" />
-
 <div class="container">
+<%doc>
     <div class="jumbotron">
         <div class="page-header"><h1>Table Games</h1></div>
         <h2>Just a temporary Alpha testing site for Coda's Card Game Engine.</h2>
         <p><a href="#table1" class="btn btn-primary btn-lg" role="button">Go Play! &raquo;</a></p>
-
         <br />
         <div class="page-header"><h2>FAQ</h2></div>
         <p><strong>Is this working and without bugs?</strong></p>
@@ -25,136 +25,90 @@
         <br />
         <p><a href="#table1" class="btn btn-primary btn-lg" role="button">Go Play! &raquo;</a></p>
     </div>
+</%doc>
+##  The game table will be loaded from it's own template and placed in to this div.
 
-    <div class="page-header">
-        <h1>You</h1>
-        <p>Bankroll: <span class="bankroll">${player.bankroll}</span></p>
-    </div>
-
-
-    <style>
-    /*move dis*/
-    .wager,
-    .play {
-        list-style-type: none;
-        display: none;
-    }
-
-    .wager li,
-    .play li {
-        float: left;
-        margin-right: 4px;
-        height: 30px;
-    }
-
-    .game_table .well {
-        min-height: 300px;
-        width: 900px;
-    }
-
-    .well .player {
-        
-        min-width: 148px;
-        min-height: 150px;
-        border: 1px solid #555;
-        margin: 0 4px;
-    }
-
-    .is_player {
-        border: 4px solid #555 !important;
-    }
-
-    .well .dealer_wrap {
-        text-align: center;
-    }
-
-    .well .dealer {
-        min-height: 170px;
-        min-width: 148px;
-        border: 1px solid #552222;
-        margin: 0 auto;
-    }
-
-     .dealer .hand {
-         margin: 0 auto;
-    }
-    </style>
-
-
-    <div id="bj1" class="game_table" data-id="">
-        <div class="page-header">
-            <h1 style="float: left; margin-right: 20px;">Blackjack Table</h1>
-            <div class="clearfix"></div>
-            <a name="table1"></a>            
-        </div>
-
-        <div class="well">
-            <div class="dealer_wrap">
-                <div class="dealer"></div>
-            </div>
-            <div class="clearfix"></div>
-
-            <div style="margin: 4px 4px;">
-                <div style="float: left;" class="player player5"></div>
-
-                <div style="float: right;" class="player player0"></div>
-                <div style="text-align: center;">
-                    <h3 class="step"></h3>
-                    <p class="timeout"></p>
-                </div>
-            </div>
-            <div class="clearfix"></div>
-
-            <div style="margin: 4px 72px;">
-                <div style="float: left;" class="player player4"></div>
-                <div style="float: right;" class="player player1"></div>
-            </div>
-            <div class="clearfix"></div>
-
-            <div style="margin: 4px 136px;">
-                <div style="float: left;" class="player player3"></div>
-                <div style="float: right;" class="player player2"></div>
-            </div>
-            <div class="clearfix"></div>
-        </div>
-        <div class="clearfix"></div>
-
-            <div class="sit" style="display: none; float: left; margin-right: 4px;">
-                <a href="#" onclick="player_sit(this); return false;" class="btn btn-sm btn-primary" role="button">Sit</a>
-            </div>
-            <div class="leave" style="display: none; float: left; margin-right: 4px;">
-                <a href="#" onclick="player_leave(this); return false;" class="btn btn-sm btn-warning" role="button">Leave</a>
-            </div>
-            <div class="pause" style="float: left; margin-right: 4px;">
-                <a href="#" onclick="debug_pause(this); return false;" class="btn btn-sm btn-danger" role="button">Pause</a>
-            </div>
-
-        <div style="float:left; font-size: 2em;" class="bankroll"></div>
-
-        <ul class="wager" style="float: left;">
-            <li><h4>Wagers</h4></li>
-            <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 1); return false;" >$1</a></li>
-            <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 10); return false;" >$10</a></li>
-            <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 100); return false;" >$100</a></li>
-            <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager(this, 1000); return false;" >$1000</a></li>
-            <li><a class="btn btn-sm btn-default" href="#" onclick="player_wager_reset(this); return false;" >Clear</a></li>
-        </ul>
-        ##<div class="clearfix"></div>
-
-        <ul class="play" style="border-left: 1px solid black; float: left;">
-            <li><a class="btn btn-sm btn-success" href="#" onclick="player_hit(this); return false;" >Hit</a></li>
-            <li><a class="btn btn-sm btn-warning" href="#" onclick="player_double(this); return false;" >Double</a></li>
-            <li><a class="btn btn-sm btn-primary" href="#" onclick="player_stand(this); return false;" >Stand</a></li>
-        </ul>
-
-        <div class="clearfix"></div>
-        
-    </div>
-</div>
-
-<div style="min-height: 14px" class="container">
+    <div id="bj1" class="game_table" data-id=""></div>
 
 </div>
+##  Just a temporary empty footer.
+<div style="min-height: 14px" class="container"></div>
+
+##  Hook script for this page. This will most likely no longer be the entry point once this project matures.
+<%def name="style()">
+    <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/base/game.css')}">
+</%def>
 <%def name="scripts()">
-    <script type="text/javascript" src="${request.static_url('bicycle_path:static/js/game.js')}"></script>
+    <script type="text/javascript">
+    "use strict";
+
+    /* Front End Entry Point. */
+    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'sockets'],
+        function ($, BackboneSocketio, Config, Models, Views, Sockets) {
+
+            // AMD Trick to ensure the theme module is loaded before instantiating the game.
+            require([Config.themeModuleName], 
+                function(Theme) {
+
+                    // Get engine list.
+                    BackboneSocketio.socketRequest(Sockets.engine, "list", {}, {
+                        success: function (data) {
+                            var engine_id = data[0]; // First available engine (game) for now.
+
+
+                            var game = new Views.GameView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(game.$el);
+                            game.render();
+
+                            /*
+                            var table_status = new Views.TableStatusView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(table_status.$el);
+
+                            var player_status = new Views.PlayerStatusView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(player_status.$el);
+
+                            var dealer = new Views.DealerView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(dealer.$el);
+
+                            var seats = new Views.SeatsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(seats.$el)
+
+                            var debug_controls = new Views.DebugControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(debug_controls.$el)
+
+                            var table_controls = new Views.TableControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(table_controls.$el);
+
+                            var wager_controls = new Views.WagerControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(wager_controls.$el);
+
+                            var game_controls = new Views.GameControlsView({
+                                model_id: engine_id
+                            });
+                            $("#bj1").append(game_controls.$el);
+                            */
+                        }
+                    });
+
+                }
+            );
+        }
+    );
+    </script>
 </%def>
