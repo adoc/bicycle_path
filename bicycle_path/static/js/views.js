@@ -52,15 +52,6 @@ define(['require', 'config', 'models'],
                             }
                         });
 
-                        // Make sure this is available to child instances.
-                        this.getCardAsset = function(card) {
-                            /* Given a `card` string ("KA"), return the card image file
-                            name ("ka.png"). */
-                            var cardFile = join_ext(card.toLowerCase(),
-                                                    Theme.cardImageExt);
-                            return join_path(Theme.cardImageFolder, cardFile);
-                        }
-
                         Backbone.View.apply(this, arguments);
                     },
                     initialize: function(opts) {
@@ -87,18 +78,11 @@ define(['require', 'config', 'models'],
 
                         // Watch the socket via the model if socket
                         //  enabled.
-                        if (this.model && typeof this.model.watch !== "undefined" && opts.model_id) {
+                        if (this.model &&
+                                typeof this.model.watch !== "undefined" && opts.model_id) {
                             this.model.watch();
                         }
                     }
-                });
-
-                Views.HandView = BaseView.extend({
-                    __name__: "HandView", // For debug only.
-                    className: "hand",
-                    tagName: "div",
-                    template: Theme.handTemplate,
-                    modelClass: Models.Hand
                 });
 
                 Views.DealerView = BaseView.extend({
@@ -129,53 +113,214 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.SingleSeatView = BaseView.extend({
-                    __name__: "SingleSeatView",
+                Views.SeatView = BaseView.extend({
+                    __name__: "SeatView",
                     className: "seat",
                     tagName: "div",
                     template: Theme.seatTemplate,
-                    modelClass: Models.Seat,
+                    // modelClass: Models.Seat,
+                    /*
                     subViews: {
                         HandView: Views.HandView
                     },
+                    */
                     initialize: function() {
                         var self = this;
                         BaseView.prototype.initialize.apply(this, arguments);
-                        this.handView = new this.HandView();
+                        
+                        this.model.on("remove", function() {
+                            console.log("SeatView.model remove", self.model.id);
+                            if (self.model.id > 0) {
+                                self.$el.removeClass("occupied", {
+                                        duration: 400,
+                                        easing: "swing",
+                                        complete: function () {
+                                            self.render();
+                                        }
+                                });
+                            } else {
+                                self.render();
+                            }
+                        });
+
+                        this.model.on("add", function() {
+                            console.log("SeatView.model add");
+                            if (self.model.id > 0) {
+                                self.$el.addClass("occupied", {
+                                    duration: 400,
+                                    easing: "swing",
+                                    complete: function () {
+                                        self.render();
+                                    }
+                            });
+                            } else {
+                                self.render();
+                            }
+                        });
+                        //this.handView = new this.HandView();
 
                         // TODO: There must be a way to abstract this,
                         //  but this is fine for now.
                         // Update subview model.
+                        /*
                         this.model.on("change", function(data) {
                             self.handView.model.reset(data.attributes.hand);
                         });
+
+
+                        console.log(this.handView);
+                        this.listenTo(this.handView, "discard", function() {
+                            console.log("discarding seat");
+                        });
+                        */
+
                     },
+                    /*
                     render: function() {
                         BaseView.prototype.render.apply(this, arguments);
                         this.$el.append(this.handView.$el);
                         return this;
                     }
+                    */
                 });
 
                 Views.SeatsView = BaseView.extend({
                     __name__: "SeatsView",
+                    el: ".seats_wrap",
                     template: Theme.seatsTemplate,
                     modelClass: Models.Seats,
                     subViews: {
-                        SingleSeatView: Views.SingleSeatView
+                        SeatView: Views.SeatView
+                    },
+                    seats: [],
+                    initialize: function () {
+                        var self = this;
+
+                        this.model.on("reset", function (data) {
+                            // console.log("seats reset", data);
+                            self.seats = [];
+                            for (var i=0; i < self.model.length; i++) {
+                                // console.log(self.model.models[i]);
+                                var model = self.model.models[i],
+                                    seat = new Views.SeatView({
+                                                    model_id: self.model_id,
+                                                    model: model
+                                                });
+                                seat.model.trigger("add");
+                                self.seats.push(seat);
+                            }
+
+                            self.render();
+                        });
+
+                        this.model.on("add", function (model) {
+                            // console.log("seats add", model);
+                            var idx = self.model.indexOf(model),
+                                seat = self.seats[idx];
+                            seat.model = model;
+                            seat.initialize();
+                            seat.model.trigger("add"); // Percolate the "add" event.
+                        });
+
+                        this.model.watch();
                     },
                     render: function() {
-                        // console.log("Seats Render", this.model);
-
                         BaseView.prototype.render.apply(this, arguments);
-                        for (var i=0; i < this.model.length; i++) {
-                            var seatView = new this.SingleSeatView(); // I don't think I want to instance this here....
-                                                                        // But I don't have a better option yet.
-
-                            seatView.model.set(this.model.at(i).attributes);
-                            
+                        for (var i=0; i < this.seats.length; i++) {
                             $(".player_wrap.player_"+i, this.el).html(
-                                    seatView.$el);
+                                        this.seats[i].$el);
+                        }
+                        return this;
+                    }
+                });
+
+                Views.HandView = BaseView.extend({
+                    __name__: "HandView", // For debug only.
+                    className: "hand",
+                    tagName: "div",
+                    template: Theme.handTemplate,
+                    // modelClass: Models.Hand,
+                    initialize: function () {
+                        var self = this;
+                        BaseView.prototype.initialize.apply(this, arguments);
+
+                        this.model.on("reset", function () {
+                            console.log("HandView.reset");
+                        });
+
+                        this.model.on("add", function () {
+                            console.log("HandView.add", self.model);
+
+
+                            for (var i=0; i < self.model.length; i++) {
+                                console.log("HandView test render", self.model.at(i));
+                                console.log(self.model.at(i).get());
+                            }
+
+                            self.render();
+                        });
+
+                        this.model.on("remove", function (data) {
+                            console.log("HandView.remove", self.model);
+                        });
+
+                        /*
+                        // Percolate the event.
+                        this.model.on("discard", function() {
+                            console.log("handview discard trigger");
+                            self.trigger("discard");
+                        });
+
+                        this.model.on("deal", function(card) {
+                            self.trigger("deal", card);
+                        });
+                        */
+                    }
+                });
+
+                Views.HandsView = BaseView.extend({
+                    el: ".seats_wrap",
+                    modelClass: Models.Hands,
+                    hands: [],
+                    initialize: function () {
+                        var self = this;
+
+                        this.model.on("reset", function (data) {
+                            // console.log("HandsView reset", data);
+
+                            for (var i=0; i < self.model.length; i++) {
+                                var model = self.model.models[i],
+                                    hand = new Views.HandView({
+                                        model_id: self.model_id,
+                                        model: model
+                                    });
+
+                                console.log("HandsView reset", model);
+
+                                hand.model.trigger("add");
+                                self.hands.push(hand);
+                            }
+                            self.render();
+                        });
+/*
+                        this.model.on("add", function (model) {
+                            console.log("HandsView add", model);
+                            var idx = self.model.indexOf(model),
+                                hand = self.hands[idx];
+
+                            if (hand) {
+                                hand.model = model;
+                                hand.initialize();
+                                hand.model.trigger("add"); // Percolate the "add" event.
+                            }
+                        });
+*/
+                        this.model.watch();
+                    },
+                    render: function () {
+                        for (var i=0; i < this.hands.length; i++) {
+                            $(".player_wrap.player_"+i, this.el).append(
+                                        this.hands[i].$el);
                         }
                         return this;
                     }
@@ -238,8 +383,13 @@ define(['require', 'config', 'models'],
                         var self = this;
 
                         this.model.request("sit", {
+                            data: {
+                                name: $("input[name='name']", this.$el).val()
+                            },
                             success: function(data) {
-                                self.render({in_game: data});
+                                self.render({
+                                            in_game: data,
+                                        });
                             }
                         });
 
@@ -389,7 +539,6 @@ define(['require', 'config', 'models'],
                         GameControlsView: Views.GameControlsView
                     },
                     initialize: function () {
-
                         this.tableStatusView = new this.TableStatusView();
                         this.playerStatusView = new this.PlayerStatusView();
                         this.dealerView = new this.DealerView();
@@ -398,13 +547,9 @@ define(['require', 'config', 'models'],
                         this.tableControlsView = new this.TableControlsView();
                         this.wagerControlsView = new this.WagerControlsView();
                         this.gameControlsView = new this.GameControlsView();
-
                     },
                     render: function() {
                         BaseView.prototype.render.apply(this, arguments);
-
-                        $(".table_status_wrap", this.$el).html(
-                                    this.tableStatusView.$el);
 
                         $(".player_status_wrap", this.$el).html(
                                     this.playerStatusView.$el);
@@ -412,8 +557,10 @@ define(['require', 'config', 'models'],
                         $(".dealer_wrap", this.$el).html(
                                     this.dealerView.$el);
 
-                        $(".seats_wrap", this.$el).html(
-                                    this.seatsView.$el);
+                        $(".table_status_wrap", this.$el).html(
+                                    this.tableStatusView.$el);
+
+                        $(".seats_wrap", this.$el).html(this.seatsView.$el);
 
                         var $controls = $(".controls", this.$el);
                         $controls.html("");

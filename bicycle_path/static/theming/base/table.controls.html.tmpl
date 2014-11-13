@@ -5,6 +5,7 @@ var ctx = this.model.attributes;
     <a class="table_sit_cancel btn btn-sm btn-default" href="#" role="button" title="Waiting to be seated.">Sit</a>
 <% } else if (ctx.in_seat === -1) { %>
     <a class="table_sit btn btn-sm btn-primary" href="#" role="button" title="Sit at this table.">Sit</a>
+    <input style="color: black;" name="name" value="<%-this.model.get("name")%>" />
 <% } else if (ctx.to_leave === true) { %>
     <a class="table_leave_cancel btn btn-sm btn-default" href="#" role="button" title="Leaving this table after this round. Click to cancel.">Leave</a>
 <% } else { %>

@@ -40,7 +40,7 @@ def main(global_config, **settings):
 
     for _ in range(buffer_engines):
         key = util.random_filename(16)
-        engine = Engine(StandardBlackjack(num_seats=6, face_up=True))
+        engine = Engine(StandardBlackjack(num_seats=7, face_up=True))
         engines.update({key: engine})
         greenlets.update({key: EngineGreenlet(engine)})
 

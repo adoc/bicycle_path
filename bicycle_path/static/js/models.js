@@ -24,10 +24,13 @@ define(['backbone', 'backbone_socketio', 'sockets'],
                 socket: Sockets.dealer
             }),
             Seat: Backbone.Model.extend({
+                idAttribute: "_id",
                 defaults: {
-                    hand: [],
-                    wager: {amount: 0},
-                    hand_total: 0
+                    bankroll: null,
+                    seat_pref: null,
+                    wager: {
+                        amount: 0
+                    }
                 }
             }),
             PlayerStatus: BackboneSocketio.Model.extend({
@@ -51,14 +54,53 @@ define(['backbone', 'backbone_socketio', 'sockets'],
         };
 
         var Collections = {
+            // Keep better track of changes to this model in order to trigger
+            // animations.
             Hand: Backbone.Collection.extend({
                 model: Models.Card
+            })
+        };
+
+        _.extend(Collections, {
+            Hands: BackboneSocketio.Collection.extend({
+                model: Collections.Hand,
+                socket: Sockets.hands
             }),
+            /*
+            Backbone.Collection.extend({
+                model: Models.Card,
+                oldState: [],
+                initialize: function() {
+                    var self = this;
+                    Backbone.Collection.prototype.initialize.apply(this,
+                                                                   arguments);
+                    this.on("reset", function(data) {
+
+                        if (self.oldState.length > 0 && data.models.length === 0) {
+                            self.oldState = [];
+                            // How can we percolate these events??
+                            // Add this to a queue of actions in the view??
+                            console.log("model discard trigger", self);
+                            self.trigger("discard");
+                        } else if (data.models.length > self.oldState.length) {
+                            // var off = data.models.length - self.oldState.length;
+                            
+                            
+                            for (var i=self.oldState.length; i < data.models.length; i++) {
+                                self.trigger("deal", data.models[i]);
+                            }
+                            self.oldState = data.models;
+                        }
+
+                    });
+                }
+            }),
+            */
             Seats: BackboneSocketio.Collection.extend({
                 model: Models.Seat,
                 socket: Sockets.seats
             })
-        };
+        });
 
         return _.extend({}, Models, Collections);
 

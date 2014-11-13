@@ -1,0 +1,60 @@
+/*Standard "cycle" card deck sprite map.
+*/
+.card {
+    background: url('cards.bicycle.png') no-repeat top left;
+    width: 86px;
+    height: 128px;
+}
+.card._2c { background-position: 0px 0px;  }
+.card._2d { background-position: -87px 0px;  }
+.card._2h { background-position: -174px 0px;  }
+.card._2s { background-position: -261px 0px;  }
+.card._3c { background-position: -348px 0px;  }
+.card._3d { background-position: -435px 0px;  }
+.card._3h { background-position: -522px 0px;  }
+.card._3s { background-position: -609px 0px;  }
+.card._4c { background-position: -696px 0px;  }
+.card._4d { background-position: -783px 0px;  }
+.card._4h { background-position: -870px 0px;  }
+.card._4s { background-position: -957px 0px;  }
+.card._5c { background-position: -1044px 0px;  }
+.card._5d { background-position: -1131px 0px;  }
+.card._5h { background-position: -1218px 0px;  }
+.card._5s { background-position: -1305px 0px;  }
+.card._6c { background-position: -1392px 0px;  }
+.card._6d { background-position: -1479px 0px;  }
+.card._6h { background-position: -1566px 0px;  }
+.card._6s { background-position: -1653px 0px;  }
+.card._7c { background-position: -1740px 0px;  }
+.card._7d { background-position: -1827px 0px;  }
+.card._7h { background-position: -1914px 0px;  }
+.card._7s { background-position: -2001px 0px;  }
+.card._8c { background-position: -2088px 0px;  }
+.card._8d { background-position: -2175px 0px;  }
+.card._8h { background-position: -2262px 0px;  }
+.card._8s { background-position: -2349px 0px;  }
+.card._9c { background-position: -2436px 0px;  }
+.card._9d { background-position: -2523px 0px;  }
+.card._9h { background-position: -2610px 0px;  }
+.card._9s { background-position: -2697px 0px;  }
+.card._10c { background-position: -2784px 0px;  }
+.card._10d { background-position: -2871px 0px;  }
+.card._10h { background-position: -2958px 0px;  }
+.card._10s { background-position: -3045px 0px;  }
+.card._ac { background-position: -3132px 0px;  }
+.card._ad { background-position: -3219px 0px;  }
+.card._ah { background-position: -3306px 0px;  }
+.card._as { background-position: -3393px 0px;  }
+.card._jc { background-position: -3480px 0px;  }
+.card._jd { background-position: -3567px 0px;  }
+.card._jh { background-position: -3654px 0px;  }
+.card._js { background-position: -3741px 0px;  }
+.card._kc { background-position: -3828px 0px;  }
+.card._kd { background-position: -3915px 0px;  }
+.card._kh { background-position: -4002px 0px;  }
+.card._ks { background-position: -4089px 0px;  }
+.card._qc { background-position: -4176px 0px;  }
+.card._qd { background-position: -4263px 0px;  }
+.card._qh { background-position: -4350px 0px;  }
+.card._qs { background-position: -4437px 0px;  }
+.card._xx { background-position: -4524px 0px;  }

@@ -1,5 +1,10 @@
 <% // .player
 var ctx = this.model.attributes;
 %>
-<div>Wager:&nbsp;<span><%= ctx.wager.amount %></span></div>
-<div>Total:&nbsp;<span><%= ctx.hand_total %></span></div>
+<% if (this.model.id > 0) { %>
+    <div><strong><%- this.model.get("name") %></strong></div>
+    <div>Wager:&nbsp;<span><%= ctx.wager %></span></div>
+    <div>Total:&nbsp;<span><%= ctx.hand_total %></span></div>
+<% } else { %>
+    <span>Empty</span>
+<% } %>

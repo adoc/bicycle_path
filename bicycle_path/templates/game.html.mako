@@ -28,23 +28,36 @@
 </%doc>
 ##  The game table will be loaded from it's own template and placed in to this div.
 
-    <div id="bj1" class="game_table" data-id=""></div>
+    <div id="bj1" class="game_table" data-id="">
+
+##      Temporary
+        <div class="seats_wrap"></div>
+        <div class="clearfix"></div>
+
+    </div>
 
 </div>
 ##  Just a temporary empty footer.
 <div style="min-height: 14px" class="container"></div>
 
+## Temp rotation/"deal" test.
+## <div id="rotateme" style="position: absolute; top: 100px; left: 100px;" class="card _2c"></div>
+
 ##  Hook script for this page. This will most likely no longer be the entry point once this project matures.
 <%def name="style()">
     <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/base/game.css')}">
+    <link rel="stylesheet" href="${request.static_url('bicycle_path:static/theming/base/cards.bicycle.css')}">
 </%def>
 <%def name="scripts()">
     <script type="text/javascript">
     "use strict";
 
     /* Front End Entry Point. */
-    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'sockets'],
+    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'sockets', 'animations'],
         function ($, BackboneSocketio, Config, Models, Views, Sockets) {
+
+            // setTimeout(function() {$("#rotateme").dealCardTo({x: 500, y:500, done: function() {console.log("ani done")}});}, 1000);
+
 
             // AMD Trick to ensure the theme module is loaded before instantiating the game.
             require([Config.themeModuleName], 
@@ -55,38 +68,27 @@
                         success: function (data) {
                             var engine_id = data[0]; // First available engine (game) for now.
 
-
+                            /*
                             var game = new Views.GameView({
                                 model_id: engine_id
                             });
                             $("#bj1").append(game.$el);
                             game.render();
+                            */
 
-                            /*
                             var table_status = new Views.TableStatusView({
                                 model_id: engine_id
                             });
                             $("#bj1").append(table_status.$el);
 
-                            var player_status = new Views.PlayerStatusView({
-                                model_id: engine_id
-                            });
-                            $("#bj1").append(player_status.$el);
-
-                            var dealer = new Views.DealerView({
-                                model_id: engine_id
-                            });
-                            $("#bj1").append(dealer.$el);
-
                             var seats = new Views.SeatsView({
                                 model_id: engine_id
                             });
-                            $("#bj1").append(seats.$el)
+                            $("#bj1").append(seats.$el);
 
-                            var debug_controls = new Views.DebugControlsView({
+                            var hands = new Views.HandsView({
                                 model_id: engine_id
                             });
-                            $("#bj1").append(debug_controls.$el)
 
                             var table_controls = new Views.TableControlsView({
                                 model_id: engine_id
@@ -102,12 +104,13 @@
                                 model_id: engine_id
                             });
                             $("#bj1").append(game_controls.$el);
-                            */
+
                         }
                     });
 
                 }
             );
+
         }
     );
     </script>

@@ -8,6 +8,7 @@ require.config({
     baseUrl: "static/js",
     paths: {
         jquery: 'lib/jquery.min',
+        jquery_ui: 'lib/jquery-ui.min',
         underscore: 'lib/underscore.min',
         backbone: 'lib/backbone.min',
         socketio: 'lib/socket.io.min',
@@ -18,6 +19,7 @@ require.config({
     shim: {
     }
 });
+
 
 /* General lib includes from my gist. (https://gist.github.com/adoc) */
 
