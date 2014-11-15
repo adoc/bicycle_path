@@ -53,13 +53,13 @@
     "use strict";
 
     /* Front End Entry Point. */
-    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'sockets', 'animations'],
-        function ($, BackboneSocketio, Config, Models, Views, Sockets) {
+    require(['jquery', 'backbone_socketio', 'config', 'models', 'views', 'animated_views', 'sockets', 'animations'],
+        function ($, BackboneSocketio, Config, Models, Views, AnimatedViews, Sockets) {
 
             // setTimeout(function() {$("#rotateme").dealCardTo({x: 500, y:500, done: function() {console.log("ani done")}});}, 1000);
 
 
-            // AMD Trick to ensure the theme module is loaded before instantiating the game.
+            // Tricky AMD usage to make the Theme module (Config.themeName) dynamic.
             require([Config.themeModuleName], 
                 function(Theme) {
 
@@ -70,41 +70,50 @@
 
                             /*
                             var game = new Views.GameView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
                             $("#bj1").append(game.$el);
                             game.render();
                             */
 
                             var table_status = new Views.TableStatusView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
                             $("#bj1").append(table_status.$el);
 
-                            var seats = new Views.SeatsView({
-                                model_id: engine_id
+                            var dealer = new Views.DealerView({
+                                socket_id: engine_id
+                            });
+                            $("#bj1").append(dealer.$el);
+
+                            var seats = new AnimatedViews.SeatsView({
+                                socket_id: engine_id
                             });
                             $("#bj1").append(seats.$el);
 
                             var hands = new Views.HandsView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
 
                             var table_controls = new Views.TableControlsView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
                             $("#bj1").append(table_controls.$el);
 
                             var wager_controls = new Views.WagerControlsView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
                             $("#bj1").append(wager_controls.$el);
 
                             var game_controls = new Views.GameControlsView({
-                                model_id: engine_id
+                                socket_id: engine_id
                             });
                             $("#bj1").append(game_controls.$el);
 
+                            /*
+                            var hands = new Models.Hands([], {socket_id: engine_id})
+                            hands.watch();
+                            */
                         }
                     });
 

@@ -47,7 +47,7 @@ define(['backbone'],
                 options || (options = {});
                 if (options.socket) this.socket = options.socket;
                 if (options.controller) this.controller = options.controller;
-                if (options.model_id) this.id = options.model_id;
+                if (options.socket_id) this.id = options.socket_id;
 
                 Backbone.Model.apply(this, arguments);
             },
@@ -115,7 +115,7 @@ define(['backbone'],
             constructor: function (attributes, options) {
                 options || (options = {});
                 if (options.socket) this.socket = options.socket;
-                if (options.model_id) this.id = options.model_id;
+                if (options.socket_id) this.id = options.socket_id;
 
                 Backbone.Collection.apply(this, arguments);
             },
@@ -137,7 +137,7 @@ define(['backbone'],
                         );
                         self.socket.on("reset",
                             function (data) {
-                                //console.log("Watch Reset Collection", data);
+                                // console.log("Watch Reset Collection", data);
                                 self.reset(data);
                             }
                         );

@@ -1,14 +1,16 @@
 <% // .hand %>
 
 <p>HAND</p>
-<% console.log("RENDER", this.model) %>
-
-
 <%
-var ctx = this.model;
-for (var i=0; i<ctx.length; i++) { 
-    var card = ctx.at(i),
+var hand = this.model.get("hand"),
+    hand_total = this.model.get("hand_total");
+// console.log("render: model", this.model)
+// console.log("render: hand", hand);
+
+for (var i=0; i < hand.length; i++) { 
+    var card = hand.at(i),
         cardStr = card.get();
 %>
     <div style="border: 1px solid green; float: left;" class="card _<%=cardStr.toLowerCase()%>"></div>
 <% } %>
+    <div>Total:&nbsp;<span><%= hand_total %></span></div>

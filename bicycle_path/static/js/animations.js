@@ -15,28 +15,32 @@ define(['underscore', 'jquery', 'jquery_ui', 'config'],
             return $(this);
         };
 
-        $.fn.dealCardTo = function(opts) {
-            var self = this;
-            opts || (opts = {});
-            opts.x || (opts.x = 0);
-            opts.y || (opts.y = 0);
-            opts.done || (opts.done = function() {});
+        require([Config.themeModuleName], 
+            function(Theme) {
 
-            this.animate({
-                degrees: Config.animations.dealRotation,
-                left: opts.x.toString() + "px",
-                top: opts.y.toString() + "px"
-            },{
-                duration: Config.animations.dealDuration,
-                easing: Config.animations.dealEasing,
-                step: function(now, tween) {
-                    if (tween.prop === "degrees") {
-                        self.rotate(now);
-                    }
-                },
-                done: opts.done
-            });
-        }
+                $.fn.dealCardTo = function(opts) {
+                    var self = this;
+                    opts || (opts = {});
+                    opts.x || (opts.x = 0);
+                    opts.y || (opts.y = 0);
+                    opts.done || (opts.done = function() {});
 
+                    this.animate({
+                        degrees: Theme.animations.dealRotation,
+                        left: opts.x.toString() + "px",
+                        top: opts.y.toString() + "px"
+                    },{
+                        duration: Theme.animations.dealDuration,
+                        easing: Theme.animations.dealEasing,
+                        step: function(now, tween) {
+                            if (tween.prop === "degrees") {
+                                self.rotate(now);
+                            }
+                        },
+                        done: opts.done
+                    });
+                }
+            }
+        );
     }
 );

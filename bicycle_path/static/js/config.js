@@ -9,12 +9,7 @@ define(['underscore'],
         return {
             socketResource: 'api/v1/sock',
             themeModuleName: 'base.theme',
-            debug: false,
-            animations: {
-                dealRotation: 720,
-                dealDuration: 1000,
-                dealEasing: "easeOutCubic"
-            }
+            debug: false
         };
     }
 );

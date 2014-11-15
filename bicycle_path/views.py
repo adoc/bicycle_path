@@ -188,6 +188,7 @@ def freeze(obj):
 
     return frozenset(_freeze(obj))
 
+from pprint import pprint
 
 class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
     """Main Socketio Namespace parent class.
@@ -207,10 +208,10 @@ class EnabledNamespace(socketio.namespace.BaseNamespace, RoomsMixin):
                 return fn(*args, **kwargs)
             except Exception, e:
                 stack = traceback.format_exception(*sys.exc_info())
-                print("socketio_exception",
-                                 {"error": str(e),
-                                  "trace": stack},
-                                 self.request)
+                print("socketio_exception")
+                pprint({"error": str(e),
+                          "trace": stack,
+                          "request": self.request})
                 # logging.getLogger('exc_logger').exception(e)
         return wrap
 

@@ -4,16 +4,16 @@
 */
 "use strict";
 
-define(['require', 'config', 'models'],
-    function(require, Config, Models) {
+define(['underscore', 'backbone', 'require', 'config', 'models'],
+    function(_, Backbone, require, Config, Models) {
 
         var Views = {};
 
-        // Tricky AMD usage to make the Theme (Config.themeName) dynamic.
-        require(['underscore', 'backbone', Config.themeModuleName],
-            function(_, Backbone, Theme) {
+        // Tricky AMD usage to make the Theme module (Config.themeName) dynamic.
+        require([Config.themeModuleName],
+            function(Theme) {
 
-                var BaseView = Backbone.View.extend({
+                Views.BaseView = Backbone.View.extend({
                     __name__: "BaseView",
                     // TODO: Clean this up.No more extending to
                     //      this.context. Use the models!
@@ -28,27 +28,27 @@ define(['require', 'config', 'models'],
                         }
                         return this;
                     },
-                    constructor: function(opts) {
+                    constructor: function(constructorOpts) {
                         var self = this;
-                        opts || (opts = {});
+                        constructorOpts || (constructorOpts = {});
 
-                        // Extend any opts in to this view.
-                        _.extend(this, opts);
+                        // Extend any constructorOpts in to this view.
+                        _.extend(this, constructorOpts);
 
-                        // Build model and pass `opts` in to it.
+                        // Build model and pass `constructorOpts` in to it.
                         // Again, crappy and unneeded!
                         if (this.modelClass &&
                                 this.modelClass.prototype instanceof Backbone.Model) {
-                            this.model = new this.modelClass({}, opts);
+                            this.model = new this.modelClass({}, constructorOpts);
                         } else if (this.modelClass &&
                                 this.modelClass.prototype instanceof Backbone.Collection) {
-                            this.model = new this.modelClass([], opts);
+                            this.model = new this.modelClass([], constructorOpts);
                         }
 
-                        // Build subviews and pass `opts` in to it.
+                        // Build subviews and pass `constructorOpts` in to it.
                         _.each(this.subViews, function(value, key) {
-                            self[key] = function () {
-                                return new value(opts);
+                            self[key] = function (opts) {
+                                return new value(_.extend({}, constructorOpts, opts));
                             }
                         });
 
@@ -79,112 +79,45 @@ define(['require', 'config', 'models'],
                         // Watch the socket via the model if socket
                         //  enabled.
                         if (this.model &&
-                                typeof this.model.watch !== "undefined" && opts.model_id) {
+                                typeof this.model.watch !== "undefined" && opts.socket_id) {
                             this.model.watch();
                         }
                     }
                 });
 
-                Views.DealerView = BaseView.extend({
-                    __name__: "DealerView",
-                    className: "dealer",
-                    tagName: "div",
-                    template: Theme.dealerTemplate,
-                    modelClass: Models.Dealer,
-                    subViews: {
-                        HandView: Views.HandView
-                    },
-                    initialize: function () {
-                        var self = this;
-                        BaseView.prototype.initialize.apply(this, arguments);
-                        this.handView = new this.HandView();
-
-                        // TODO: There must be a way to abstract this,
-                        //  but this is fine for now.
-                        // Update subview model.
-                        this.model.on("change", function(data) {
-                            self.handView.model.reset(data.attributes.hand);
-                        });
-                    },
-                    render: function() {
-                        BaseView.prototype.render.apply(this, arguments);
-                        this.$el.append(this.handView.$el);
-                        return this;
-                    }
-                });
-
-                Views.SeatView = BaseView.extend({
+                /* The Seat View. Includes player "name", "wager" amount,
+                "bankroll" and other metadata about the Seat.
+                Listens to the model "remove" and "add" events for rendering.
+                */
+                Views.SeatView = Views.BaseView.extend({
                     __name__: "SeatView",
                     className: "seat",
                     tagName: "div",
                     template: Theme.seatTemplate,
-                    // modelClass: Models.Seat,
-                    /*
-                    subViews: {
-                        HandView: Views.HandView
+                    modelRemove: function () {
+                        self.render();
                     },
-                    */
+                    modelAdd: function () {
+                        self.render();
+                    },
                     initialize: function() {
                         var self = this;
-                        BaseView.prototype.initialize.apply(this, arguments);
-                        
+                        Views.BaseView.prototype.initialize.apply(this,
+                                                                  arguments);
                         this.model.on("remove", function() {
-                            console.log("SeatView.model remove", self.model.id);
-                            if (self.model.id > 0) {
-                                self.$el.removeClass("occupied", {
-                                        duration: 400,
-                                        easing: "swing",
-                                        complete: function () {
-                                            self.render();
-                                        }
-                                });
-                            } else {
-                                self.render();
-                            }
+                            self.modelRemove();
                         });
-
                         this.model.on("add", function() {
-                            console.log("SeatView.model add");
-                            if (self.model.id > 0) {
-                                self.$el.addClass("occupied", {
-                                    duration: 400,
-                                    easing: "swing",
-                                    complete: function () {
-                                        self.render();
-                                    }
-                            });
-                            } else {
-                                self.render();
-                            }
+                            self.modelAdd();
                         });
-                        //this.handView = new this.HandView();
-
-                        // TODO: There must be a way to abstract this,
-                        //  but this is fine for now.
-                        // Update subview model.
-                        /*
-                        this.model.on("change", function(data) {
-                            self.handView.model.reset(data.attributes.hand);
-                        });
-
-
-                        console.log(this.handView);
-                        this.listenTo(this.handView, "discard", function() {
-                            console.log("discarding seat");
-                        });
-                        */
-
-                    },
-                    /*
-                    render: function() {
-                        BaseView.prototype.render.apply(this, arguments);
-                        this.$el.append(this.handView.$el);
-                        return this;
                     }
-                    */
                 });
 
-                Views.SeatsView = BaseView.extend({
+                /* All the Seats at this table. Handles instantiation of
+                SeatView and percolating model events to it.
+                Listens to the model "reset" and "add" events.
+                */
+                Views.SeatsView = Views.BaseView.extend({
                     __name__: "SeatsView",
                     el: ".seats_wrap",
                     template: Theme.seatsTemplate,
@@ -196,16 +129,15 @@ define(['require', 'config', 'models'],
                     initialize: function () {
                         var self = this;
 
+                        /* The `Seats` model is reset after the first
+                        initiation of the socket namespace. The `SeatViews`
+                        are initialized here and the view is rendered.
+                        */
                         this.model.on("reset", function (data) {
-                            // console.log("seats reset", data);
                             self.seats = [];
                             for (var i=0; i < self.model.length; i++) {
-                                // console.log(self.model.models[i]);
                                 var model = self.model.models[i],
-                                    seat = new Views.SeatView({
-                                                    model_id: self.model_id,
-                                                    model: model
-                                                });
+                                    seat = new self.SeatView({model: model});
                                 seat.model.trigger("add");
                                 self.seats.push(seat);
                             }
@@ -213,19 +145,25 @@ define(['require', 'config', 'models'],
                             self.render();
                         });
 
+                        /* Percolates the `Seats` model "add" event to the
+                        `SeatView`. Reinitialize the `SeatView` to rebind
+                        events.
+                        */
                         this.model.on("add", function (model) {
-                            // console.log("seats add", model);
                             var idx = self.model.indexOf(model),
                                 seat = self.seats[idx];
                             seat.model = model;
-                            seat.initialize();
+                            seat.initialize(); // Re_initialize the seat to re-bind events.
                             seat.model.trigger("add"); // Percolate the "add" event.
                         });
 
                         this.model.watch();
                     },
+                    /* Render the seats.
+                    (This should only occur once.)
+                    */
                     render: function() {
-                        BaseView.prototype.render.apply(this, arguments);
+                        Views.BaseView.prototype.render.apply(this, arguments);
                         for (var i=0; i < this.seats.length; i++) {
                             $(".player_wrap.player_"+i, this.el).html(
                                         this.seats[i].$el);
@@ -234,87 +172,73 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.HandView = BaseView.extend({
+                /*
+                */
+                Views.HandView = Views.BaseView.extend({
                     __name__: "HandView", // For debug only.
                     className: "hand",
                     tagName: "div",
-                    template: Theme.handTemplate,
-                    // modelClass: Models.Hand,
+                    template: Theme.handTemplate
+                });
+
+                Views.DealerView = Views.BaseView.extend({
+                    __name__: "DealerView",
+                    className: "dealer",
+                    tagName: "div",
+                    template: Theme.dealerTemplate,
+                    modelClass: Models.Dealer,
+                    subViews: {
+                        HandView: Views.HandView
+                    },
                     initialize: function () {
                         var self = this;
-                        BaseView.prototype.initialize.apply(this, arguments);
+                        Views.BaseView.prototype.initialize.apply(this, arguments);
 
-                        this.model.on("reset", function () {
-                            console.log("HandView.reset");
-                        });
-
-                        this.model.on("add", function () {
-                            console.log("HandView.add", self.model);
-
-
-                            for (var i=0; i < self.model.length; i++) {
-                                console.log("HandView test render", self.model.at(i));
-                                console.log(self.model.at(i).get());
-                            }
-
-                            self.render();
-                        });
-
-                        this.model.on("remove", function (data) {
-                            console.log("HandView.remove", self.model);
-                        });
+                        console.log(this.model);
+                        this.handView = new this.HandView({model: this.model});
 
                         /*
-                        // Percolate the event.
-                        this.model.on("discard", function() {
-                            console.log("handview discard trigger");
-                            self.trigger("discard");
-                        });
-
-                        this.model.on("deal", function(card) {
-                            self.trigger("deal", card);
+                        this.model.on("reset", function(data) {
+                            console.log("DealerView reset");
                         });
                         */
+
+                        // TODO: There must be a way to abstract this,
+                        //  but this is fine for now.
+                        // Update subview model.
+                        this.model.on("change", function(data) {
+                            //self.handView.model.reset(data.attributes.hand);
+                            console.log("DealerView change");
+                            self.render();
+                        });
+                    },
+                    render: function() {
+                        Views.BaseView.prototype.render.apply(this, arguments);
+                        this.$el.append(this.handView.$el);
+                        return this;
                     }
                 });
 
-                Views.HandsView = BaseView.extend({
+                Views.HandsView = Views.BaseView.extend({
                     el: ".seats_wrap",
                     modelClass: Models.Hands,
+                    subViews: {
+                        HandView: Views.HandView
+                    },
                     hands: [],
                     initialize: function () {
                         var self = this;
 
                         this.model.on("reset", function (data) {
-                            // console.log("HandsView reset", data);
-
                             for (var i=0; i < self.model.length; i++) {
-                                var model = self.model.models[i],
-                                    hand = new Views.HandView({
-                                        model_id: self.model_id,
-                                        model: model
-                                    });
-
-                                console.log("HandsView reset", model);
-
-                                hand.model.trigger("add");
+                                var model = self.model.models[i], // `Hand` Model.
+                                    hand = new self.HandView({model: model});
+                                hand.model.trigger("change");
                                 self.hands.push(hand);
                             }
                             self.render();
                         });
-/*
-                        this.model.on("add", function (model) {
-                            console.log("HandsView add", model);
-                            var idx = self.model.indexOf(model),
-                                hand = self.hands[idx];
 
-                            if (hand) {
-                                hand.model = model;
-                                hand.initialize();
-                                hand.model.trigger("add"); // Percolate the "add" event.
-                            }
-                        });
-*/
                         this.model.watch();
                     },
                     render: function () {
@@ -326,7 +250,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.PlayerStatusView = BaseView.extend({
+                Views.PlayerStatusView = Views.BaseView.extend({
                     __name__: "PlayerStatusView",
                     template: Theme.playerStatusTemplate,
                     className: "player_status",
@@ -342,7 +266,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.TableStatusView = BaseView.extend({
+                Views.TableStatusView = Views.BaseView.extend({
                     __name__: "TableStatusView",
                     template: Theme.tableStatusTemplate,
                     className: "table_status",
@@ -351,7 +275,7 @@ define(['require', 'config', 'models'],
                     countDown: function() {},
                     initialize: function() {
                         var self = this;
-                        BaseView.prototype.initialize.apply(this, arguments);
+                        Views.BaseView.prototype.initialize.apply(this, arguments);
 
                         this.model.on("change", function(data) {
                             clearInterval(self.countDown);
@@ -368,7 +292,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.TableControlsView = BaseView.extend({
+                Views.TableControlsView = Views.BaseView.extend({
                     __name__: "TableControlsView",
                     template: Theme.tableControlsTemplate,
                     className: "table_controls",
@@ -408,7 +332,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.WagerControlsView = BaseView.extend({
+                Views.WagerControlsView = Views.BaseView.extend({
                     __name__: "WagerControlsView",
                     template: Theme.wagerControlsTemplate,
                     modelClass: Models.WagerControls,
@@ -444,7 +368,7 @@ define(['require', 'config', 'models'],
                 });
 
                 // blackjack game to be abstracted later.
-                Views.GameControlsView = BaseView.extend({
+                Views.GameControlsView = Views.BaseView.extend({
                     __name__: "GameControlsView",
                     template: Theme.gameControlsTemplate,
                     className: "game_controls", // This needs to be abstracted!
@@ -460,7 +384,7 @@ define(['require', 'config', 'models'],
                     /*
                     render: function() {
                         if (this.model.get("show") === true) {
-                            BaseView.prototype.render.apply(this, arguments);
+                            Views.BaseView.prototype.render.apply(this, arguments);
                         } else {
                             this.$el.html("");
                         }
@@ -480,7 +404,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.DebugControlsView = BaseView.extend({
+                Views.DebugControlsView = Views.BaseView.extend({
                     __name__: "DebugControlsView",
                     template: Theme.debugControlsTemplate,
                     className: "debug_controls",
@@ -524,7 +448,7 @@ define(['require', 'config', 'models'],
                     }
                 });
 
-                Views.GameView = BaseView.extend({
+                Views.GameView = Views.BaseView.extend({
                     __name__: "GameView",
                     template: Theme.gameTemplate,
                     className: "game",
@@ -549,7 +473,7 @@ define(['require', 'config', 'models'],
                         this.gameControlsView = new this.GameControlsView();
                     },
                     render: function() {
-                        BaseView.prototype.render.apply(this, arguments);
+                        Views.BaseView.prototype.render.apply(this, arguments);
 
                         $(".player_status_wrap", this.$el).html(
                                     this.playerStatusView.$el);

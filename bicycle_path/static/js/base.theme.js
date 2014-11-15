@@ -40,6 +40,14 @@ define(['underscore',
                 'PlayerStep': "Let's play!",
                 'ResolveStep': "Round Over!",
                 'CleanupStep': ""
+            },
+
+            animations: {
+                dealRotation: 720,
+                dealDuration: 1000,
+                dealEasing: "easeOutCubic",
+                seatDuration: 400,
+                seatEasing: "swing"
             }
         };
 

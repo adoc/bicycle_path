@@ -11,12 +11,20 @@ require.config({
         jquery_ui: 'lib/jquery-ui.min',
         underscore: 'lib/underscore.min',
         backbone: 'lib/backbone.min',
+        // backbone_nested: 'lib/backbone-nested.min',
+        // backbone_relational: 'lib/backbone-relational',
         socketio: 'lib/socket.io.min',
         backbone_socketio: 'lib/backbone.socket.io',
         bootstrap: 'lib/bootstrap.min',
         text: 'lib/text.min',
     },
     shim: {
+        /*backbone_nested: {
+            deps: ['backbone']
+        }*/
+        backbone_relational: {
+            deps: ['backbone']
+        }
     }
 });
 
