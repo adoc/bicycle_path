@@ -94,14 +94,14 @@ define(['backbone'],
                     success: function(data) {
                         self.socket.on("change",
                             function (data) {
-                                //console.log("Watch Model Change", data);
+                                // console.log("Watch Model Change", data);
                                 self.set(data);
                             }
                         );
                         self.socket.on("reset",
                             function (data) {
-                                //console.log("Watch Model Reset", data);
-                                self.clear();
+                                // console.log("Watch Model Reset", data);
+                                self.clear({silent: true});
                                 self.set(data);
                             }
                         );

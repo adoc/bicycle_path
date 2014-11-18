@@ -68,14 +68,14 @@
                         success: function (data) {
                             var engine_id = data[0]; // First available engine (game) for now.
 
-                            /*
+
                             var game = new Views.GameView({
                                 socket_id: engine_id
                             });
                             $("#bj1").append(game.$el);
                             game.render();
-                            */
 
+                            /*
                             var table_status = new Views.TableStatusView({
                                 socket_id: engine_id
                             });
@@ -109,11 +109,8 @@
                                 socket_id: engine_id
                             });
                             $("#bj1").append(game_controls.$el);
-
-                            /*
-                            var hands = new Models.Hands([], {socket_id: engine_id})
-                            hands.watch();
                             */
+
                         }
                     });
 

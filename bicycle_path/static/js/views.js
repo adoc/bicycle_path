@@ -39,10 +39,10 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                         // Again, crappy and unneeded!
                         if (this.modelClass &&
                                 this.modelClass.prototype instanceof Backbone.Model) {
-                            this.model = new this.modelClass({}, constructorOpts);
+                            this.model = new this.modelClass(null, constructorOpts);
                         } else if (this.modelClass &&
                                 this.modelClass.prototype instanceof Backbone.Collection) {
-                            this.model = new this.modelClass([], constructorOpts);
+                            this.model = new this.modelClass(null, constructorOpts);
                         }
 
                         // Build subviews and pass `constructorOpts` in to it.
@@ -95,10 +95,10 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                     tagName: "div",
                     template: Theme.seatTemplate,
                     modelRemove: function () {
-                        self.render();
+                        this.render();
                     },
                     modelAdd: function () {
-                        self.render();
+                        this.render();
                     },
                     initialize: function() {
                         var self = this;
@@ -195,6 +195,7 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                         Views.BaseView.prototype.initialize.apply(this, arguments);
 
                         console.log(this.model);
+
                         this.handView = new this.HandView({model: this.model});
 
                         /*
@@ -211,6 +212,7 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                             console.log("DealerView change");
                             self.render();
                         });
+
                     },
                     render: function() {
                         Views.BaseView.prototype.render.apply(this, arguments);
@@ -457,6 +459,7 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                         PlayerStatusView: Views.PlayerStatusView,
                         DealerView: Views.DealerView,
                         SeatsView: Views.SeatsView,
+                        HandsView: Views.HandsView,
                         DebugControlsView: Views.DebugControlsView,
                         TableControlsView: Views.TableControlsView,
                         WagerControlsView: Views.WagerControlsView,
@@ -467,6 +470,7 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                         this.playerStatusView = new this.PlayerStatusView();
                         this.dealerView = new this.DealerView();
                         this.seatsView = new this.SeatsView();
+                        this.handsView = new this.HandsView();
                         this.debugControlsView = new this.DebugControlsView();
                         this.tableControlsView = new this.TableControlsView();
                         this.wagerControlsView = new this.WagerControlsView();
@@ -485,6 +489,8 @@ define(['underscore', 'backbone', 'require', 'config', 'models'],
                                     this.tableStatusView.$el);
 
                         $(".seats_wrap", this.$el).html(this.seatsView.$el);
+
+                        $(".seats_wrap", this.$el).append(this.handsView.$el);
 
                         var $controls = $(".controls", this.$el);
                         $controls.html("");

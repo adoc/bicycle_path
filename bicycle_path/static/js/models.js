@@ -40,6 +40,15 @@ define(['backbone', 'backbone_socketio', 'sockets'],
             }
         })
 
+        // Set the nested "hand" model.
+        function setNestedHand() {
+            this.set({
+                hand: new Collections.Cards(this.get("hand"))
+            },{
+                silent: true
+            });
+        }
+
         Models.Hand = Backbone.Model.extend({
             idAttribute: "_id",
             defaults: {
@@ -53,18 +62,8 @@ define(['backbone', 'backbone_socketio', 'sockets'],
             },
             initialize: function () {
                 var self = this;
-
-                // Set the nested "hand" model.
-                function setNestedHand() {
-                    self.set({
-                        hand: new Collections.Cards(self.get("hand"))
-                    },{
-                        silent: true
-                    });
-                }
-
                 this.on("add change", function () {
-                    setNestedHand();
+                    setNestedHand.apply(self);
                 });
             }
         });
@@ -78,8 +77,9 @@ define(['backbone', 'backbone_socketio', 'sockets'],
             },
             initialize: function () {
                 var self = this;
-                this.on("add change", function (data) {
-                    console.log("Dealer add/change", arguments);
+                this.on("add change", function () {
+                    setNestedHand.apply(self);
+
                 });
             }
         });
